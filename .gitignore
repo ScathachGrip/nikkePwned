@@ -1,0 +1,32 @@
+# Developer tools' files
+.vscode
+.temp/auth_info.json
+.temp
+.storage
+dist
+.lite_workspace.lua
+node_modules/
+npm-debug.log
+neutralinojs.log
+package-lock.json
+
+# Neutralinojs binaries and builds
+/bin
+/dist
+/resources/js/
+/resources/index.html
+/resources/index-asli.html
+/resources/style.css
+
+# Neutralinojs client (minified)
+neutralino.js
+
+# Neutralinojs related files
+.storage
+*.log
+auth_info.json
+opendir.bat
+discord-rpc.dll
+discord-rpc.lib
+discord-rpc.exe
+discord-rpc.mjs
