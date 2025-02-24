@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "target": "ES6",
+    "module": "ESNext",
+    "strict": true,
+    "outDir": "./resources/js",
+    "rootDir": "./src",
+    "types": ["neutralinojs-types"],
+    "esModuleInterop": true
+  },
+  "include": ["src"],
+  "exclude": ["node_modules", "dist", "resource/js", "tmp", "logs", "test"]
+}
