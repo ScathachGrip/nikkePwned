@@ -1,0 +1,35 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🛎 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: 📥 Install Dependencies
+        run: npm install
+
+      - name: 🛠 Install Neutralino CLI (Global)
+        run: npm install -g @neutralinojs/neu
+
+      - name: 🔄 Update Neutralino.js Files
+        run: neu update
+
+      - name: 🔧 Compile TypeScript
+        run: npm run build
