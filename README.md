@@ -1,18 +1,18 @@
 <div align="center">
-<a href="#"><img width="600" src="resources/icons/docs_logo.png" alt="jandapress"></a>
+<a href="#"><img width="600" src="resources/icons/docs_logo.png" alt="nikkePwned"></a>
 
 
 <p align="center">
-	<a href="https://github.com/sinkaroid/nikkepwned/actions/workflows/build.yml"><img src="https://github.com/sinkaroid/nikkepwned/actions/workflows/build.yml/badge.svg"></a>
-	<a href="https://github.com/sinkaroid/nikkepwned/actions/workflows/build-rpc.yml"><img src="https://github.com/sinkaroid/nikkepwned/actions/workflows/build-rpc.yml/badge.svg" /></a>
+	<a href="https://github.com/ScathachGrip/nikkePwned/actions/workflows/build.yml"><img src="https://github.com/ScathachGrip/nikkePwned/actions/workflows/build.yml/badge.svg"></a>
+	<a href="https://github.com/ScathachGrip/nikkePwned/actions/workflows/build-rpc.yml"><img src="https://github.com/ScathachGrip/nikkePwned/actions/workflows/build-rpc.yml/badge.svg" /></a>
 </p>
 
 NIKKEPwned is a Password Manager for NIKKE, it uses localStorage and simulating nikke_launcher  
 The motivation of this project is automated log-in, allowing users interacts each accounts **quickly and effortlessly**.
 
 <a href="#installation">Installation</a> •
-<a href="https://github.com/sinkaroid/jandapress/blob/master/CONTRIBUTING.md">Contributing</a> •
-<a href="https://github.com/sinkaroid/jandapress/issues/new/choose">Report Issues</a>
+<a href="https://github.com/ScathachGrip/nikkePwned/blob/master/CONTRIBUTING.md">Contributing</a> •
+<a href="https://github.com/ScathachGrip/nikkePwned/issues/new/choose">Report Issues</a>
 </div>
 
 ---
@@ -50,7 +50,7 @@ This tool was designed to **automate the login process**, allowing users to log 
   - Read more: [this tool flagged as potential malware](./LIMITATIONS.md#this-tool-flagged-as-potential-malware)
 
 # Installation
-- Get the latest build version on the release page You only need nikkePwned.zip. 
+- Get the latest build version from the [release page You only need nikkepwned-release.zip.](https://github.com/ScathachGrip/nikkePwned/releases) 
 - Unzip it, or extract it "as folder" somewhere in your computer
 - Open `nikkepwned-win_x64.exe` with **Run as Administrator**
   - WHY, Read more: [this tool flagged as potential malware](./LIMITATIONS.md#this-tool-flagged-as-potential-malware) for explanation.  

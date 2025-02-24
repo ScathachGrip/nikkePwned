@@ -1,0 +1,38 @@
+name: Build RPC
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🛎 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: 📥 Install pkg
+        run: npm install -g pkg
+
+      - name: 🛠 Install Dependencies
+        run: npm install
+
+      - name: 🔨 Build Discord RPC Executable
+        run: pkg discord-rpc.cjs --targets node18-win-x64 --output discord-rpc.exe
+
+      - name: 📤 Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: discord-rpc-exe
+          path: discord-rpc.exe
