@@ -128,6 +128,45 @@ class PwnedManager {
       console.warn("⚠️ WebSocket not ready.");
     }
   }
+
+  /**
+   * Displays vanilla toast with a success or fail message.
+   * This function updates the snackbar text, applies the correct styling, 
+   * and animates a progress bar that disappears after 3 seconds.
+   * 
+   * @param {string} message - The message to display inside the snackbar.
+   * @param {"success" | "fail"} type - Determines the appearance of the snackbar: green for success, red for fail.
+   * 
+   * @returns {void} This function does not return a value.
+   */
+  public showAlert(message: string, type: "success" | "fail"): void {
+    const snackbar = document.getElementById("snackbar");
+    const textElement = document.getElementById("snackbar-text");
+    const progressBar = document.querySelector(".progress-bar") as HTMLElement;
+  
+    if (!snackbar || !textElement || !progressBar) {
+      console.error("Snackbar elements not found.");
+      return;
+    }
+  
+    snackbar.className = `show ${type}`;
+  
+    if (type === "success") {
+      textElement.textContent = `✅ ${message}`;
+    } else {
+      textElement.textContent = `❌ ${message}`;
+    }
+
+    progressBar.style.width = "0%";
+    progressBar.style.transition = "none"; 
+    void progressBar.offsetWidth; 
+    progressBar.style.transition = "width 3s linear";
+    progressBar.style.width = "100%"; 
+  
+    setTimeout(() => {
+      snackbar.classList.remove("show", "success", "fail");
+    }, 3000);
+  }
 }
 
 const accountManager = new PwnedManager();
@@ -177,6 +216,15 @@ Neutralino.events.on("ready", async () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } as unknown as any);
 
+      if (!file || file.length === 0) {
+        console.warn("⚠️ No file selected.");
+        return;
+      }
+      if (!file[0].includes("nikke_launcher.exe")) {
+        await Neutralino.os.showNotification("Oops :/", "Please select nikke_launcher.exe", "ERROR");
+        accountManager.showAlert("Please select nikke_launcher.exe", "fail");
+        return;
+      }
       if (file && file.length > 0) {
         launcherPath = file[0]; // Store selected path in global variable
         await Neutralino.storage.setData("nikkeLauncherPath", launcherPath);
@@ -186,6 +234,7 @@ Neutralino.events.on("ready", async () => {
     } catch (error) {
       console.error("Error selecting file:", error);
       await Neutralino.os.showNotification("Oops :/", "Failed to select file.", "ERROR");
+      accountManager.showAlert("Failed to select file.", "fail");
     }
   });
 
@@ -225,11 +274,12 @@ Neutralino.events.on("ready", async () => {
       
       const updatedAccounts = Array.from(accountMap.values());
       await Neutralino.storage.setData("accounts", JSON.stringify(updatedAccounts));
-      alert("✅ Accounts Registered!");
+      accountManager.showAlert("Accounts Registered!", "success");
       await accountManager.loadAccounts();
     } catch (e) {
       console.error("Invalid JSON format!", e);
       await Neutralino.os.showNotification("Oops :/", "Invalid JSON format! Please correct it.", "ERROR");
+      accountManager.showAlert("Invalid JSON format! Please correct it.", "fail");
     }
   });
 
@@ -253,13 +303,14 @@ Neutralino.events.on("ready", async () => {
 
     if (selectedIndex === "") {
       await Neutralino.os.showNotification(">:(", "Please select an account!", "ERROR");
+      accountManager.showAlert("Please select an account!", "fail");
       return;
     }
 
     try {
       const data = await Neutralino.storage.getData("accounts");
       if (!data) {
-        alert("No accounts found! Register first.");
+        accountManager.showAlert("No accounts found! Register first.", "fail");
         return;
       }
       const accounts = JSON.parse(data);
@@ -275,6 +326,7 @@ Neutralino.events.on("ready", async () => {
       await Neutralino.os.execCommand(`powershell -ExecutionPolicy Bypass -Command "Add-Type -AssemblyName System.Windows.Forms; Start-Sleep -Seconds 5; [System.Windows.Forms.SendKeys]::SendWait('{TAB}${emailFixed}{TAB}${passwordFixed}{ENTER}')"`);  
       console.log("✅ Login complete!");
       await Neutralino.os.showNotification(`${account.nickname} `, "Successfully logged in!");
+      accountManager.showAlert(`Logged in as ${account.nickname}!`, "success");
 
       accountManager.updateDiscordRPC(`Playing NIKKE ${currentArray} / ${accounts.length} accounts`, `Logged in as ${account.nickname}`);
     } catch (error) {
@@ -299,7 +351,8 @@ Neutralino.events.on("ready", async () => {
   (document.getElementById("removeBtn") as HTMLButtonElement).addEventListener("click", async () => {
     const selectedEmail = (document.getElementById("accountSelect") as HTMLSelectElement).value;
     if (!selectedEmail) {
-      alert("Please select an account to remove.");
+      accountManager.showAlert("Please select an account!", "fail");
+
       return;
     }
   
@@ -308,7 +361,7 @@ Neutralino.events.on("ready", async () => {
     const updatedAccounts = accounts.filter((acc: Account) => acc.email !== selectedEmail);
   
     await Neutralino.storage.setData("accounts", JSON.stringify(updatedAccounts));
-    alert(`❌ Account ${selectedEmail} removed!`);
+    accountManager.showAlert(`Account ${selectedEmail} removed!`, "success");
     await accountManager.loadAccounts();
   });  
 });
