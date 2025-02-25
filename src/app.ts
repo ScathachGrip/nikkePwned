@@ -319,6 +319,11 @@ Neutralino.events.on("ready", async () => {
       const emailFixed = accountManager.escapeSendKeys(account.email);
       const passwordFixed = accountManager.escapeSendKeys(account.password);
 
+      if (!launcherPath) {
+        accountManager.showAlert("You did not edit where nikke_launcher is located!", "fail");
+        return;
+      }
+
       console.log(`Opening NIKKE Launcher... (${launcherPath})`);
       await Neutralino.os.execCommand(`powershell -ExecutionPolicy Bypass -Command "Start-Process '${launcherPath}' -Verb RunAs"`);
       await new Promise(resolve => setTimeout(resolve, 3000));
