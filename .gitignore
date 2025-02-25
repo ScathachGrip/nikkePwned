@@ -9,6 +9,8 @@ node_modules/
 npm-debug.log
 neutralinojs.log
 package-lock.json
+changelog.sh
+CHANGELOG.md
 
 # Neutralinojs binaries and builds
 /bin
