@@ -2,7 +2,7 @@
   "name": "nikkepwned",
   "description": "Password Manager for NIKKE",
   "funding": "https://github.com/sponsors/sinkaroid",
-  "version": "0.1.3-alpha",
+  "version": "0.1.4-alpha",
   "scripts": {
     "prebuild": "ts-node src/frontend.ts",
     "build": "tsc",
