@@ -132,6 +132,94 @@ select {
     overflow: hidden;
     text-overflow: ellipsis; 
 }
+
+
+/* Base Snackbar container */
+#snackbar {
+  visibility: hidden;
+  max-width: 320px;
+  color: #fff;
+  text-align: left;
+  border-radius: 8px;
+  padding: 14px 16px;
+  position: fixed;
+  z-index: 1000;
+  top: 20px;
+  right: 20px;
+  font-size: 14px;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: opacity 0.3s, transform 0.3s;
+}
+
+/* Success Snackbar */
+#snackbar.success {
+  background-color: #222; /* Dark gray */
+}
+
+/* Fail Snackbar */
+#snackbar.fail {
+  background-color:rgb(133, 12, 12); /* Red */
+}
+
+/* Show Snackbar */
+#snackbar.show {
+  visibility: visible;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Snackbar Text */
+#snackbar-text {
+  flex: 1;
+  word-wrap: break-word;
+}
+
+/* Loading Bar */
+.progress {
+  height: 4px;
+  width: 100%;
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+  overflow: hidden;
+  position: relative;
+}
+
+.progress-bar {
+  height: 100%;
+  width: 0%;
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+
+/* Success Bar */
+#snackbar.success .progress-bar {
+  background-color:rgb(145, 255, 0); /* Orange */
+}
+
+/* Fail Bar */
+#snackbar.fail .progress-bar {
+  background-color:rgb(166, 255, 0); /* Bright Red */
+}
+
+/* Responsive: Adjust for small screens */
+@media (max-width: 600px) {
+  #snackbar {
+    max-width: 90%;
+    right: 5%;
+    left: auto;
+    font-size: 13px;
+    padding: 12px;
+  }
+}
+
+</style>
+
 </style>
 </head>
 <body>
@@ -151,6 +239,12 @@ select {
         <br>
         <button id="removeBtn">or Remove account</button>
     </div>
+<div id="snackbar">
+  <span id="snackbar-text"></span>
+  <div class="progress"><div class="progress-bar"></div></div>
+</div>
+
+
     <p>Password Manager for NIKKE v<span id="appVersion">Loading...</span></p>
     <script src="js/neutralino.js"></script>  
     <script src="js/app.js"></script>
