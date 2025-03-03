@@ -1,10 +1,120 @@
 let ws: WebSocket | null = null;
+let globalUser: string;
+
+type PwnedType =
+  | "Account Login"
+  | "Account Added"
+  | "Account Removed"
+  | "Adjusting Delay"
+  | "Adjusting Path";
+type SuccessType = "True" | "False";
+type DcStateType = "Idling" | "Maintaining" | "Registering";
+type AlertType = "success" | "fail";
 
 interface Account {
   email: string;
   password: string;
   nickname: string;
 }
+
+enum ActivityStates {
+  Idle = "Idle",
+  Maintaining = "Maintaining",
+  Registering = "Registering",
+}
+
+enum ActivityAssets {
+  Logo = "https://i.imgur.com/LIzkC9I.png",
+  Idle = "https://i.imgur.com/7484syW.png",
+  Maintaining = "https://i.imgur.com/VW1Z9nP.png",
+}
+
+/**
+ * Checks if the current user is running the application as an administrator.
+ * Uses PowerShell to verify if the user belongs to the Administrators group.
+ *
+ * @returns {Promise<boolean>} - Resolves to `true` if the user has admin privileges, otherwise `false`.
+ */
+async function checkPermissionApp(): Promise<boolean> {
+  try {
+    const result = await Neutralino.os.execCommand(
+      "powershell -Command \"[Security.Principal.WindowsIdentity]::GetCurrent().Groups -contains (New-Object System.Security.Principal.SecurityIdentifier('S-1-5-32-544')).Value\"",
+    );
+    return result.stdOut.trim() === "True";
+  } catch (error) {
+    console.error("Failed to check admin privileges:", error);
+    return false;
+  }
+}
+
+/**
+ * Retrieves the motherboard manufacturer and product name using PowerShell.
+ * This command fetches data from the Win32_BaseBoard class via Get-CimInstance.
+ *
+ * @returns {Promise<string>} - Resolves to a string containing the motherboard information, or a fallback message.
+ */
+async function getUser(): Promise<string> {
+  try {
+    const result = await Neutralino.os.execCommand(
+      "powershell -Command \"(Get-CimInstance Win32_BaseBoard | Select-Object -ExpandProperty Manufacturer) + ' (' + (Get-CimInstance Win32_BaseBoard | Select-Object -ExpandProperty Product) + ')'\"",
+    );
+    return result.stdOut.trim() || "Unknown User";
+  } catch (error) {
+    console.error("Failed to get motherboard info:", error);
+    return "Error: Unknown User";
+  }
+}
+
+/**
+ * Attempts to close the "nikke_launcher.exe" process if it is running.
+ * Uses the `tasklist` command to check if the process exists, then forcefully terminates it using `taskkill`.
+ *
+ * @returns {Promise<void>} - Resolves once the process check and termination (if needed) are completed.
+ */
+async function closeNikkeLauncher(): Promise<void> {
+  try {
+    const result = await Neutralino.os.execCommand("tasklist");
+    const isRunning = result.stdOut.includes("nikke_launcher.exe");
+
+    if (isRunning) {
+      await Neutralino.os.execCommand("taskkill /F /IM nikke_launcher.exe");
+      console.warn("Nikke Launcher intentionally closed.");
+    } else {
+      console.log("Nikke Launcher should not running.");
+    }
+  } catch (error) {
+    console.error("Failed to close Nikke Launcher:", error);
+  }
+}
+
+/**
+ * Checks if nikkepwned is running with administrator privileges.
+ * If not, displays an error message and prevents further execution.
+ * If running as admin, retrieves the motherboard information and shows success.
+ *
+ * @returns {Promise<void>} - Resolves once the privilege check and corresponding actions are completed.
+ */
+async function enforceAdminPrivileges(): Promise<void> {
+  const isAdmin = await checkPermissionApp();
+  console.log(
+    isAdmin ? "User is an administrator." : "User is NOT an administrator.",
+  );
+  if (!isAdmin) {
+    document.body.innerHTML = `
+        <div id="snackbar">
+            <span id="snackbar-text"></span>
+            <div class="progress"><div class="progress-bar"></div></div>
+        </div>
+        <img id="closeAppButton" src="/icons/no.jpg" class="responsive-img-small" style="cursor: pointer;">
+    `;
+    accountManager.showAlert("Error: Missing Permissions", "fail");
+  } else {
+    globalUser = await getUser();
+    accountManager.showAlert(`${globalUser}`, "success");
+  }
+}
+
+enforceAdminPrivileges();
 
 /**
  * Checks if `discord-rpc.exe` is currently running.
@@ -18,6 +128,22 @@ async function isRPCRunning(): Promise<boolean> {
   return isRunning;
 }
 
+/**
+ * Checks if `nikke_launcher.exe` is currently running.
+ * This function executes the `tasklist` command and searches for the process name.
+ * @returns {Promise<boolean>} - Returns `true` if the process is found, otherwise `false`.
+ */
+async function isLauncherRunning(): Promise<boolean> {
+  const result = await Neutralino.os.execCommand("tasklist");
+  const isRunning = result.stdOut.includes("nikke_launcher.exe");
+  console.log("nikke_launcher Running:", isRunning);
+  return isRunning;
+}
+
+/**
+ * Checks if the Discord Rich Presence (RPC) WebSocket is running.
+ * If the RPC process is running, attempts to connect to the WebSocket server.
+ */
 isRPCRunning().then((running) => {
   if (running) {
     ws = new WebSocket("ws://localhost:6464");
@@ -26,10 +152,12 @@ isRPCRunning().then((running) => {
   }
 });
 
+isLauncherRunning();
+
 /**
  * Manages account selection and data retrieval from storage.
- * 
- * This class handles loading accounts, redacting email addresses, 
+ *
+ * This class handles loading accounts, redacting email addresses,
  * and updating the account selection dropdown.
  */
 class PwnedManager {
@@ -38,20 +166,20 @@ class PwnedManager {
    * @type {HTMLSelectElement}
    */
   private select: HTMLSelectElement;
-  
+
   /**
    * Initializes the PwnedManager and selects the account dropdown element.
    */
   constructor() {
     this.select = document.getElementById("accountSelect") as HTMLSelectElement;
   }
-  
+
   /**
    * Loads accounts from Neutralino storage and populates the select menu.
-   * 
-   * Retrieves stored accounts from `Neutralino.storage.getData("accounts")`, parses the data, 
+   *
+   * Retrieves stored accounts from `Neutralino.storage.getData("accounts")`, parses the data,
    * and updates the select menu with available accounts.
-   * 
+   *
    * @returns {Promise<void>} Resolves when accounts are loaded and displayed.
    * @throws {Error} If there is an issue retrieving or parsing the accounts data.
    */
@@ -59,26 +187,62 @@ class PwnedManager {
     try {
       const data = await Neutralino.storage.getData("accounts");
       if (!data) return;
-  
+
       const accounts: Account[] = JSON.parse(data);
       this.select.innerHTML = "<option value=\"\">Select an Account</option>";
-  
+
       accounts.forEach((acc: Account, index: number) => {
         const option = document.createElement("option");
         option.value = index.toString();
         option.textContent = `${acc.nickname} (${this.redactedEmails(acc.email)})`;
         this.select.appendChild(option);
       });
-  
+
       console.log(`✅ Loaded ${accounts.length} accounts.`);
     } catch (error) {
       console.error("Failed to load accounts:", error);
     }
   }
-  
+
+  /**
+   * Logs a successful login into Neutralino.storage.
+   * @param {string} account - The account nickname.
+   * @param {PwnedType} typeWhat - The type of login event.
+   * @param {SuccessType} isSuccessWhat - The success status of the login.
+   * @param {number} dateWhat - The timestamp of the login event.
+   *
+   * @returns {Promise<void>} Resolves when the log entry is created and stored.
+   */
+  async createLog(
+    account: string,
+    typeWhat: PwnedType,
+    isSuccessWhat: SuccessType,
+    dateWhat: number,
+  ): Promise<void> {
+    let history = [];
+
+    try {
+      const result = await Neutralino.storage.getData("history");
+      history = JSON.parse(result);
+    } catch {
+      console.warn("⚠️ No existing logins found, creating new one.");
+    }
+
+    const logEntry = {
+      accountWhat: account,
+      typeWhat: typeWhat,
+      isSuccess: isSuccessWhat,
+      dateWhat: dateWhat,
+    };
+
+    history.push(logEntry);
+    await Neutralino.storage.setData("history", JSON.stringify(history));
+    // console.log("CHECK ISI", await Neutralino.storage.getData("history"));
+  }
+
   /**
    * Redacts part of an email address for privacy.
-   * 
+   *
    * @param {string} email - The email address to redact.
    * @returns {string} The redacted email address.
    */
@@ -87,8 +251,8 @@ class PwnedManager {
   }
 
   /**
-   * Regex to escape special characters in SendKeys. 
-   * 
+   * Regex to escape special characters in SendKeys.
+   *
    * Some characters have special meanings in SendKeys and must be escaped using `{}` notation.
    * This function replaces those characters with their escaped versions.
    *
@@ -119,11 +283,32 @@ class PwnedManager {
    * This function sends updated information to `discord-rpc.exe` through WebSocket.
    * @param {string} details - The main text displayed in the Discord activity.
    * @param {string} state - The secondary text displayed below `details`.
+   * @param {string} [smallImageKey] - The key for a small image asset.
+   * @param {string} [smallImageText] - The tooltip text for the small image.
+   *
+   * @returns {void} State sent to the WebSocket server.
    */
-  public updateDiscordRPC(details: string, state: string) {
+  public updateDiscordRPC(
+    details: string,
+    state: string,
+    smallImageKey?: string,
+    smallImageText?: DcStateType,
+  ): void {
     if (ws && ws.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify({ details, state }));
-      console.log("📤 Sent RPC Update:", { details, state });
+      const payload = JSON.stringify({
+        details,
+        state,
+        smallImageKey,
+        smallImageText,
+      });
+
+      ws.send(payload);
+      console.log("📤 Sent RPC Update:", {
+        details,
+        state,
+        smallImageKey,
+        smallImageText,
+      });
     } else {
       console.warn("⚠️ WebSocket not ready.");
     }
@@ -131,26 +316,26 @@ class PwnedManager {
 
   /**
    * Displays vanilla toast with a success or fail message.
-   * This function updates the snackbar text, applies the correct styling, 
+   * This function updates the snackbar text, applies the correct styling,
    * and animates a progress bar that disappears after 3 seconds.
-   * 
+   *
    * @param {string} message - The message to display inside the snackbar.
-   * @param {"success" | "fail"} type - Determines the appearance of the snackbar: green for success, red for fail.
-   * 
+   * @param {AlertType} type - The type of alert to display (success or fail).
+   *
    * @returns {void} This function does not return a value.
    */
-  public showAlert(message: string, type: "success" | "fail"): void {
+  public showAlert(message: string, type: AlertType): void {
     const snackbar = document.getElementById("snackbar");
     const textElement = document.getElementById("snackbar-text");
     const progressBar = document.querySelector(".progress-bar") as HTMLElement;
-  
+
     if (!snackbar || !textElement || !progressBar) {
       console.error("Snackbar elements not found.");
       return;
     }
-  
+
     snackbar.className = `show ${type}`;
-  
+
     if (type === "success") {
       textElement.textContent = `✅ ${message}`;
     } else {
@@ -158,21 +343,110 @@ class PwnedManager {
     }
 
     progressBar.style.width = "0%";
-    progressBar.style.transition = "none"; 
-    void progressBar.offsetWidth; 
+    progressBar.style.transition = "none";
+    void progressBar.offsetWidth;
     progressBar.style.transition = "width 3s linear";
-    progressBar.style.width = "100%"; 
-  
+    progressBar.style.width = "100%";
+
     setTimeout(() => {
       snackbar.classList.remove("show", "success", "fail");
     }, 3000);
+  }
+
+  /**
+   * Converts a timestamp to a readable date and "time ago" format.
+   * @param {number} timestamp - The timestamp stored with Date.now().
+   * @returns {string} - Formatted date and time ago string.
+   */
+  public formattedDate(timestamp: number): string {
+    const date = new Date(timestamp);
+    const now = Date.now();
+    const diffInSeconds = Math.floor((now - timestamp) / 1000);
+
+    // Formatting the date (DD Mon YYYY, HH:mm)
+    const formattedDate = date
+      .toLocaleString("en-GB", {
+        day: "2-digit",
+        month: "long",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      })
+      .replace(",", "");
+
+    // Calculating "time ago"
+    let timeAgo;
+    if (diffInSeconds < 60) {
+      timeAgo = `${diffInSeconds} seconds ago`;
+    } else if (diffInSeconds < 3600) {
+      timeAgo = `${Math.floor(diffInSeconds / 60)} minutes ago`;
+    } else if (diffInSeconds < 86400) {
+      timeAgo = `${Math.floor(diffInSeconds / 3600)} hours ago`;
+    } else {
+      timeAgo = `${Math.floor(diffInSeconds / 86400)} days ago`;
+    }
+    return `${formattedDate} (${timeAgo})`;
+  }
+
+  /**
+   * Extracts nicknames from an account or an array of accounts.
+   * @param {Array<{nickname: string}> | {nickname: string}} accounts - A single account object or an array of accounts.
+   * @returns {string} - A comma-separated string of nicknames.
+   */
+  public extractNicknames(
+    accounts: { nickname: string } | { nickname: string }[],
+  ): string {
+    if (Array.isArray(accounts)) {
+      return accounts.map((account) => account.nickname).join(", ");
+    }
+    return accounts.nickname;
+  }
+
+  /**
+   * Populates the history table with log entries from Neutralino storage.
+   *
+   * Retrieves the history data from `Neutralino.storage.getData("history")`,
+   * parses the JSON data, and populates the table with log entries.
+   *
+   * @returns {Promise<void>} Resolves when the table is populated with log entries.
+   * @throws {Error} If there is an issue retrieving or parsing the history data.
+   */
+  public async populateTable(): Promise<void> {
+    try {
+      const tbody = document.querySelector(
+        "table tbody",
+      ) as HTMLTableSectionElement;
+      const result = await Neutralino.storage.getData("history");
+      const logs = JSON.parse(result).reverse() as Array<{
+        accountWhat: string;
+        typeWhat: string;
+        isSuccess: string;
+        dateWhat: number;
+      }>;
+
+      tbody.innerHTML = "";
+
+      logs.forEach((log) => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td data-label="AccountsObject">${log.accountWhat}</td>
+          <td data-label="Type">${log.typeWhat}</td>
+          <td data-label="isSuccess">${log.isSuccess}</td>
+          <td data-label="Date">${accountManager.formattedDate(log.dateWhat)}</td>
+        `;
+        tbody.appendChild(row);
+      });
+    } catch (e) {
+      console.warn("⚠️ Failed to load history:", e);
+    }
   }
 }
 
 const accountManager = new PwnedManager();
 accountManager.loadAccounts();
 
-let launcherPath: string = ""; 
+let launcherPath: string = "";
 Neutralino.init();
 
 // events: ready
@@ -180,14 +454,17 @@ Neutralino.events.on("ready", async () => {
   console.log("🟢 Neutralino App Ready");
 
   const config = await Neutralino.app.getConfig();
-  (document.getElementById("appVersion") as HTMLElement).innerText = config.version || "Unknown";
+  (document.getElementById("appVersion") as HTMLElement).innerText =
+    config.version || "Unknown";
 
   await accountManager.loadAccounts();
 
   const pathDisplay = document.getElementById("selectedPath") as HTMLElement;
   const runBtn = document.getElementById("runBtn") as HTMLButtonElement;
 
-  const storedPath = await Neutralino.storage.getData("nikkeLauncherPath").catch(() => null);
+  const storedPath = await Neutralino.storage
+    .getData("nikkeLauncherPath")
+    .catch(() => null);
   if (storedPath) {
     launcherPath = storedPath;
     pathDisplay.textContent = launcherPath;
@@ -196,24 +473,24 @@ Neutralino.events.on("ready", async () => {
 
   /**
    * Handles the "Select Path" button click event to choose the game executable.
-   * 
+   *
    * - Opens a file selection dialog, allowing the user to select an `.exe` file.
    * - Stores the selected file path in a global variable (`launcherPath`).
    * - Saves the path to Neutralino storage for persistence.
    * - Updates the UI with the selected path.
    * - Enables the "Run" button after selection.
    * - Displays an error notification if the file selection fails.
-   * 
+   *
    * @returns {Promise<void>} Resolves when the file is selected and stored or an error occurs.
    * @throws {Error} If there is an issue selecting the file or storing the path.
    */
-  (document.getElementById("selectPathBtn") as HTMLButtonElement).addEventListener("click", async () => {
+  (
+    document.getElementById("selectPathBtn") as HTMLButtonElement
+  ).addEventListener("click", async () => {
     try {
       const file = await Neutralino.os.showOpenDialog("Open a nikke", {
-        filters: [
-          { name: "Executables", extensions: ["exe"] }
-        ]
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        filters: [{ name: "Executables", extensions: ["exe"] }],
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } as unknown as any);
 
       if (!file || file.length === 0) {
@@ -221,7 +498,11 @@ Neutralino.events.on("ready", async () => {
         return;
       }
       if (!file[0].includes("nikke_launcher.exe")) {
-        await Neutralino.os.showNotification("Oops :/", "Please select nikke_launcher.exe", "ERROR");
+        await Neutralino.os.showNotification(
+          "Oops :/",
+          "Please select nikke_launcher.exe",
+          "ERROR",
+        );
         accountManager.showAlert("Please select nikke_launcher.exe", "fail");
         return;
       }
@@ -230,17 +511,28 @@ Neutralino.events.on("ready", async () => {
         await Neutralino.storage.setData("nikkeLauncherPath", launcherPath);
         pathDisplay.textContent = launcherPath;
         runBtn.disabled = false;
+        accountManager.showAlert("Path selected!", "success");
+        await accountManager.createLog(
+          "nikke_launcher.exe",
+          "Adjusting Path",
+          "True",
+          Date.now(),
+        );
       }
     } catch (error) {
       console.error("Error selecting file:", error);
-      await Neutralino.os.showNotification("Oops :/", "Failed to select file.", "ERROR");
+      await Neutralino.os.showNotification(
+        "Oops :/",
+        "Failed to select file.",
+        "ERROR",
+      );
       accountManager.showAlert("Failed to select file.", "fail");
     }
   });
 
   /**
    * Handles the "Register" button click event to register new accounts from JSON input.
-   * 
+   *
    * - Parses user-provided JSON input to extract account data.
    * - Ensures the data is properly structured (each account must have `nickname`, `email`, and `password`).
    * - Retrieves existing accounts from Neutralino storage.
@@ -248,100 +540,182 @@ Neutralino.events.on("ready", async () => {
    * - Saves the updated account list back to storage.
    * - Refreshes the account dropdown and displays a success notification.
    * - Shows an error notification if the JSON format is invalid.
-   * 
+   *
    * @returns {Promise<void>} Resolves when accounts are successfully registered or an error occurs.
    * @throws {Error} If there is an issue JSON input or saving the accounts.
    */
-  (document.getElementById("registerBtn") as HTMLButtonElement).addEventListener("click", async () => {
-    const input = (document.getElementById("jsonInput") as HTMLTextAreaElement).value;
+  (
+    document.getElementById("registerBtn") as HTMLButtonElement
+  ).addEventListener("click", async () => {
+    const input = (document.getElementById("jsonInput") as HTMLTextAreaElement)
+      .value;
     try {
       const parsedData = JSON.parse(input);
       const newAccounts = Array.isArray(parsedData) ? parsedData : [parsedData];
 
-      const existingData = await Neutralino.storage.getData("accounts").catch(() => "[]");
+      const existingData = await Neutralino.storage
+        .getData("accounts")
+        .catch(() => "[]");
       const existingAccounts = JSON.parse(existingData);
 
       const accountMap = new Map<string, Account>();
+      existingAccounts.forEach((acc: Account) =>
+        accountMap.set(acc.email, acc),
+      );
 
-      existingAccounts.forEach((acc: Account) => accountMap.set(acc.email, acc));
-      
       newAccounts.forEach((acc: Account) => {
         if (!acc.email || !acc.password || !acc.nickname) {
-          throw new Error("Each account must have nickname, email, and password");
+          throw new Error(
+            "Each account must have nickname, email, and password",
+          );
         }
         accountMap.set(acc.email, acc);
       });
-      
+
       const updatedAccounts = Array.from(accountMap.values());
-      await Neutralino.storage.setData("accounts", JSON.stringify(updatedAccounts));
+      await Neutralino.storage.setData(
+        "accounts",
+        JSON.stringify(updatedAccounts),
+      );
       accountManager.showAlert("Accounts Registered!", "success");
       await accountManager.loadAccounts();
+      await accountManager.createLog(
+        accountManager.extractNicknames(JSON.parse(input)),
+        "Account Added",
+        "True",
+        Date.now(),
+      );
     } catch (e) {
       console.error("Invalid JSON format!", e);
-      await Neutralino.os.showNotification("Oops :/", "Invalid JSON format! Please correct it.", "ERROR");
-      accountManager.showAlert("Invalid JSON format! Please correct it.", "fail");
+      await Neutralino.os.showNotification(
+        "Oops :/",
+        "Invalid JSON format! Please correct it.",
+        "ERROR",
+      );
+      accountManager.showAlert(
+        "Invalid JSON format! Please correct it.",
+        "fail",
+      );
     }
   });
 
   /**
    * Handles the "Run" button click event to launch the game and perform auto-login.
-   * 
+   *
    * - Retrieves the selected account from the dropdown.
    * - If no account is selected, displays an error notification.
    * - Loads stored accounts from storage.
    * - Launches the game using PowerShell with elevated permissions.
    * - Waits for a few seconds, then sends login credentials using simulated keystrokes.
    * - Displays a notification upon successful login.
-   * 
+   *
    * @returns {Promise<void>} Resolves when the login process is completed or an error occurs.
    * @throws {Error} If there is an issue retrieving accounts, launching the game, or sending keystrokes.
    */
-  (document.getElementById("runBtn") as HTMLButtonElement).addEventListener("click", async () => {
-    const select = document.getElementById("accountSelect") as HTMLSelectElement;
-    const selectedIndex = select.value;
-    const currentArray = Number(selectedIndex) + 1;
+  (document.getElementById("runBtn") as HTMLButtonElement).addEventListener(
+    "click",
+    async () => {
+      const getDelay =
+        (await Neutralino.storage.getData("delay_as_second")) || "3";
+      const select = document.getElementById(
+        "accountSelect",
+      ) as HTMLSelectElement;
+      const selectedIndex = select.value;
+      const currentArray = Number(selectedIndex) + 1;
 
-    if (selectedIndex === "") {
-      await Neutralino.os.showNotification(">:(", "Please select an account!", "ERROR");
-      accountManager.showAlert("Please select an account!", "fail");
-      return;
-    }
-
-    try {
-      const data = await Neutralino.storage.getData("accounts");
-      if (!data) {
-        accountManager.showAlert("No accounts found! Register first.", "fail");
-        return;
-      }
-      const accounts = JSON.parse(data);
-      const account = accounts[selectedIndex];
-
-      const emailFixed = accountManager.escapeSendKeys(account.email);
-      const passwordFixed = accountManager.escapeSendKeys(account.password);
-
-      if (!launcherPath) {
-        accountManager.showAlert("You did not edit where nikke_launcher is located!", "fail");
+      if (selectedIndex === "") {
+        await Neutralino.os.showNotification(
+          ">:(",
+          "Please select an account!",
+          "ERROR",
+        );
+        accountManager.showAlert("Please select an account!", "fail");
         return;
       }
 
-      console.log(`Opening NIKKE Launcher... (${launcherPath})`);
-      await Neutralino.os.execCommand(`powershell -ExecutionPolicy Bypass -Command "Start-Process '${launcherPath}' -Verb RunAs"`);
-      await new Promise(resolve => setTimeout(resolve, 3000));
-      // console.log(`Executing: [${emailFixed}] & [${passwordFixed}]`);
-      await Neutralino.os.execCommand(`powershell -ExecutionPolicy Bypass -Command "Add-Type -AssemblyName System.Windows.Forms; Start-Sleep -Seconds 5; [System.Windows.Forms.SendKeys]::SendWait('{TAB}${emailFixed}{TAB}${passwordFixed}{ENTER}')"`);  
-      console.log("✅ Login complete!");
-      await Neutralino.os.showNotification(`${account.nickname} `, "Successfully logged in!");
-      accountManager.showAlert(`Logged in as ${account.nickname}!`, "success");
+      try {
+        const data = await Neutralino.storage.getData("accounts");
+        if (!data) {
+          accountManager.showAlert(
+            "No accounts found! Register first.",
+            "fail",
+          );
+          return;
+        }
 
-      accountManager.updateDiscordRPC(`Playing NIKKE ${currentArray} / ${accounts.length} accounts`, `Logged in as ${account.nickname}`);
-    } catch (error) {
-      console.error("Execution failed:", error);
-    }
-  });
+        const accounts = JSON.parse(data);
+        const account = accounts[selectedIndex];
+
+        const emailFixed = accountManager.escapeSendKeys(account.email);
+        const passwordFixed = accountManager.escapeSendKeys(account.password);
+
+        if (!launcherPath) {
+          accountManager.showAlert(
+            "You did not edit where nikke_launcher is located!",
+            "fail",
+          );
+          return;
+        }
+
+        console.log(`Opening NIKKE Launcher... (${launcherPath})`);
+        await Neutralino.os.execCommand(
+          `powershell -ExecutionPolicy Bypass -Command "Start-Process '${launcherPath}' -Verb RunAs"`,
+        );
+        await new Promise((resolve) => setTimeout(resolve, Number(getDelay)));
+        await Neutralino.os.execCommand(
+          `powershell -ExecutionPolicy Bypass -Command "Add-Type -AssemblyName System.Windows.Forms; Start-Sleep -Seconds 5; [System.Windows.Forms.SendKeys]::SendWait('{TAB}${emailFixed}{TAB}${passwordFixed}{ENTER}')"`,
+        );
+
+        if (await isLauncherRunning()) {
+          await Neutralino.os.showNotification(
+            `${account.nickname} `,
+            "Successfully logged in!",
+          );
+          accountManager.showAlert(
+            `Logged in as ${account.nickname}!`,
+            "success",
+          );
+          accountManager.updateDiscordRPC(
+            `Playing NIKKE ${currentArray} / ${accounts.length} accounts`,
+            `Logged in as ${account.nickname}`,
+            ActivityAssets.Maintaining,
+            ActivityStates.Maintaining,
+          );
+          console.log(`✅ Logged in as ${account.nickname}!`);
+          await accountManager.createLog(
+            account.nickname,
+            "Account Login",
+            "True",
+            Date.now(),
+          );
+        } else {
+          await Neutralino.os.showNotification(
+            "Oops :/",
+            "ERROR: Window focus is not nikke_launcher.exe",
+            "ERROR",
+          );
+          accountManager.showAlert(
+            "ERROR: Window focus is not nikke_launcher.exe",
+            "fail",
+          );
+          await accountManager.createLog(
+            account.nickname,
+            "Account Login",
+            "False",
+            Date.now(),
+          );
+        }
+
+        console.log("Login flow was completed.");
+      } catch (error) {
+        console.error("Execution failed:", error);
+      }
+    },
+  );
 
   /**
    * Handles the "Remove" button click event to delete a selected account.
-   * 
+   *
    * - Retrieves the selected account email from the dropdown.
    * - If no account is selected, displays an alert.
    * - Loads stored accounts from Neutralino storage.
@@ -349,37 +723,153 @@ Neutralino.events.on("ready", async () => {
    * - Updates the storage with the new account list.
    * - Displays an alert confirming the removal.
    * - Refreshes the account list in the UI.
-   * 
+   *
    * @returns {Promise<void>} Resolves when the account is successfully removed.
    * @throws {Error} If there is an issue retrieving or updating the account list.
    */
-  (document.getElementById("removeBtn") as HTMLButtonElement).addEventListener("click", async () => {
-    const selectedEmail = (document.getElementById("accountSelect") as HTMLSelectElement).value;
-    if (!selectedEmail) {
-      accountManager.showAlert("Please select an account!", "fail");
+  (document.getElementById("removeBtn") as HTMLButtonElement).addEventListener(
+    "click",
+    async () => {
+      const selectedEmail = (
+        document.getElementById("accountSelect") as HTMLSelectElement
+      ).value;
+      if (!selectedEmail) {
+        accountManager.showAlert("Please select an account!", "fail");
+        return;
+      }
 
-      return;
-    }
-  
-    const storedData = await Neutralino.storage.getData("accounts").catch(() => "[]");
-    const accounts: Account[] = JSON.parse(storedData);
-    const updatedAccounts = accounts.filter((acc: Account) => acc.email !== selectedEmail);
-  
-    await Neutralino.storage.setData("accounts", JSON.stringify(updatedAccounts));
-    accountManager.showAlert(`Account ${selectedEmail} removed!`, "success");
-    await accountManager.loadAccounts();
-  });  
+      const storedData = await Neutralino.storage
+        .getData("accounts")
+        .catch(() => "[]");
+      const accounts: Account[] = JSON.parse(storedData);
+      const updatedAccounts = accounts.filter(
+        (acc: Account) => acc.email !== selectedEmail,
+      );
+
+      await Neutralino.storage.setData(
+        "accounts",
+        JSON.stringify(updatedAccounts),
+      );
+      accountManager.showAlert(`Account ${selectedEmail} removed!`, "success");
+      await accountManager.loadAccounts();
+    },
+  );
 });
 
-// events: windowClose
+// Browser.events: DOMContentLoaded
+document.addEventListener("DOMContentLoaded", async () => {
+  // Handling account selection
+  const accountSelect = document.getElementById("accountSelect");
+  if (accountSelect) {
+    accountSelect.addEventListener("mousedown", closeNikkeLauncher);
+  }
+
+  // Handling exit onlick closeAppButton
+  document.body.addEventListener("click", ({ target }) => {
+    if ((target as HTMLElement).id === "closeAppButton") Neutralino.app.exit();
+  });
+
+  // Modal-related elements
+  const modal = document.getElementById("myModal") as HTMLElement | null;
+  const btn = document.getElementById("myBtn") as HTMLButtonElement | null;
+  const span = document.querySelector(".close") as HTMLElement | null;
+  const tbody = document.querySelector(
+    "table tbody",
+  ) as HTMLTableSectionElement | null;
+
+  if (!modal || !btn || !span || !tbody) {
+    console.error("❌ Modal elements not found.");
+    return;
+  }
+
+  // Show modal and populate table
+  btn.addEventListener("click", async () => {
+    modal.style.display = "flex";
+    await accountManager.populateTable();
+  });
+
+  // Close modal when clicking the close button
+  span.addEventListener("click", () => {
+    modal.style.display = "none";
+  });
+
+  // Close modal when clicking outside the modal
+  window.addEventListener("click", (event) => {
+    if (event.target === modal) {
+      modal.style.display = "none";
+    }
+  });
+
+  // Handling delay input field
+  const delayInput = document.getElementById("delayBtn") as HTMLInputElement;
+  if (!delayInput) {
+    console.error("❌ Delay input field not found.");
+    return;
+  }
+
+  try {
+    let storedDelay: string | null = null;
+
+    try {
+      storedDelay = await Neutralino.storage.getData("delay_as_second");
+    } catch (error) {
+      if ((error as { code: string }).code === "NE_ST_NOSTKEX") {
+        console.warn("⚠️ No existing delay found, setting default (3).");
+      } else {
+        throw error; // Re-throw other errors
+      }
+    }
+
+    let delayValue = storedDelay ? Number(storedDelay) : 3;
+    if (isNaN(delayValue) || delayValue < 1 || delayValue > 5) {
+      delayValue = 3;
+      await Neutralino.storage.setData("delay_as_second", String(delayValue));
+    }
+
+    delayInput.value = String(delayValue);
+    console.log(`🕒 Current delay loaded: ${delayValue}`);
+  } catch (error) {
+    console.error("❌ Failed to retrieve delay:", error);
+  }
+
+  // Listen for changes and save new value to storage
+  delayInput.addEventListener("input", async () => {
+    const newDelay = Number(delayInput.value);
+
+    if (!isNaN(newDelay) && newDelay >= 1 && newDelay <= 5) {
+      await Neutralino.storage.setData("delay_as_second", String(newDelay));
+      console.log(`✅ New delay saved: ${newDelay}`);
+      accountManager.showAlert(`Delay set to ${newDelay} seconds.`, "success");
+      await accountManager.createLog(
+        `Delay: ${newDelay}`,
+        "Adjusting Delay",
+        "True",
+        Date.now(),
+      );
+    } else {
+      console.warn("⚠️ Delay value out of range (1-5).");
+      accountManager.showAlert(
+        "Delay value out of range: Expected (1-5).",
+        "fail",
+      );
+    }
+  });
+});
+
+// Neutralino.events: windowClose
 Neutralino.events.on("windowClose", async () => {
-  const button = await Neutralino.os.showMessageBox("Confirm", "Are you sure you want to quit?", "YES_NO", "QUESTION");
+  const button = await Neutralino.os.showMessageBox(
+    "Confirm",
+    "Are you sure you want to quit?",
+    "YES_NO",
+    "QUESTION",
+  );
   if (button == "YES") {
     Neutralino.app.exit();
   }
 });
 
-// events: serverOffline
+// Neutralino.events: serverOffline
 Neutralino.events.on("serverOffline", () => {
   location.reload();
   console.warn("WebSocket was disconnected. Refreshing..");
