@@ -8,7 +8,7 @@
 </p>
 
 NIKKEPwned is a Password Manager for NIKKE, it uses localStorage and simulating nikke_launcher  
-The motivation of this project is automated log-in, allowing users interacts each accounts **quickly and effortlessly**.
+The motivation of this project is simplified login process, allowing users interacts each accounts **quickly and effortlessly**.
 
 <a href="#installation">Installation</a> •
 <a href="https://github.com/ScathachGrip/nikkePwned/blob/master/CONTRIBUTING.md">Contributing</a> •
@@ -39,7 +39,7 @@ The motivation of this project is automated log-in, allowing users interacts eac
 Managing multiple accounts can be frustrating and inefficient, especially when you need to **log in manually one by one**. For users who frequently switch between multiple accounts, constantly entering login information can be a repetitive and tiresome task.  
 
 # The Solution  
-This tool was designed to **automate the login process**, allowing users to log in to their accounts **quickly and effortlessly**. Instead copying pasting or manually typing credentials every time, this tool handles the process for you, **saving time and reducing errors**. By streamlining account management, this tool makes switching between accounts **seamless and efficient**, eliminating the hassle of repetitive logins. Whether you're managing a handful of accounts or dozens, this tool ensures a smoother, faster, and more convenient login experience. 
+This extension was designed to simplified login process, **automate the login process**, allowing users to log in to their accounts **quickly and effortlessly**. Instead copying pasting or manually typing credentials every time, this tool handles the process for you, **saving time and reducing errors**. By streamlining account management, this tool makes switching between accounts **seamless and efficient**, eliminating the hassle of repetitive logins. Whether you're managing a handful of accounts or dozens, this tool ensures a smoother, faster, and more convenient login experience. 
 
 
 ## Prerequisites
@@ -53,7 +53,7 @@ This tool was designed to **automate the login process**, allowing users to log 
 - Get the latest build version from the [release page You only need nikkepwned-release.zip.](https://github.com/ScathachGrip/nikkePwned/releases) 
 - Unzip it, or extract it "as folder" somewhere in your computer
 - Open `nikkepwned-win_x64.exe` with **Run as Administrator**
-  - WHY, Read more: [this tool flagged as potential malware](./LIMITATIONS.md#this-tool-flagged-as-potential-malware) for explanation.  
+  - Read more: [LIMITATIONS.md](./LIMITATIONS.md#this-tool-flagged-as-potential-malware) for explanation.  
 
 # How to interacts
 >  1. Edit launcher location where `nikke_launcher.exe` located, then select.
@@ -146,7 +146,7 @@ This tool must be `run as Administrator` to function correctly because:
 All code is transparently written and documented in this GitHub repository, with all binary bundles generated through GitHub CI (Continuous Integration). There are no hidden scripts or encrypted stuff. There would be no reason for me to do otherwise.
 
 ## Pronunciation
-[`en_US`](https://www.localeplanet.com/java/en-US/index.html) • NYIKKE "powned" **/poʊnd/** */ or "pawned" (/pɔːnd/) — I have no idea why i use this
+[`en_US`](https://www.localeplanet.com/java/en-US/index.html) • NYIKKE "powned" **/poʊnd/** */ or "pawned" (/pɔːnd/) — Both mean getting wrecked; "powned" rules gaming slang, while "pawned" sneaks in as an alt take.
 
 ## Legal
 This tool can be freely copied, modified, altered, distributed without any attribution whatsoever. However, if you feel

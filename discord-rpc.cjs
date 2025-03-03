@@ -1,5 +1,6 @@
 const RPC = require("discord-rpc");
 const WebSocket = require("ws");
+const { version } = require("./package.json");
 
 const CLIENT_ID = "632699411448725564";
 const rpc = new RPC.Client({ transport: "ipc" });
@@ -12,10 +13,11 @@ let activity = {
   details: "Idle",
   state: "Password Manager for NIKKE",
   startTimestamp: Date.now(),
-  largeImageKey: "logo",
-  largeImageText: "NIKKEPwned",
+  largeImageKey: "https://i.imgur.com/LIzkC9I.png",
+  largeImageText: `v${version}`,
+  smallImageKey: "https://i.imgur.com/7484syW.png",
+  smallImageText: "Idling",
   instance: false,
-  type: 0, // 0 = Playing
   buttons: [
     { label: "Learn More", url: "https://github.com/ScathachGrip/nikkePwned" },
   ]
@@ -38,8 +40,6 @@ wss.on("connection", (ws) => {
     try {
       const data = JSON.parse(message);
       console.log("🔄 Updating RPC:", data);
-
-      // Update only changed fields
       activity = { ...activity, ...data };
       setActivity();
     } catch (error) {

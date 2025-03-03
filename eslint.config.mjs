@@ -19,6 +19,7 @@ export default tseslint.config(
       "no-empty": "error",
       "no-func-assign": "error",
       "no-unreachable": "error",
+      "template-curly-spacing": ["error", "never"]
     }
   }
 );
