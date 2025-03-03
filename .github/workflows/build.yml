@@ -33,3 +33,6 @@ jobs:
 
       - name: 🔧 Compile TypeScript
         run: npm run build
+
+      - name: ✨ Release Build
+        run: npm run release
