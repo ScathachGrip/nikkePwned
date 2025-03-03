@@ -1,7 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/neutralinojs/neutralinojs/main/schemas/neutralino.config.schema.json",
   "applicationId": "neu.js.nikkepwned",
-  "version": "0.1.4-alpha",
+  "version": "0.1.5-alpha",
   "applicationName": "NIKKEPwned",
   "author": "ScathachGrip",
   "description": "NIKKEPwned",
@@ -42,10 +42,10 @@
         "./discord-rpc.exe"
       ],
       "title": "NIKKEPwned",
-      "width": 900,
-      "height": 600,
-      "minWidth": 400,
-      "minHeight": 200,
+      "width": 950,
+      "height": 650,
+      "minWidth": 450,
+      "minHeight": 250,
       "center": true,
       "fullScreen": false,
       "alwaysOnTop": false,
@@ -72,8 +72,8 @@
       ]
     },
     "chrome": {
-      "width": 900,
-      "height": 600,
+      "width": 930,
+      "height": 630,
       "args": "--user-agent=\"Neutralinojs chrome mode\"",
       "nativeBlockList": [
         "filesystem.*",
