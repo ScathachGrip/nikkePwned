@@ -3,11 +3,29 @@
     "target": "ES6",
     "module": "ESNext",
     "strict": true,
+    "inlineSourceMap": true,
+    "downlevelIteration": true,
+    "newLine": "lf",
+    "strictBindCallApply": true,
+    "strictPropertyInitialization": false,
+    "declaration": true,
+    "allowSyntheticDefaultImports": true,
     "outDir": "./resources/js",
     "rootDir": "./src",
-    "types": ["neutralinojs-types"],
+    "types": [
+      "neutralinojs-types"
+    ],
     "esModuleInterop": true
   },
-  "include": ["src"],
-  "exclude": ["node_modules", "dist", "resource/js", "tmp", "logs", "test"]
+  "include": [
+    "src"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "resource/js",
+    "tmp",
+    "logs",
+    "test"
+  ]
 }
