@@ -237,7 +237,6 @@ class PwnedManager {
 
     history.push(logEntry);
     await Neutralino.storage.setData("history", JSON.stringify(history));
-    // console.log("CHECK ISI", await Neutralino.storage.getData("history"));
   }
 
   /**
@@ -373,7 +372,6 @@ class PwnedManager {
     const now = Date.now();
     const diffInSeconds = Math.floor((now - timestamp) / 1000);
 
-    // Formatting the date (DD Mon YYYY, HH:mm)
     const formattedDate = date
       .toLocaleString("en-GB", {
         day: "2-digit",
@@ -385,7 +383,6 @@ class PwnedManager {
       })
       .replace(",", "");
 
-    // Calculating "time ago"
     let timeAgo;
     if (diffInSeconds < 60) {
       timeAgo = `${diffInSeconds} seconds ago`;
@@ -753,7 +750,6 @@ Neutralino.events.on("ready", async () => {
         return;
       }
 
-      // Load stored accounts
       const storedData = await Neutralino.storage
         .getData("accounts")
         .catch(() => "[]");
@@ -768,27 +764,20 @@ Neutralino.events.on("ready", async () => {
         return;
       }
 
-      // Get nickname before deletion
       const deletedNickname = accounts[selectedIndex].nickname;
 
-      // Remove the selected index
       accounts.splice(selectedIndex, 1);
       console.log("After deletion:", accounts);
-
-      // Save updated accounts
       await Neutralino.storage.setData("accounts", JSON.stringify(accounts));
 
-      // Show the updated alert with the nickname
       accountManager.showAlert(
         `${deletedNickname} deleted successfully!`,
         "success",
       );
-
-      // Refresh the dropdown
       accountSelect.innerHTML = "<option value=''>Select account</option>";
       accounts.forEach((acc, index) => {
         const option = document.createElement("option");
-        option.value = index.toString(); // Store index as value
+        option.value = index.toString(); 
         option.textContent = acc.email;
         accountSelect.appendChild(option);
       });
@@ -917,6 +906,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       storedDelay = await Neutralino.storage.getData("delay_switch");
     } catch (error) {
       if ((error as { code: string }).code === "NE_ST_NOSTKEX") {
+        await Neutralino.storage.setData("delay_switch", "3");
         console.warn("⚠️ No existing delay switch found, setting default (3).");
       } else {
         throw error;
@@ -977,6 +967,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       storedDelay = await Neutralino.storage.getData("delay_login");
     } catch (error) {
       if ((error as { code: string }).code === "NE_ST_NOSTKEX") {
+        await Neutralino.storage.setData("delay_login", "3");
         console.warn("⚠️ No existing delay login found, setting default (3).");
       } else {
         throw error;
