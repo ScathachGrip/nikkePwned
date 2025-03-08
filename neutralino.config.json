@@ -1,7 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/neutralinojs/neutralinojs/main/schemas/neutralino.config.schema.json",
   "applicationId": "neu.js.nikkepwned",
-  "version": "0.1.5-alpha",
+  "version": "1.1.0",
   "applicationName": "NIKKEPwned",
   "author": "ScathachGrip",
   "description": "NIKKEPwned",
