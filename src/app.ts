@@ -251,31 +251,41 @@ class PwnedManager {
   }
 
   /**
-   * Regex to escape special characters in SendKeys.
+   * Escapes special characters for use in SendKeys.
    *
-   * Some characters have special meanings in SendKeys and must be escaped using `{}` notation.
-   * This function replaces those characters with their escaped versions.
+   * Certain characters in SendKeys have special meanings and need to be enclosed
+   * in `{}` to be interpreted correctly. This function ensures that those characters
+   * are properly escaped to prevent unintended behavior.
+   *
+   * Special characters escaped:
+   * `{`, `}`, `+`, `~`, `^`, `%`, `&`, `(`, `)`, `[`, `]`, `\`, `/`, `"`, `'`
    *
    * @param {string} input - The string to escape.
    * @returns {string} The escaped string, safe for SendKeys.
    */
   public escapeSendKeys(input: string): string {
-    return input
-      .replace(/\+/g, "{+}")
-      .replace(/~/g, "{~}")
-      .replace(/\^/g, "{^}")
-      .replace(/%/g, "{%}")
-      .replace(/&/g, "{&}")
-      .replace(/\(/g, "{(}")
-      .replace(/\)/g, "{)}")
-      .replace(/\{/g, "{{}")
-      .replace(/\}/g, "{}}")
-      .replace(/\[/g, "{[}")
-      .replace(/\]/g, "{]}")
-      .replace(/\\/g, "{\\}")
-      .replace(/\//g, "{/}")
-      .replace(/"/g, "{\"}")
-      .replace(/'/g, "{'}");
+    const specialChars: Record<string, string> = {
+      "{": "{{}",
+      "}": "{}}",
+      "+": "{+}",
+      "~": "{~}",
+      "^": "{^}",
+      "%": "{%}",
+      "&": "{&}",
+      "(": "{(}",
+      ")": "{)}",
+      "[": "{[}",
+      "]": "{]}",
+      "\\": "{\\}",
+      "/": "{/}",
+      "\"": "{'}",
+      "'": "{'}",
+    };
+
+    return input.replace(
+      /[{+~^%&()[\]\\/"'}]/g,
+      (match) => specialChars[match],
+    );
   }
 
   /**
@@ -513,7 +523,7 @@ Neutralino.events.on("ready", async () => {
         runBtn.disabled = false;
         accountManager.showAlert("Path selected!", "success");
         await accountManager.createLog(
-          "nikke_launcher.exe",
+          "nikke_launcher",
           "Adjusting Path",
           "True",
           Date.now(),
@@ -616,7 +626,10 @@ Neutralino.events.on("ready", async () => {
     "click",
     async () => {
       const getDelay =
-        (await Neutralino.storage.getData("delay_as_second")) || "3";
+        (await Neutralino.storage.getData("delay_switch")) || "3";
+      const getDelayLogin =
+        (await Neutralino.storage.getData("delay_login")) || "3";
+
       const select = document.getElementById(
         "accountSelect",
       ) as HTMLSelectElement;
@@ -663,7 +676,7 @@ Neutralino.events.on("ready", async () => {
         );
         await new Promise((resolve) => setTimeout(resolve, Number(getDelay)));
         await Neutralino.os.execCommand(
-          `powershell -ExecutionPolicy Bypass -Command "Add-Type -AssemblyName System.Windows.Forms; Start-Sleep -Seconds 5; [System.Windows.Forms.SendKeys]::SendWait('{TAB}${emailFixed}{TAB}${passwordFixed}{ENTER}')"`,
+          `powershell -ExecutionPolicy Bypass -Command "Add-Type -AssemblyName System.Windows.Forms; Start-Sleep -Seconds ${Number(getDelayLogin)}; [System.Windows.Forms.SendKeys]::SendWait(\\"{TAB}${emailFixed}{TAB}${passwordFixed}{ENTER}\\")"`,
         );
 
         if (await isLauncherRunning()) {
@@ -730,28 +743,118 @@ Neutralino.events.on("ready", async () => {
   (document.getElementById("removeBtn") as HTMLButtonElement).addEventListener(
     "click",
     async () => {
-      const selectedEmail = (
-        document.getElementById("accountSelect") as HTMLSelectElement
-      ).value;
-      if (!selectedEmail) {
-        accountManager.showAlert("Please select an account!", "fail");
+      const accountSelect = document.getElementById(
+        "accountSelect",
+      ) as HTMLSelectElement;
+      const selectedIndex = parseInt(accountSelect.value, 10); // Convert to number
+
+      if (isNaN(selectedIndex)) {
+        accountManager.showAlert("Please select a valid account!", "fail");
         return;
       }
 
+      // Load stored accounts
       const storedData = await Neutralino.storage
         .getData("accounts")
         .catch(() => "[]");
       const accounts: Account[] = JSON.parse(storedData);
-      const updatedAccounts = accounts.filter(
-        (acc: Account) => acc.email !== selectedEmail,
+
+      console.log("Before deletion:", accounts);
+      console.log("Selected index:", selectedIndex);
+
+      if (selectedIndex < 0 || selectedIndex >= accounts.length) {
+        console.error("Index out of range!");
+        accountManager.showAlert("Invalid account index!", "fail");
+        return;
+      }
+
+      // Get nickname before deletion
+      const deletedNickname = accounts[selectedIndex].nickname;
+
+      // Remove the selected index
+      accounts.splice(selectedIndex, 1);
+      console.log("After deletion:", accounts);
+
+      // Save updated accounts
+      await Neutralino.storage.setData("accounts", JSON.stringify(accounts));
+
+      // Show the updated alert with the nickname
+      accountManager.showAlert(
+        `${deletedNickname} deleted successfully!`,
+        "success",
       );
 
-      await Neutralino.storage.setData(
-        "accounts",
-        JSON.stringify(updatedAccounts),
-      );
-      accountManager.showAlert(`Account ${selectedEmail} removed!`, "success");
+      // Refresh the dropdown
+      accountSelect.innerHTML = "<option value=''>Select account</option>";
+      accounts.forEach((acc, index) => {
+        const option = document.createElement("option");
+        option.value = index.toString(); // Store index as value
+        option.textContent = acc.email;
+        accountSelect.appendChild(option);
+      });
+
       await accountManager.loadAccounts();
+      await accountManager.createLog(
+        deletedNickname,
+        "Account Removed",
+        "True",
+        Date.now(),
+      );
+    },
+  );
+
+  /**
+   * Handles the "Purge Data" button click event to permanently delete all stored data.
+   *
+   * - Displays a confirmation dialog warning the user about data removal.
+   * - If the user confirms, proceeds with the deletion.
+   * - Clears stored data for:
+   *   - STORED_ACCOUNTS (Saved user accounts)
+   *   - STORED_HISTORY (Login history)
+   *   - STORED_nikkeLauncherPath (Path to NIKKE Launcher)
+   *   - STORED_DELAYS_SWITCH (Delay settings for switch)
+   *   - STORED_DELAYS_LOGIN (Delay settings for login)
+   * - Logs the action to the console for debugging.
+   * - If any storage operation fails, the error is logged but does not interrupt the process.
+   * - Displays a success message upon completion.
+   *
+   * @returns {Promise<void>} Resolves when data is successfully purged.
+   * @throws {Error} If an issue occurs while deleting stored data.
+   */
+  (document.getElementById("purgeBtn") as HTMLButtonElement).addEventListener(
+    "click",
+    async () => {
+      const button = await Neutralino.os.showMessageBox(
+        "Purge Data",
+        "This action will permanently remove the following stored data:\n\n" +
+          "- STORED_ACCOUNTS\n" +
+          "- STORED_HISTORY\n" +
+          "- STORED_nikkeLauncherPath\n" +
+          "- STORED_DELAYS_SWITCH\n" +
+          "- STORED_DELAYS_LOGIN\n\n" +
+          "This action cannot be undone. Do you want to continue?",
+        "YES_NO",
+        "QUESTION",
+      );
+
+      if (button === "YES") {
+        console.log("Purging data...");
+        await Promise.all([
+          Neutralino.storage.setData("accounts", "").catch(console.error),
+          Neutralino.storage.setData("history", "").catch(console.error),
+          Neutralino.storage
+            .setData("nikkeLauncherPath", "")
+            .catch(console.error),
+          Neutralino.storage.setData("delay_switch", "").catch(console.error),
+          Neutralino.storage.setData("delay_login", "").catch(console.error),
+        ]).then(() => console.log("Data purged successfully."));
+        await Neutralino.os.showMessageBox(
+          "Deleted",
+          "Data has been purged successfully.",
+          "OK",
+          "INFO",
+        );
+      }
     },
   );
 });
@@ -800,10 +903,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   });
 
-  // Handling delay input field
+  // Handling delay SWITCH input field
   const delayInput = document.getElementById("delayBtn") as HTMLInputElement;
   if (!delayInput) {
-    console.error("❌ Delay input field not found.");
+    console.error("❌ Delay switch input field not found.");
     return;
   }
 
@@ -811,45 +914,108 @@ document.addEventListener("DOMContentLoaded", async () => {
     let storedDelay: string | null = null;
 
     try {
-      storedDelay = await Neutralino.storage.getData("delay_as_second");
+      storedDelay = await Neutralino.storage.getData("delay_switch");
     } catch (error) {
       if ((error as { code: string }).code === "NE_ST_NOSTKEX") {
-        console.warn("⚠️ No existing delay found, setting default (3).");
+        console.warn("⚠️ No existing delay switch found, setting default (3).");
       } else {
-        throw error; // Re-throw other errors
+        throw error;
       }
     }
 
     let delayValue = storedDelay ? Number(storedDelay) : 3;
     if (isNaN(delayValue) || delayValue < 1 || delayValue > 5) {
       delayValue = 3;
-      await Neutralino.storage.setData("delay_as_second", String(delayValue));
+      await Neutralino.storage.setData("delay_switch", String(delayValue));
     }
-
     delayInput.value = String(delayValue);
-    console.log(`🕒 Current delay loaded: ${delayValue}`);
+    console.log(`🕒 Current delay switch loaded: ${delayValue}`);
   } catch (error) {
-    console.error("❌ Failed to retrieve delay:", error);
+    console.error("❌ Failed to retrieve delay switch:", error);
   }
 
-  // Listen for changes and save new value to storage
+  // Listen for value changes
   delayInput.addEventListener("input", async () => {
     const newDelay = Number(delayInput.value);
 
     if (!isNaN(newDelay) && newDelay >= 1 && newDelay <= 5) {
-      await Neutralino.storage.setData("delay_as_second", String(newDelay));
-      console.log(`✅ New delay saved: ${newDelay}`);
-      accountManager.showAlert(`Delay set to ${newDelay} seconds.`, "success");
+      await Neutralino.storage.setData("delay_switch", String(newDelay));
+      console.log(`✅ New delay switch saved: ${newDelay}`);
+      accountManager.showAlert(
+        `Delay switch set to ${newDelay} seconds.`,
+        "success",
+      );
       await accountManager.createLog(
-        `Delay: ${newDelay}`,
+        `Delay (switch): ${newDelay}`,
         "Adjusting Delay",
         "True",
         Date.now(),
       );
     } else {
-      console.warn("⚠️ Delay value out of range (1-5).");
+      await Neutralino.storage.setData("delay_switch", "3");
+      console.warn("⚠️ Delay value switch out of range (1-5).");
       accountManager.showAlert(
-        "Delay value out of range: Expected (1-5).",
+        "Delay value switch out of range: Expected (1-5) seconds.",
+        "fail",
+      );
+    }
+  });
+
+  // Handling delay LOGIN input field
+  const delayInputLogin = document.getElementById(
+    "delayBtnLogin",
+  ) as HTMLInputElement;
+  if (!delayInputLogin) {
+    console.error("❌ Delay input login field not found.");
+    return;
+  }
+
+  try {
+    let storedDelay: string | null = null;
+
+    try {
+      storedDelay = await Neutralino.storage.getData("delay_login");
+    } catch (error) {
+      if ((error as { code: string }).code === "NE_ST_NOSTKEX") {
+        console.warn("⚠️ No existing delay login found, setting default (3).");
+      } else {
+        throw error;
+      }
+    }
+
+    let delayValue = storedDelay ? Number(storedDelay) : 3;
+    if (isNaN(delayValue) || delayValue < 1 || delayValue > 5) {
+      delayValue = 3;
+      await Neutralino.storage.setData("delay_login", String(delayValue));
+    }
+    delayInputLogin.value = String(delayValue);
+    console.log(`🕒 Current delay login loaded: ${delayValue}`);
+  } catch (error) {
+    console.error("❌ Failed to retrieve delay login:", error);
+  }
+
+  // Listen for value changes
+  delayInputLogin.addEventListener("input", async () => {
+    const newDelay = Number(delayInputLogin.value);
+
+    if (!isNaN(newDelay) && newDelay >= 1 && newDelay <= 5) {
+      await Neutralino.storage.setData("delay_login", String(newDelay));
+      console.log(`✅ New delay login saved: ${newDelay}`);
+      accountManager.showAlert(
+        `Delay login set to ${newDelay} seconds.`,
+        "success",
+      );
+      await accountManager.createLog(
+        `Delay (login): ${newDelay}`,
+        "Adjusting Delay",
+        "True",
+        Date.now(),
+      );
+    } else {
+      await Neutralino.storage.setData("delay_login", "3");
+      console.warn("⚠️ Delay value login out of range (1-5).");
+      accountManager.showAlert(
+        "Delay value login out of range: Expected (1-5) seconds.",
         "fail",
       );
     }

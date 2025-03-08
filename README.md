@@ -23,11 +23,11 @@ The motivation of this project is simplified login process, allowing users inter
   - [Prerequisites](#prerequisites)
     - [Installation](#installation)
       - [How to interacts](#how-to-interacts)
-      - [Inputing data](#inputing-data)
+      - [Inputing data](#inputting-data)
       - [Discord RPC support](#discord-rpc-supports)
     - [Manual build](#manual-build)
     - [Running tests](#running-tests)
-  - [Limitations](./LIMITATIONS.md)
+  - [Limitations](#Limitations)
     - [Prevent antivirus things](./LIMITATIONS.md#prevent-windows-defender-from-flagging-the-tool)
     - [Tool flagged as potential malware](./LIMITATIONS.md#this-tool-flagged-as-potential-malware)
   - [Frequently asked questions ](#frequently-asked-questions)
@@ -53,7 +53,7 @@ This extension was designed to simplified login process, **automate the login pr
 - Get the latest build version from the [release page You only need nikkepwned-release.zip.](https://github.com/ScathachGrip/nikkePwned/releases) 
 - Unzip it, or extract it "as folder" somewhere in your computer
 - Open `nikkepwned-win_x64.exe` with **Run as Administrator**
-  - Read more: [LIMITATIONS.md](./LIMITATIONS.md#this-tool-flagged-as-potential-malware) for explanation.  
+  - Read more: [Limitations](#Limitations) for clearly explanation.  
 
 # How to interacts
 >  1. Edit launcher location where `nikke_launcher.exe` located, then select.
@@ -70,9 +70,43 @@ This extension was designed to simplified login process, **automate the login pr
 **OPTIONAL**: this tools has DISCORD rich presence support if you like to..  
 Just open `discord-rpc.exe` BEFORE `nikkepwned-win_x64.exe` for realtime state checks.  
 
-<img width="750" src="resources/icons/rpc.png" alt="nikkepwned"></a>
+<img width="950" src="resources/icons/rpc.png" alt="nikkepwned"></a>
 
-## Inputing data
+## Essential Features
+
+- **Edit PATH**: 
+   - This tells the tool where your `nikke_launcher.exe` is located.
+
+- **Input as JSON**: 
+   - Enter your account details. See [#Inputting data](#Inputting-data).
+
+- **Select an Account**:  
+   - A dropdown list of registered accounts to choose from.
+
+- **Proceed login**:  
+   - This tool will starting to simulate `nikke_launcher`, you need no actions.
+
+## Utility Features
+
+- **Remove Account**:
+  - Deletes corresponding account from this tool.
+
+- **Delay (Switch)**:
+  - Time delay between account switches.  
+  - Default: `3` (Range: `1-5` seconds).
+
+- **Delay (Login)**:
+  - Time delay before login to prevent abuse.  
+  - Default: `3` (Range: `1-5` seconds).
+
+- **Logs**:
+  - Displays activity logs, including login attempts, path adjustments, and delay settings.
+
+- **Purge Data**:
+  - Erases all stored data from this tool.
+
+
+## Inputting data
 This tool uses JSON and supports **two types of input** here's the example:
 
 🟢 Single Input (Object Format)  
@@ -107,9 +141,8 @@ Use this format when inputting multiple accounts at once:
 ]
 ```
 If there's an errors watch your step again then..  
-You should not change or rename the PROPERTY `nickname`, `email`, and `password`  
-You only supposed to change its VALUE
-> All good, then you can click "Register Accounts"
+- You should not change or rename the PROPERTY `nickname`, `email`, and `password`  
+- You only supposed to change its VALUE
 
 ## Manual build
 <table>
@@ -129,8 +162,9 @@ You can check build script on `package.json` for the step by step.
 
 ## Limitations
 This tool must be `run as Administrator` to function correctly because:
+- Simple, I just want to be automated.
 - It **simulates keystrokes**, which requires elevated permissions.
-- Opening NIKKE launcher triggers **User Account Control (UAC) prompt** otherwise the automation will broke
+- Opening NIKKE launcher triggers **User Account Control (UAC) prompt** otherwise the flow will broke
 
 > Read more: [LIMITATIONS.md for clearly explanation.](./LIMITATIONS.md)
 
