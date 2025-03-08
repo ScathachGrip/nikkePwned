@@ -31,10 +31,11 @@ const htmlContent = `
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Account Index</title>
+    <link rel="stylesheet" href="https://fonts.bunny.net/css?family=manrope:300,400,500,600,700,800&display=swap">
     <link rel="icon" type="image/x-icon" href="/icons/favicon.ico" />
     <style>
       body {
-          font-family: Arial, sans-serif;
+          font-family: 'Manrope', sans-serif;
           background-color: #1e1e2e;
           color: #ffffff;
           display: flex;
@@ -46,7 +47,7 @@ const htmlContent = `
       }
       .container {
           width: 90%;
-          max-width: 400px;
+          max-width: 450px;
           background: #2a2a3b;
           padding: 20px;
           border-radius: 10px;
@@ -238,6 +239,7 @@ const htmlContent = `
 
       /* The Modal (background) */
       .modal {
+        border: none !important;
         display: none; /* Hidden by default */
         position: fixed;
         z-index: 1000; /* High z-index */
@@ -258,9 +260,10 @@ const htmlContent = `
 
       /* Modal Content */
       .modal-content {
+        border: none !important;
         background-color: rgb(23, 22, 22);
         padding: 20px;
-        border-radius: 5px;
+        border-radius: 10px;
         border: 1px solid #888;
         width: 80%;
         max-width: 700px; /* Limit modal width */
@@ -272,6 +275,29 @@ const htmlContent = `
         -webkit-animation-duration: 0.4s;
         animation-name: animatebottom;
         animation-duration: 0.4s
+      }
+
+      .modal-content {
+          scrollbar-color: #555 #222; /* thumb color, track color */
+          scrollbar-width: thin;
+      }
+
+      .modal-content::-webkit-scrollbar {
+          width: 8px; /* Adjust width */
+      }
+
+      .modal-content::-webkit-scrollbar-track {
+          background: #222; /* Dark background */
+          border-radius: 10px;
+      }
+
+      .modal-content::-webkit-scrollbar-thumb {
+          background: #555; /* Dark gray scrollbar */
+          border-radius: 10px;
+      }
+
+      .modal-content::-webkit-scrollbar-thumb:hover {
+          background: #777; /* Lighter gray on hover */
       }
 
       /* The Close Button */
@@ -304,6 +330,22 @@ const htmlContent = `
         background-color:rgb(71, 73, 74);
       }
 
+      #purgeBtn {
+        background-color:rgb(105, 5, 5);
+        color: white;
+        font-size: 12px;
+        border: none;
+        padding: 3px 9px;
+        cursor: pointer;
+        border-radius: 3px;
+        width: auto;
+        min-width: 50px;
+      }
+
+      #purgeBtn:hover {
+        background-color:rgb(196, 15, 15);
+      }
+
       #delayBtn {
         background-color: rgb(20, 21, 22);
         color: white;
@@ -311,8 +353,8 @@ const htmlContent = `
         border: 1px solid rgb(71, 73, 74);
         padding: 3px 6px;
         border-radius: 3px;
-        width: 60px;
-        height: 20px; /* Match button height */
+        width: 30px;
+        height: 25px; /* Match button height */
         text-align: center;
         vertical-align: middle;
       }
@@ -329,6 +371,36 @@ const htmlContent = `
       }
 
       #delayBtn:focus {
+        outline: none;
+        border-color: rgb(100, 100, 100);
+      }
+
+
+      #delayBtnLogin {
+        background-color: rgb(20, 21, 22);
+        color: white;
+        font-size: 12px;
+        border: 1px solid rgb(71, 73, 74);
+        padding: 3px 6px;
+        border-radius: 3px;
+        width: 30px;
+        height: 25px; /* Match button height */
+        text-align: center;
+        vertical-align: middle;
+      }
+
+      /* Push input and label lower */
+      #delayBtnLogin,
+      label[for="delayBtnLogin"] {
+        margin-top: 8px; /* Adjust for lower positioning */
+      }
+
+      #delayBtnLogin:focus {
+        outline: none;
+        border-color: rgb(100, 100, 100);
+      }
+
+      #delayBtnLogin:focus {
         outline: none;
         border-color: rgb(100, 100, 100);
       }
@@ -416,6 +488,18 @@ const htmlContent = `
           border-bottom: 0;
         }
       }
+
+      /* Untuk browser berbasis WebKit (Chrome, Edge, Safari) */
+      input[type="number"]::-webkit-inner-spin-button, 
+      input[type="number"]::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+      }
+
+      /* Untuk Firefox */
+      input[type="number"] {
+        -moz-appearance: textfield;
+      }
     </style>
   </head>
   <body>
@@ -448,19 +532,36 @@ Please select where nikke_launcher.exe was installed.</pre
           height: 32px;
         "
       >
-        <label for="delayBtn" style="white-space: nowrap; line-height: 1"
-          >Delay (as second):</label
+        <label for="delayBtn" style="white-space: nowrap; line-height: 1; font-size: 12px;"
+          >Delay (switch):</label
         >
         <input
           type="number"
           id="delayBtn"
-          name="delay"
+          name="delayswitch"
           min="1"
           max="5"
           step="1"
           value="3"
+          style="font-size: 12px;"
         />
-        <button id="myBtn">🕒Log History</button>
+
+         <label for="delayBtnLogin" style="white-space: nowrap; line-height: 1; font-size: 12px;"
+          >Delay (login):</label
+        >
+        <input
+          type="number"
+          id="delayBtnLogin"
+          name="delaylogin"
+          min="1"
+          max="5"
+          step="1"
+          value="3"
+          style="font-size: 12px;"
+        />
+
+        <button id="myBtn">🔍Logs</button>
+        <button id="purgeBtn">⛔Purge Data</button>
       </div>
     </div>
     <div id="snackbar">
