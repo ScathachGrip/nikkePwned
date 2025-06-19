@@ -13,9 +13,9 @@ let activity = {
   details: "Idle",
   state: "Password Manager for NIKKE",
   startTimestamp: Date.now(),
-  largeImageKey: "https://i.imgur.com/LIzkC9I.png",
+  largeImageKey: "https://raw.githubusercontent.com/ScathachGrip/nikkePwned/refs/heads/master/resources/static/rpc_icon.png",
   largeImageText: `v${version}`,
-  smallImageKey: "https://i.imgur.com/7484syW.png",
+  smallImageKey: "https://raw.githubusercontent.com/ScathachGrip/nikkePwned/refs/heads/master/resources/static/rpc_idle.png",
   smallImageText: "Idling",
   instance: false,
   buttons: [
