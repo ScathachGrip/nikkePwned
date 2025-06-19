@@ -500,11 +500,180 @@ const htmlContent = `
       input[type="number"] {
         -moz-appearance: textfield;
       }
+
+      #capsWarning {
+          display: none; /* Hide by default */
+          font-size: 12px;
+          font-weight: bold;
+          text-align: center;
+          margin: 2px auto;
+          padding: 2px 8px;
+          background: rgba(255, 0, 0, 0.2);
+          color: red;
+          border-radius: 4px;
+          width: fit-content;
+      }
+
+      .search-box {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 16px; /* jarak bawah */
+      }
+
+      .search-box .search-icon {
+        width: 30px;
+        height: 30px;
+      }
+
+      #searchInput {
+        flex: 1;
+        max-width: 300px;
+        padding: 6px 10px;
+        font-size: 14px;
+        color: #eee;
+        background-color: #111;
+        border: 1px solid rgb(0, 0, 0);
+        border-radius: 4px;
+        transition: border-color 0.2s, background-color 0.2s;
+      }
+
+      #searchInput:focus {
+        outline: none;
+        border-color:rgb(41, 39, 39);
+        background-color: #111;
+      }
+
+      @keyframes berdetak {
+      0%, 100% {
+        transform: scale(1);
+      }
+      50% {
+        transform: scale(1.1);
+      }
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    .berdetak {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background-color: white;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      animation: berdetak 1s ease-in-out infinite;
+      z-index: 9999;
+      cursor: pointer;
+    }
+
+    .berdetak:hover {
+      animation: spin 2s linear infinite;
+    }
+
+    .berdetak img {
+      width: 50px;
+      height: 50px;
+      pointer-events: none; /* so the hover still works on the span */
+    }
+
+    #click {
+      background-color: #292929;
+      color: #eee;
+      padding: 1rem;
+      border-radius: 6px;
+      margin-bottom: 1rem;
+      border: 1px solid #444;
+      font-size: 0.95rem;
+    }
+
+    input[type="text"] {
+      background-color: #222;
+      color: #eee;
+      border: 1px solid #555;
+      border-radius: 4px;
+      padding: 4px 8px;
+      margin-bottom: 0.5rem;
+      width: 60px;
+      font-size: 0.9rem;
+      vertical-align: middle;
+    }
+
+    button#reset {
+      background-color: #a80a24;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      padding: 4px 10px;
+      font-size: 0.85rem;
+      height: 28px;
+      margin-left: 6px;
+      cursor: pointer;
+      transform: translateY(-5px); /* 💀 HACK SEBENARNYA */
+    }
+    button#reset:hover {
+      background-color: #c41630;
+    }
+
+    #dcCount {
+      background-color: #222;
+      color: #eee;
+      border: 1px solid #555;
+      border-radius: 4px;
+      padding: 4px 8px;
+      margin-bottom: 0.5rem;
+      width: 60px;
+      font-size: 0.9rem;
+    }
+
+    #textarea {
+      background-color: #111;
+      color: #eee;
+      border: 1px solid #444;
+      border-radius: 4px;
+      padding: 6px;
+      width: 100%;
+      margin-top: 0.5rem;
+      resize: vertical;
+      font-family: monospace;
+      font-size: 0.85rem;
+    }
+
+    .gambarklik {
+      width: 100%;
+      height: auto;
+      cursor: pointer;
+    }
+
+    @keyframes vibrate {
+      0%, 100% { transform: translate(0, 0); }
+      20%  { transform: translate(-15px, 15px); }
+      40%  { transform: translate(15px, -15px); }
+      60%  { transform: translate(-15px, -15px); }
+      80%  { transform: translate(15px, 15px); }
+    }
+
+    .vibrate {
+      animation: vibrate 0.08s linear;
+    }
+
     </style>
   </head>
   <body>
     <div class="container">
       <img src="/icons/logo.png" alt="Description" class="responsive-img" />
+      <div id="capsWarning">⚠️ Caps Lock is ON</div>
       <div id="pathContainer" style="display: flex; align-items: center">
         <pre id="selectedPath">
 Please select where nikke_launcher.exe was installed.</pre
@@ -572,10 +741,13 @@ Please select where nikke_launcher.exe was installed.</pre
     <div id="myModal" class="modal" style="display: none">
       <div class="modal-content">
         <span class="close">&times;</span>
+          <div class="search-box">
+            <input type="text" id="searchInput" placeholder="search string" />
+          </div>
         <table>
           <thead>
             <tr>
-              <th scope="col">AccountsObject</th>
+              <th scope="col">String</th>
               <th scope="col">Type</th>
               <th scope="col">isSuccess</th>
               <th scope="col">Date</th>
@@ -583,7 +755,7 @@ Please select where nikke_launcher.exe was installed.</pre
           </thead>
           <tbody>
             <tr>
-              <td data-label="AccountsObject">null</td>
+              <td data-label="String">null</td>
               <td data-label="Type">null</td>
               <td data-label="isSuccess">null</td>
               <td data-label="Date">null</td>
@@ -593,7 +765,29 @@ Please select where nikke_launcher.exe was installed.</pre
       </div>
     </div>
 
+    <div id="myModalWortel" class="modal" style="display: none">
+      <div class="modal-content">
+      <span class="close">&times;</span>
+        <div class="asuwh">
+          <div id="click" class="click" style="background: orange; padding: 1rem; margin-bottom: 1rem;">
+            <img src="/static/my.png" id="gambarKlik" class="gambarklik" alt="Click me!" />
+          </div>
+
+          Clicks: <input id="count" type="text" value="0" size="4"> 
+          <button id="reset">Reset</button><br />
+          Fast double click count: <input id="dcCount" type="text" value="0" size="4"> <br />
+          <textarea id="textarea" rows="10" cols="50"></textarea>
+       </div>
+      </div>
+    </div>
     <p>Password Manager for NIKKE v<span id="appVersion">Loading...</span></p>
+    <span class="berdetak" id="myBtnWortel">
+      <img
+        src="/static/rpc_testing.png"
+        alt="sun"
+        style="width: 30px; height: 30px"
+        />
+    </span>
     <script src="js/neutralino.js"></script>
     <script src="js/app.js"></script>
   </body>

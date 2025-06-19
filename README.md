@@ -93,17 +93,20 @@ Just open `discord-rpc.exe` BEFORE `nikkepwned-win_x64.exe` for realtime state c
 
 - **Delay (Switch)**:
   - Time delay between account switches.  
-  - Default: `3` (Range: `1-5` seconds).
+  - Default: `3` (Range: `1-8` seconds).
 
 - **Delay (Login)**:
   - Time delay before login to prevent abuse.  
-  - Default: `3` (Range: `1-5` seconds).
+  - Default: `3` (Range: `1-8` seconds).
 
 - **Logs**:
   - Displays activity logs, including login attempts, path adjustments, and delay settings.
 
 - **Purge Data**:
   - Erases all stored data from this tool.
+
+- **Rapidfire click tests**:
+  - Rapidfire / double click mouse (macro tests)
 
 
 ## Inputting data

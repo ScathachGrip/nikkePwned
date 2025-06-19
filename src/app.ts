@@ -8,7 +8,7 @@ type PwnedType =
   | "Adjusting Delay"
   | "Adjusting Path";
 type SuccessType = "True" | "False";
-type DcStateType = "Idling" | "Maintaining" | "Registering";
+type DcStateType = "Idling" | "Maintaining" | "Registering" | "Testing";
 type AlertType = "success" | "fail";
 
 interface Account {
@@ -21,12 +21,15 @@ enum ActivityStates {
   Idle = "Idle",
   Maintaining = "Maintaining",
   Registering = "Registering",
+  Testing = "Testing",
 }
 
 enum ActivityAssets {
-  Logo = "https://i.imgur.com/LIzkC9I.png",
-  Idle = "https://i.imgur.com/7484syW.png",
-  Maintaining = "https://i.imgur.com/VW1Z9nP.png",
+  Logo = "https://raw.githubusercontent.com/ScathachGrip/nikkePwned/refs/heads/master/resources/static/rpc_icon.png",
+  Idle = "https://raw.githubusercontent.com/ScathachGrip/nikkePwned/refs/heads/master/resources/static/rpc_idle.png",
+  Maintaining = "https://raw.githubusercontent.com/ScathachGrip/nikkePwned/refs/heads/master/resources/static/rpc_maintain.png",
+  Registering = "https://raw.githubusercontent.com/ScathachGrip/nikkePwned/refs/heads/master/resources/static/rpc_register.png",
+  Testing = "https://raw.githubusercontent.com/ScathachGrip/nikkePwned/refs/heads/master/resources/static/static/rpc_testing.png",
 }
 
 /**
@@ -139,6 +142,38 @@ async function isLauncherRunning(): Promise<boolean> {
   console.log("nikke_launcher Running:", isRunning);
   return isRunning;
 }
+
+/**
+ * Checks if Caps Lock is currently ON using PowerShell.
+ * This function executes a PowerShell command to determine the Caps Lock state.
+ * 
+ * @returns {Promise<boolean>} - Returns `true` if Caps Lock is ON, otherwise `false`.
+ */
+async function checkCapsLock(): Promise<boolean> {
+  try {
+    const result = await Neutralino.os.execCommand("powershell -Command \"[console]::CapsLock\"");
+    return result.stdOut.trim() === "True";
+  } catch (error) {
+    console.error("Gagal mendeteksi Caps Lock:", error);
+    return false;
+  }
+}
+
+/**
+ * Updates the visibility of the Caps Lock warning element.
+ * This function checks the current Caps Lock state and updates the UI accordingly.
+ * 
+ * @returns {Promise<void>} - No return value; only updates the UI.
+ */
+async function updateCapsLock(): Promise<void> {
+  const capsWarning = document.getElementById("capsWarning") as HTMLElement;
+  if (!capsWarning) return;
+
+  const isCapsOn = await checkCapsLock();
+  capsWarning.style.display = isCapsOn ? "block" : "none";
+  console.log("Caps Lock State:", isCapsOn);
+}
+
 
 /**
  * Checks if the Discord Rich Presence (RPC) WebSocket is running.
@@ -333,7 +368,7 @@ class PwnedManager {
    *
    * @returns {void} This function does not return a value.
    */
-  public showAlert(message: string, type: AlertType): void {
+  public showAlert(message: string, type: AlertType, forceFront = false): void {
     const snackbar = document.getElementById("snackbar");
     const textElement = document.getElementById("snackbar-text");
     const progressBar = document.querySelector(".progress-bar") as HTMLElement;
@@ -351,6 +386,9 @@ class PwnedManager {
       textElement.textContent = `❌ ${message}`;
     }
 
+    // 🔸 Set z-index higher *only if* requested
+    snackbar.style.zIndex = forceFront ? "9999" : "";
+
     progressBar.style.width = "0%";
     progressBar.style.transition = "none";
     void progressBar.offsetWidth;
@@ -359,8 +397,10 @@ class PwnedManager {
 
     setTimeout(() => {
       snackbar.classList.remove("show", "success", "fail");
+      snackbar.style.zIndex = ""; // reset to default after done
     }, 3000);
   }
+
 
   /**
    * Converts a timestamp to a readable date and "time ago" format.
@@ -419,11 +459,9 @@ class PwnedManager {
    * @returns {Promise<void>} Resolves when the table is populated with log entries.
    * @throws {Error} If there is an issue retrieving or parsing the history data.
    */
-  public async populateTable(): Promise<void> {
+  public async populateTable(query?: string): Promise<void> {
     try {
-      const tbody = document.querySelector(
-        "table tbody",
-      ) as HTMLTableSectionElement;
+      const tbody = document.querySelector("table tbody") as HTMLTableSectionElement;
       const result = await Neutralino.storage.getData("history");
       const logs = JSON.parse(result).reverse() as Array<{
         accountWhat: string;
@@ -434,20 +472,31 @@ class PwnedManager {
 
       tbody.innerHTML = "";
 
-      logs.forEach((log) => {
+      const filteredLogs = query
+        ? logs.filter(log => log.accountWhat.toLowerCase().includes(query.toLowerCase()))
+        : logs;
+
+      filteredLogs.forEach((log) => {
         const row = document.createElement("tr");
         row.innerHTML = `
-          <td data-label="AccountsObject">${log.accountWhat}</td>
-          <td data-label="Type">${log.typeWhat}</td>
-          <td data-label="isSuccess">${log.isSuccess}</td>
-          <td data-label="Date">${accountManager.formattedDate(log.dateWhat)}</td>
-        `;
+        <td data-label="String">${log.accountWhat}</td>
+        <td data-label="Type">${log.typeWhat}</td>
+        <td data-label="isSuccess">${log.isSuccess}</td>
+        <td data-label="Date">${accountManager.formattedDate(log.dateWhat)}</td>
+      `;
         tbody.appendChild(row);
       });
+
+      if (filteredLogs.length === 0) {
+        const emptyRow = document.createElement("tr");
+        emptyRow.innerHTML = "<td colspan=\"4\" style=\"text-align:center;\">No Results</td>";
+        tbody.appendChild(emptyRow);
+      }
     } catch (e) {
       console.warn("⚠️ Failed to load history:", e);
     }
   }
+
 }
 
 const accountManager = new PwnedManager();
@@ -556,14 +605,20 @@ Neutralino.events.on("ready", async () => {
   ).addEventListener("click", async () => {
     const input = (document.getElementById("jsonInput") as HTMLTextAreaElement)
       .value;
+
+    console.log("Input received:", JSON.stringify(input));
+
     try {
       const parsedData = JSON.parse(input);
       const newAccounts = Array.isArray(parsedData) ? parsedData : [parsedData];
 
-      const existingData = await Neutralino.storage
-        .getData("accounts")
-        .catch(() => "[]");
-      const existingAccounts = JSON.parse(existingData);
+      let existingAccounts: Account[] = [];
+      try {
+        const existingData = await Neutralino.storage.getData("accounts");
+        existingAccounts = JSON.parse(existingData);
+      } catch {
+        existingAccounts = [];
+      }
 
       const accountMap = new Map<string, Account>();
       existingAccounts.forEach((acc: Account) =>
@@ -593,7 +648,13 @@ Neutralino.events.on("ready", async () => {
         Date.now(),
       );
     } catch (e) {
-      console.error("Invalid JSON format!", e);
+      let message = "Unknown error";
+
+      if (e instanceof Error) {
+        message = e.message;
+      }
+
+      console.error(`Error: ${message}`);
       await Neutralino.os.showNotification(
         "Oops :/",
         "Invalid JSON format! Please correct it.",
@@ -777,7 +838,7 @@ Neutralino.events.on("ready", async () => {
       accountSelect.innerHTML = "<option value=''>Select account</option>";
       accounts.forEach((acc, index) => {
         const option = document.createElement("option");
-        option.value = index.toString(); 
+        option.value = index.toString();
         option.textContent = acc.email;
         accountSelect.appendChild(option);
       });
@@ -816,12 +877,12 @@ Neutralino.events.on("ready", async () => {
       const button = await Neutralino.os.showMessageBox(
         "Purge Data",
         "This action will permanently remove the following stored data:\n\n" +
-          "- STORED_ACCOUNTS\n" +
-          "- STORED_HISTORY\n" +
-          "- STORED_nikkeLauncherPath\n" +
-          "- STORED_DELAYS_SWITCH\n" +
-          "- STORED_DELAYS_LOGIN\n\n" +
-          "This action cannot be undone. Do you want to continue?",
+        "- STORED_ACCOUNTS\n" +
+        "- STORED_HISTORY\n" +
+        "- STORED_nikkeLauncherPath\n" +
+        "- STORED_DELAYS_SWITCH\n" +
+        "- STORED_DELAYS_LOGIN\n\n" +
+        "This action cannot be undone. Do you want to continue?",
         "YES_NO",
         "QUESTION",
       );
@@ -869,7 +930,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     "table tbody",
   ) as HTMLTableSectionElement | null;
 
-  if (!modal || !btn || !span || !tbody) {
+  const myModalWortel = document.getElementById("myModalWortel") as HTMLElement;
+  const btnWortel = document.getElementById("myBtnWortel") as HTMLButtonElement;
+  const spanWortel = myModalWortel.querySelector(".close") as HTMLElement;
+  
+
+  if (!modal || !btn || !span || !tbody || !myModalWortel || !btnWortel || !spanWortel) {
     console.error("❌ Modal elements not found.");
     return;
   }
@@ -889,6 +955,31 @@ document.addEventListener("DOMContentLoaded", async () => {
   window.addEventListener("click", (event) => {
     if (event.target === modal) {
       modal.style.display = "none";
+    }
+  });
+
+  btnWortel.addEventListener("click", () => {
+    const isOpening = myModalWortel.style.display !== "flex"; 
+
+    myModalWortel.style.display = isOpening ? "flex" : "none";
+    if (isOpening) {
+      accountManager.showAlert("double click mouse tests", "success", true);
+      accountManager.updateDiscordRPC(
+        "Playing NIKKE",
+        "Rapidfire mouse tests",
+        ActivityAssets.Testing,
+        ActivityStates.Testing,
+      );
+    }
+  });
+
+  spanWortel.addEventListener("click", () => {
+    myModalWortel.style.display = "none";
+  });
+
+  myModalWortel.addEventListener("click", (event) => {
+    if (event.target === myModalWortel) {
+      myModalWortel.style.display = "none";
     }
   });
 
@@ -928,7 +1019,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   delayInput.addEventListener("input", async () => {
     const newDelay = Number(delayInput.value);
 
-    if (!isNaN(newDelay) && newDelay >= 1 && newDelay <= 5) {
+    if (!isNaN(newDelay) && newDelay >= 1 && newDelay <= 8) {
       await Neutralino.storage.setData("delay_switch", String(newDelay));
       console.log(`✅ New delay switch saved: ${newDelay}`);
       accountManager.showAlert(
@@ -943,9 +1034,9 @@ document.addEventListener("DOMContentLoaded", async () => {
       );
     } else {
       await Neutralino.storage.setData("delay_switch", "3");
-      console.warn("⚠️ Delay value switch out of range (1-5).");
+      console.warn("⚠️ Delay value switch out of range (1-8).");
       accountManager.showAlert(
-        "Delay value switch out of range: Expected (1-5) seconds.",
+        "Delay value switch out of range: Expected (1-8) seconds.",
         "fail",
       );
     }
@@ -989,7 +1080,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   delayInputLogin.addEventListener("input", async () => {
     const newDelay = Number(delayInputLogin.value);
 
-    if (!isNaN(newDelay) && newDelay >= 1 && newDelay <= 5) {
+    if (!isNaN(newDelay) && newDelay >= 1 && newDelay <= 8) {
       await Neutralino.storage.setData("delay_login", String(newDelay));
       console.log(`✅ New delay login saved: ${newDelay}`);
       accountManager.showAlert(
@@ -1004,9 +1095,9 @@ document.addEventListener("DOMContentLoaded", async () => {
       );
     } else {
       await Neutralino.storage.setData("delay_login", "3");
-      console.warn("⚠️ Delay value login out of range (1-5).");
+      console.warn("⚠️ Delay value login out of range (1-8).");
       accountManager.showAlert(
-        "Delay value login out of range: Expected (1-5) seconds.",
+        "Delay value login out of range: Expected (1-8) seconds.",
         "fail",
       );
     }
@@ -1030,4 +1121,69 @@ Neutralino.events.on("windowClose", async () => {
 Neutralino.events.on("serverOffline", () => {
   location.reload();
   console.warn("WebSocket was disconnected. Refreshing..");
+});
+
+// other browser events
+document.addEventListener("DOMContentLoaded", updateCapsLock);
+document.addEventListener("keydown", updateCapsLock);
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) {
+    updateCapsLock();
+  }
+});
+document.getElementById("accountSelect")?.addEventListener("click", updateCapsLock);
+const searchInput = document.getElementById("searchInput") as HTMLInputElement;
+
+searchInput?.addEventListener("input", () => {
+  accountManager.populateTable(searchInput.value.trim());
+});
+
+const click = document.getElementById("click") as HTMLElement;
+const textarea = document.getElementById("textarea") as HTMLTextAreaElement;
+const clicks = document.getElementById("count") as HTMLInputElement;
+const dcCount = document.getElementById("dcCount") as HTMLInputElement;
+const reset = document.getElementById("reset") as HTMLButtonElement;
+const img = document.getElementById("gambarKlik") as HTMLImageElement;
+const sound = new Audio("/static/ichad.wav");
+
+let prevClickMicrotime = microtime(true);
+
+reset.onclick = function () {
+  clicks.value = "0";
+  dcCount.value = "0";
+  textarea.value = "";
+  click.style.background = "orange";
+  prevClickMicrotime = microtime(true);
+};
+
+click.addEventListener("mousedown", () => {
+  clickEvent();
+});
+
+function microtime(get_as_float: boolean = false): number {
+  const now = Date.now() / 1000;
+  return get_as_float ? now : Math.round(now * 1000) / 1000;
+}
+
+function clickEvent() {
+  const clickTime = microtime(true);
+  const diff = clickTime - prevClickMicrotime;
+
+  if (diff <= 0.08) {
+    click.style.background = "red";
+    dcCount.value = (parseInt(dcCount.value) + 1).toString();
+  }
+
+  textarea.value = `${diff}\t${diff.toFixed(2)} sec.\n` + textarea.value;
+  prevClickMicrotime = clickTime;
+  clicks.value = (parseInt(clicks.value) + 1).toString();
+}
+
+img.addEventListener("click", () => {
+  img.classList.remove("vibrate");
+  void img.offsetWidth;
+  img.classList.add("vibrate");
+
+  sound.currentTime = 0;
+  sound.play();
 });
