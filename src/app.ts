@@ -29,7 +29,7 @@ enum ActivityAssets {
   Idle = "https://raw.githubusercontent.com/ScathachGrip/nikkePwned/refs/heads/master/resources/static/rpc_idle.png",
   Maintaining = "https://raw.githubusercontent.com/ScathachGrip/nikkePwned/refs/heads/master/resources/static/rpc_maintain.png",
   Registering = "https://raw.githubusercontent.com/ScathachGrip/nikkePwned/refs/heads/master/resources/static/rpc_register.png",
-  Testing = "https://raw.githubusercontent.com/ScathachGrip/nikkePwned/refs/heads/master/resources/static/static/rpc_testing.png",
+  Testing = "https://raw.githubusercontent.com/ScathachGrip/nikkePwned/refs/heads/master/resources/static/rpc_testing.png",
 }
 
 /**
