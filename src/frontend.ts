@@ -34,124 +34,241 @@ const htmlContent = `
     <link rel="stylesheet" href="https://fonts.bunny.net/css?family=manrope:300,400,500,600,700,800&display=swap">
     <link rel="icon" type="image/x-icon" href="/icons/favicon.ico" />
     <style>
+      :root {
+        --bg: #0f0f0fff;
+        --titlebar-bg: #0f0f0fff;
+        --accent: #ff8a00;
+        /* orange color */
+        --muted: #bdbdbd;
+      }
+
+      * {
+        box-sizing: border-box
+      }
+
+      html,
       body {
-          font-family: 'Manrope', sans-serif;
-          background-color: #1e1e2e;
-          color: #ffffff;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          height: 100vh;
-          margin: 0;
+        height: 100vh;
+        display: flex;
+        margin: 0;
+        font-family: 'Manrope', sans-serif;
+        background: var(--bg);
+        color: #eee;
+        flex-direction: column;
+        /* susun vertikal */
+        -webkit-font-smoothing: antialiased
       }
+
+      .titlebar {
+        -webkit-app-region: drag;
+        height: 36px;
+        background: var(--titlebar-bg);
+        -webkit-app-region: drag;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 8px;
+      }
+
+      .main-area {
+        flex: 1;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .title-left {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .app-icon {
+        width: 18px;
+        height: 18px;
+        border-radius: 3px;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02));
+        border: 1px solid rgba(255, 255, 255, 0.04);
+        box-shadow: 0 0 0 2px rgba(255, 138, 0, 0.04) inset;
+      }
+
+      .app-title {
+        font-size: 13px;
+        color: var(--muted);
+        letter-spacing: 0.2px;
+      }
+
+      .window-controls {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        -webkit-app-region: no-drag;
+      }
+
+      .window-controls button {
+        -webkit-app-region: no-drag;
+        cursor: pointer;
+      }
+
+      .ctl {
+        width: 24px;
+        height: 24px;
+        border: 1px solid #666;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: transparent;
+        cursor: pointer;
+        padding: 0;
+        margin-top: -1px;
+      }
+
+      /* mimic screenshot: orange outline and small icon inside */
+      .ctl svg {
+        fill: none;
+        stroke: currentColor;
+        color: var(--accent);
+      }
+
+      /* hover/active */
+      .ctl:hover {
+        background: rgba(255, 138, 0, 0.06);
+        transform: translateY(-1px);
+      }
+
+      .ctl:active {
+        transform: translateY(0);
+      }
+
+      .ctl-close {
+        border-color: rgba(255, 138, 0, 0.9);
+        background: rgba(255, 138, 0, 0.04);
+        color: var(--accent);
+      }
+
+      .ctl-close:hover {
+        background: rgba(255, 138, 0, 0.14);
+      }
+
       .container {
-          width: 90%;
-          max-width: 450px;
-          background: #2a2a3b;
-          padding: 20px;
-          border-radius: 10px;
-          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        width: 90% !important;
+        max-width: 450px !important;
+        background: #24242bff !important;
+        padding: 20px !important;
+        border-radius: 10px !important;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2) !important;
+        margin: 20px auto !important;
       }
+
       textarea {
-          width: 100%;
-          height: 100px;
-          background: #333344;
-          color: white;
-          border: none;
-          padding: 10px;
-          border-radius: 5px;
-          resize: none;
-          box-sizing: border-box; /* Fix ukuran agar padding tidak bikin ukuran kacau */
+        width: 100%;
+        height: 100px;
+        background: #333344;
+        color: white;
+        border: none;
+        padding: 10px;
+        border-radius: 5px;
+        resize: none;
+        box-sizing: border-box;
       }
-      select, button {
-          width: 100%;
-          padding: 10px;
-          margin-top: 10px;
-          font-size: 16px;
-          border: none;
-          border-radius: 5px;
+
+      select,
+      button {
+        width: 100%;
+        padding: 10px;
+        margin-top: 10px;
+        font-size: 16px;
+        border: none;
+        border-radius: 5px;
       }
+
       select {
-          background: #444455;
-          color: white;
+        background: #444455;
+        color: white;
       }
+
       #registerBtn {
-          background: #007bff;
-          color: white;
+        background: #007bff;
+        color: white;
       }
+
       #registerBtn:hover {
-          background: #529be8;
+        background: #529be8;
       }
+
       #runBtn {
-          background: #28a745;
-          color: white;
+        background: #28a745;
+        color: white;
       }
 
       #runBtn:hover {
-          background: #68e986;
+        background: #68e986;
       }
+
       #removeBtn {
-          background: #a20a0a;
-          color: white;
+        background: #a20a0a;
+        color: white;
       }
+
       #removeBtn:hover {
-          background: #d74141;
+        background: #d74141;
       }
 
       .agold {
-          color: #FFD700; /* Custom color */
-          text-decoration: none; /* Optional: removes underline */
+        color: #FFD700;
+        text-decoration: none;
       }
 
       .agold:hover {
-          color:rgb(156, 135, 15); /* Change color on hover */
+        color: rgb(156, 135, 15);
       }
 
-
       .responsive-img {
-          width: 100%;
-          height: auto;
-          max-width: 400px;
-          display: block;
-          margin: 0 auto;
+        width: 100%;
+        height: auto;
+        max-width: 400px;
+        display: block;
+        margin: 0 auto;
       }
 
       .responsive-img-small {
-          width: 100%;
-          height: auto;
-          max-width: 320px;
-          display: block;
-          margin: 0 auto;
+        width: 100%;
+        height: auto;
+        max-width: 320px;
+        display: block;
+        margin: 0 auto;
       }
 
       #selectPathBtn {
-          margin-left: 3px;
-          background-color: #007bff;
-          color: white;
-          font-size: 12px;
-          border: none;
-          padding: 3px 9px;
-          cursor: pointer;
-          border-radius: 3px;
-          width: auto;
-          min-width: 50px;
-      }
-      #selectPathBtn:hover {
-          background-color: #529be8;
-      }
-      #pathContainer {
-          display: flex;
-          align-items: center;
-          gap: 5px;
-      }
-      #selectedPath {
-          font-family: monospace;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
+        margin-left: 3px;
+        background-color: #007bff;
+        color: white;
+        font-size: 12px;
+        border: none;
+        padding: 3px 9px;
+        cursor: pointer;
+        border-radius: 3px;
+        width: auto;
+        min-width: 50px;
       }
 
+      #selectPathBtn:hover {
+        background-color: #529be8;
+      }
+
+      #pathContainer {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+
+      #selectedPath {
+        font-family: monospace;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
 
       /* Base Snackbar container */
       #snackbar {
@@ -177,12 +294,14 @@ const htmlContent = `
 
       /* Success Snackbar */
       #snackbar.success {
-        background-color: #222; /* Dark gray */
+        background-color: #222;
+        /* Dark gray */
       }
 
       /* Fail Snackbar */
       #snackbar.fail {
-        background-color:rgb(133, 12, 12); /* Red */
+        background-color: rgb(133, 12, 12);
+        /* Red */
       }
 
       /* Show Snackbar */
@@ -198,7 +317,6 @@ const htmlContent = `
         word-wrap: break-word;
       }
 
-      /* Loading Bar */
       .progress {
         height: 4px;
         width: 100%;
@@ -218,12 +336,14 @@ const htmlContent = `
 
       /* Success Bar */
       #snackbar.success .progress-bar {
-        background-color:rgb(145, 255, 0); /* Orange */
+        background-color: rgb(145, 255, 0);
+        /* Orange */
       }
 
       /* Fail Bar */
       #snackbar.fail .progress-bar {
-        background-color:rgb(166, 255, 0); /* Bright Red */
+        background-color: rgb(166, 255, 0);
+        /* Bright Red */
       }
 
       /* Responsive: Adjust for small screens */
@@ -237,22 +357,26 @@ const htmlContent = `
         }
       }
 
-      /* The Modal (background) */
       .modal {
         border: none !important;
-        display: none; /* Hidden by default */
+        display: none;
+        /* Hidden by default */
         position: fixed;
-        z-index: 1000; /* High z-index */
+        z-index: 1000;
+        /* High z-index */
         left: 0;
         top: 0;
         width: 100%;
         height: 100%;
-        background-color: rgba(0, 0, 0, 0.68); /* Black w/ opacity */
+        background-color: rgba(0, 0, 0, 0.68);
+        /* Black w/ opacity */
         display: flex;
         align-items: center;
         justify-content: center;
-        overflow: hidden; /* Prevent full-page scrolling */
-         -webkit-animation-name: animatebottom; /* Fade in the background */
+        overflow: hidden;
+        /* Prevent full-page scrolling */
+        -webkit-animation-name: animatebottom;
+        /* Fade in the background */
         -webkit-animation-duration: 0.4s;
         animation-name: animatebottom;
         animation-duration: 0.4s
@@ -266,9 +390,12 @@ const htmlContent = `
         border-radius: 10px;
         border: 1px solid #888;
         width: 80%;
-        max-width: 700px; /* Limit modal width */
-        max-height: 80vh; /* Prevent modal from taking full height */
-        overflow-y: auto; /* Enable scrolling inside modal */
+        max-width: 700px;
+        /* Limit modal width */
+        max-height: 80vh;
+        /* Prevent modal from taking full height */
+        overflow-y: auto;
+        /* Enable scrolling inside modal */
         display: flex;
         flex-direction: column;
         -webkit-animation-name: animatebottom;
@@ -278,26 +405,31 @@ const htmlContent = `
       }
 
       .modal-content {
-          scrollbar-color: #555 #222; /* thumb color, track color */
-          scrollbar-width: thin;
+        scrollbar-color: #555 #222;
+        /* thumb color, track color */
+        scrollbar-width: thin;
       }
 
       .modal-content::-webkit-scrollbar {
-          width: 8px; /* Adjust width */
+        width: 8px;
+        /* Adjust width */
       }
 
       .modal-content::-webkit-scrollbar-track {
-          background: #222; /* Dark background */
-          border-radius: 10px;
+        background: #222;
+        /* Dark background */
+        border-radius: 10px;
       }
 
       .modal-content::-webkit-scrollbar-thumb {
-          background: #555; /* Dark gray scrollbar */
-          border-radius: 10px;
+        background: #555;
+        /* Dark gray scrollbar */
+        border-radius: 10px;
       }
 
       .modal-content::-webkit-scrollbar-thumb:hover {
-          background: #777; /* Lighter gray on hover */
+        background: #777;
+        /* Lighter gray on hover */
       }
 
       /* The Close Button */
@@ -315,7 +447,7 @@ const htmlContent = `
 
       /* Button Styling */
       #myBtn {
-        background-color:rgb(20, 21, 22);
+        background-color: rgb(20, 21, 22);
         color: white;
         font-size: 12px;
         border: none;
@@ -327,11 +459,11 @@ const htmlContent = `
       }
 
       #myBtn:hover {
-        background-color:rgb(71, 73, 74);
+        background-color: rgb(71, 73, 74);
       }
 
       #purgeBtn {
-        background-color:rgb(105, 5, 5);
+        background-color: rgb(105, 5, 5);
         color: white;
         font-size: 12px;
         border: none;
@@ -343,7 +475,7 @@ const htmlContent = `
       }
 
       #purgeBtn:hover {
-        background-color:rgb(196, 15, 15);
+        background-color: rgb(196, 15, 15);
       }
 
       #delayBtn {
@@ -354,7 +486,8 @@ const htmlContent = `
         padding: 3px 6px;
         border-radius: 3px;
         width: 30px;
-        height: 25px; /* Match button height */
+        height: 25px;
+        /* Match button height */
         text-align: center;
         vertical-align: middle;
       }
@@ -362,7 +495,8 @@ const htmlContent = `
       /* Push input and label lower */
       #delayBtn,
       label[for="delayBtn"] {
-        margin-top: 8px; /* Adjust for lower positioning */
+        margin-top: 8px;
+        /* Adjust for lower positioning */
       }
 
       #delayBtn:focus {
@@ -374,7 +508,6 @@ const htmlContent = `
         outline: none;
         border-color: rgb(100, 100, 100);
       }
-
 
       #delayBtnLogin {
         background-color: rgb(20, 21, 22);
@@ -384,7 +517,8 @@ const htmlContent = `
         padding: 3px 6px;
         border-radius: 3px;
         width: 30px;
-        height: 25px; /* Match button height */
+        height: 25px;
+        /* Match button height */
         text-align: center;
         vertical-align: middle;
       }
@@ -392,7 +526,8 @@ const htmlContent = `
       /* Push input and label lower */
       #delayBtnLogin,
       label[for="delayBtnLogin"] {
-        margin-top: 8px; /* Adjust for lower positioning */
+        margin-top: 8px;
+        /* Adjust for lower positioning */
       }
 
       #delayBtnLogin:focus {
@@ -405,13 +540,15 @@ const htmlContent = `
         border-color: rgb(100, 100, 100);
       }
 
-      table, th, td, tr {
+      table,
+      th,
+      td,
+      tr {
         border-radius: 10px;
         background-color: rgb(16, 16, 16) !important;
         color: white !important;
         border: none !important;
       }
-
 
       table {
         border-collapse: collapse;
@@ -427,7 +564,7 @@ const htmlContent = `
       }
 
       table tr {
-        background-color:rgb(5, 5, 5);
+        background-color: rgb(5, 5, 5);
         border: 1px solid #ddd;
         padding: .35em;
       }
@@ -444,10 +581,19 @@ const htmlContent = `
         text-transform: uppercase;
       }
 
-      @keyframes animatebottom{from{bottom:-300px;opacity:0} to{bottom:0;opacity:1}}
+      @keyframes animatebottom {
+        from {
+          bottom: -300px;
+          opacity: 0
+        }
+
+        to {
+          bottom: 0;
+          opacity: 1
+        }
+      }
 
       @media screen and (max-width: 600px) {
-
         table caption {
           font-size: 1.3em;
         }
@@ -489,36 +635,33 @@ const htmlContent = `
         }
       }
 
-      /* Untuk browser berbasis WebKit (Chrome, Edge, Safari) */
-      input[type="number"]::-webkit-inner-spin-button, 
+      input[type="number"]::-webkit-inner-spin-button,
       input[type="number"]::-webkit-outer-spin-button {
         -webkit-appearance: none;
         margin: 0;
       }
 
-      /* Untuk Firefox */
       input[type="number"] {
         -moz-appearance: textfield;
       }
 
       #capsWarning {
-          display: none; /* Hide by default */
-          font-size: 12px;
-          font-weight: bold;
-          text-align: center;
-          margin: 2px auto;
-          padding: 2px 8px;
-          background: rgba(255, 0, 0, 0.2);
-          color: red;
-          border-radius: 4px;
-          width: fit-content;
+        visibility: hidden;
+        font-size: 12px;
+        font-weight: 900;
+        text-align: center;
+        margin: 2px auto;
+        color: red;
+        width: fit-content;
+        transition: all 0.2s ease;
       }
 
       .search-box {
         display: flex;
         align-items: center;
         gap: 8px;
-        margin-bottom: 16px; /* jarak bawah */
+        margin-bottom: 16px;
+        /* jarak bawah */
       }
 
       .search-box .search-icon {
@@ -540,253 +683,287 @@ const htmlContent = `
 
       #searchInput:focus {
         outline: none;
-        border-color:rgb(41, 39, 39);
+        border-color: rgb(41, 39, 39);
         background-color: #111;
       }
 
       @keyframes berdetak {
-      0%, 100% {
-        transform: scale(1);
+
+        0%,
+        100% {
+          transform: scale(1);
+        }
+
+        50% {
+          transform: scale(1.1);
+        }
       }
-      50% {
-        transform: scale(1.1);
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+
+        100% {
+          transform: rotate(360deg);
+        }
       }
-    }
 
-    @keyframes spin {
-      0% {
-        transform: rotate(0deg);
+      .berdetak {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background-color: white;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        animation: berdetak 1s ease-in-out infinite;
+        z-index: 9999;
+        cursor: pointer;
       }
-      100% {
-        transform: rotate(360deg);
+
+      .berdetak:hover {
+        animation: spin 2s linear infinite;
       }
-    }
 
-    .berdetak {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      background-color: white;
-      width: 50px;
-      height: 50px;
-      border-radius: 50%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      animation: berdetak 1s ease-in-out infinite;
-      z-index: 9999;
-      cursor: pointer;
-    }
+      .berdetak img {
+        width: 50px;
+        height: 50px;
+        pointer-events: none;
+        /* so the hover still works on the span */
+      }
 
-    .berdetak:hover {
-      animation: spin 2s linear infinite;
-    }
+      #click {
+        background-color: #292929;
+        color: #eee;
+        padding: 1rem;
+        border-radius: 6px;
+        margin-bottom: 1rem;
+        border: 1px solid #444;
+        font-size: 0.95rem;
+      }
 
-    .berdetak img {
-      width: 50px;
-      height: 50px;
-      pointer-events: none; /* so the hover still works on the span */
-    }
+      input[type="text"] {
+        background-color: #222;
+        color: #eee;
+        border: 1px solid #555;
+        border-radius: 4px;
+        padding: 4px 8px;
+        margin-bottom: 0.5rem;
+        width: 60px;
+        font-size: 0.9rem;
+        vertical-align: middle;
+      }
 
-    #click {
-      background-color: #292929;
-      color: #eee;
-      padding: 1rem;
-      border-radius: 6px;
-      margin-bottom: 1rem;
-      border: 1px solid #444;
-      font-size: 0.95rem;
-    }
+      button#reset {
+        background-color: #a80a24;
+        color: #fff;
+        border: none;
+        border-radius: 4px;
+        padding: 4px 10px;
+        font-size: 0.85rem;
+        height: 28px;
+        margin-left: 6px;
+        cursor: pointer;
+        transform: translateY(-5px);
+      }
 
-    input[type="text"] {
-      background-color: #222;
-      color: #eee;
-      border: 1px solid #555;
-      border-radius: 4px;
-      padding: 4px 8px;
-      margin-bottom: 0.5rem;
-      width: 60px;
-      font-size: 0.9rem;
-      vertical-align: middle;
-    }
+      button#reset:hover {
+        background-color: #c41630;
+      }
 
-    button#reset {
-      background-color: #a80a24;
-      color: #fff;
-      border: none;
-      border-radius: 4px;
-      padding: 4px 10px;
-      font-size: 0.85rem;
-      height: 28px;
-      margin-left: 6px;
-      cursor: pointer;
-      transform: translateY(-5px); /* 💀 HACK SEBENARNYA */
-    }
-    button#reset:hover {
-      background-color: #c41630;
-    }
+      #dcCount {
+        background-color: #222;
+        color: #eee;
+        border: 1px solid #555;
+        border-radius: 4px;
+        padding: 4px 8px;
+        margin-bottom: 0.5rem;
+        width: 60px;
+        font-size: 0.9rem;
+      }
 
-    #dcCount {
-      background-color: #222;
-      color: #eee;
-      border: 1px solid #555;
-      border-radius: 4px;
-      padding: 4px 8px;
-      margin-bottom: 0.5rem;
-      width: 60px;
-      font-size: 0.9rem;
-    }
+      #textarea {
+        background-color: #111;
+        color: #eee;
+        border: 1px solid #444;
+        border-radius: 4px;
+        padding: 6px;
+        width: 100%;
+        margin-top: 0.5rem;
+        resize: vertical;
+        font-family: monospace;
+        font-size: 0.85rem;
+      }
 
-    #textarea {
-      background-color: #111;
-      color: #eee;
-      border: 1px solid #444;
-      border-radius: 4px;
-      padding: 6px;
-      width: 100%;
-      margin-top: 0.5rem;
-      resize: vertical;
-      font-family: monospace;
-      font-size: 0.85rem;
-    }
+      .gambarklik {
+        width: 100%;
+        height: auto;
+        cursor: pointer;
+      }
 
-    .gambarklik {
-      width: 100%;
-      height: auto;
-      cursor: pointer;
-    }
+      @keyframes vibrate {
 
-    @keyframes vibrate {
-      0%, 100% { transform: translate(0, 0); }
-      20%  { transform: translate(-15px, 15px); }
-      40%  { transform: translate(15px, -15px); }
-      60%  { transform: translate(-15px, -15px); }
-      80%  { transform: translate(15px, 15px); }
-    }
+        0%,
+        100% {
+          transform: translate(0, 0);
+        }
 
-    .vibrate {
-      animation: vibrate 0.08s linear;
-    }
+        20% {
+          transform: translate(-15px, 15px);
+        }
 
+        40% {
+          transform: translate(15px, -15px);
+        }
+
+        60% {
+          transform: translate(-15px, -15px);
+        }
+
+        80% {
+          transform: translate(15px, 15px);
+        }
+      }
+
+      .vibrate {
+        animation: vibrate 0.08s linear;
+      }
+
+      .smol {
+        margin: 0;
+        padding: 0;
+        height: 7px;
+        /* jarak default */
+        color: red;
+        font-size: 12px;
+        visibility: hidden;
+        /* hide dulu */
+      }
     </style>
   </head>
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>NikkePwned</title>
+  </head>
   <body>
-    <div class="container">
-      <img src="/icons/logo.png" alt="Description" class="responsive-img" />
-      <div id="capsWarning">⚠️ Caps Lock is ON</div>
-      <div id="pathContainer" style="display: flex; align-items: center">
-        <pre id="selectedPath">
-Please select where nikke_launcher.exe was installed.</pre
-        >
-        <button id="selectPathBtn">Edit</button>
+    <div id="titlebar" class="titlebar">
+      <div class="title-left">
+        <div class="app-icon" aria-hidden="true"></div>
+        <span class="app-title">nikkePwned</span>
       </div>
-      <textarea
-        id="jsonInput"
-        placeholder="Enter account JSON here..."
-      ></textarea>
-      <button id="registerBtn">🔑Register Accounts</button>
-      <br /><br />
-      <select id="accountSelect">
-        <option value="">Select account</option>
-      </select>
-      <button id="runBtn">Proceed auto login</button>
-      <br />
-      <button id="removeBtn">or Remove account</button>
-      <div
-        style="
+      <div class="window-controls" role="group" aria-label="Window controls">
+        <button id="minBtn" class="ctl ctl-min" aria-label="Minimize" title="Minimize">
+          <!-- minus icon -->
+          <svg viewBox="0 0 10 2" width="14" height="14" aria-hidden="true">
+            <rect width="10" height="2" rx="1"></rect>
+          </svg>
+        </button>
+        <button id="maxBtn" class="ctl ctl-max" aria-label="Maximize" title="Maximize">
+          <!-- square icon -->
+          <svg viewBox="0 0 10 10" width="12" height="12" aria-hidden="true">
+            <rect x="1" y="1" width="8" height="8" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.4"></rect>
+          </svg>
+        </button>
+        <button id="closeBtn" class="ctl ctl-close" aria-label="Close" title="Close">
+          <!-- X icon -->
+          <svg viewBox="0 0 10 10" width="12" height="12" aria-hidden="true">
+            <path d="M1 1 L9 9 M9 1 L1 9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+    <!-- your app content -->
+    <div class="main-area">
+      <div class="container">
+        <img src="/icons/logo.png" alt="Description" class="responsive-img" />
+        <div id="capsWarning" class="smol">⚠️ Caps Lock is ON</div>
+        <div id="pathContainer" style="display: flex; align-items: center">
+          <pre id="selectedPath">
+Please select where nikke_launcher.exe was installed.</pre>
+          <button id="selectPathBtn">Edit</button>
+        </div>
+        <textarea id="jsonInput" placeholder="Enter account JSON here..."></textarea>
+        <button id="registerBtn">🔑Register Accounts</button>
+        <br />
+        <br />
+        <select id="accountSelect">
+          <option value="">Select account</option>
+        </select>
+        <button id="runBtn">Proceed auto login</button>
+        <br />
+        <button id="removeBtn">or Remove account</button>
+        <div style="
           display: flex;
           align-items: center;
           justify-content: center;
           gap: 6px;
           height: 32px;
-        "
-      >
-        <label for="delayBtn" style="white-space: nowrap; line-height: 1; font-size: 12px;"
-          >Delay (switch):</label
-        >
-        <input
-          type="number"
-          id="delayBtn"
-          name="delayswitch"
-          min="1"
-          max="5"
-          step="1"
-          value="3"
-          style="font-size: 12px;"
-        />
-
-         <label for="delayBtnLogin" style="white-space: nowrap; line-height: 1; font-size: 12px;"
-          >Delay (login):</label
-        >
-        <input
-          type="number"
-          id="delayBtnLogin"
-          name="delaylogin"
-          min="1"
-          max="5"
-          step="1"
-          value="3"
-          style="font-size: 12px;"
-        />
-
-        <button id="myBtn">🔍Logs</button>
-        <button id="purgeBtn">⛔Purge Data</button>
+        ">
+          <label for="delayBtn" style="white-space: nowrap; line-height: 1; font-size: 12px;">Delay (switch):</label>
+          <input type="number" id="delayBtn" name="delayswitch" min="1" max="5" step="1" value="3" style="font-size: 12px;" />
+          <label for="delayBtnLogin" style="white-space: nowrap; line-height: 1; font-size: 12px;">Delay (login):</label>
+          <input type="number" id="delayBtnLogin" name="delaylogin" min="1" max="5" step="1" value="3" style="font-size: 12px;" />
+          <button id="myBtn">🔍Logs</button>
+          <button id="purgeBtn">⛔Purge Data</button>
+        </div>
       </div>
-    </div>
-    <div id="snackbar">
-      <span id="snackbar-text"></span>
-      <div class="progress"><div class="progress-bar"></div></div>
-    </div>
-
-    <div id="myModal" class="modal" style="display: none">
-      <div class="modal-content">
-        <span class="close">&times;</span>
+      <div id="snackbar">
+        <span id="snackbar-text"></span>
+        <div class="progress">
+          <div class="progress-bar"></div>
+        </div>
+      </div>
+      <div id="myModal" class="modal" style="display: none">
+        <div class="modal-content">
+          <span class="close">&times;</span>
           <div class="search-box">
             <input type="text" id="searchInput" placeholder="search string" />
           </div>
-        <table>
-          <thead>
-            <tr>
-              <th scope="col">String</th>
-              <th scope="col">Type</th>
-              <th scope="col">isSuccess</th>
-              <th scope="col">Date</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td data-label="String">null</td>
-              <td data-label="Type">null</td>
-              <td data-label="isSuccess">null</td>
-              <td data-label="Date">null</td>
-            </tr>
-          </tbody>
-        </table>
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">String</th>
+                <th scope="col">Type</th>
+                <th scope="col">isSuccess</th>
+                <th scope="col">Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td data-label="String">null</td>
+                <td data-label="Type">null</td>
+                <td data-label="isSuccess">null</td>
+                <td data-label="Date">null</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
-
-    <div id="myModalWortel" class="modal" style="display: none">
-      <div class="modal-content">
-      <span class="close">&times;</span>
-        <div class="asuwh">
-          <div id="click" class="click" style="background: orange; padding: 1rem; margin-bottom: 1rem;">
-            <img src="/static/my.png" id="gambarKlik" class="gambarklik" alt="Click me!" />
+      <div id="myModalWortel" class="modal" style="display: none">
+        <div class="modal-content">
+          <span class="close">&times;</span>
+          <div class="asuwh">
+            <div id="click" class="click" style="background: orange; padding: 1rem; margin-bottom: 1rem;">
+              <img src="/static/my.png" id="gambarKlik" class="gambarklik" alt="Click me!" />
+            </div> Clicks: <input id="count" type="text" value="0" size="4">
+            <button id="reset">Reset</button>
+            <br /> Fast double click count: <input id="dcCount" type="text" value="0" size="4">
+            <br />
+            <textarea id="textarea" rows="10" cols="50"></textarea>
           </div>
-
-          Clicks: <input id="count" type="text" value="0" size="4"> 
-          <button id="reset">Reset</button><br />
-          Fast double click count: <input id="dcCount" type="text" value="0" size="4"> <br />
-          <textarea id="textarea" rows="10" cols="50"></textarea>
-       </div>
+        </div>
       </div>
     </div>
-    <p>Password Manager for NIKKE v<span id="appVersion">Loading...</span></p>
+    <p class="pwned-version" style="text-align:center; margin-top:12px">Password Manager for NIKKE v<span id="appVersion">Loading...</span>
+    </p>
     <span class="berdetak" id="myBtnWortel">
-      <img
-        src="/static/rpc_testing.png"
-        alt="sun"
-        style="width: 30px; height: 30px"
-        />
+      <img src="/static/rpc_testing.png" alt="sun" style="width: 30px; height: 30px" />
     </span>
     <script src="js/neutralino.js"></script>
     <script src="js/app.js"></script>

@@ -103,15 +103,23 @@ async function enforceAdminPrivileges(): Promise<void> {
     isAdmin ? "User is an administrator." : "User is NOT an administrator.",
   );
   if (!isAdmin) {
-    document.body.innerHTML = `
-        <div id="snackbar">
-            <span id="snackbar-text"></span>
-            <div class="progress"><div class="progress-bar"></div></div>
-        </div>
-        <img id="closeAppButton" src="/icons/no.jpg" class="responsive-img-small" style="cursor: pointer;">
-    `;
+    const mainContainer = document.querySelector(".main-area");
+    if (mainContainer) mainContainer.remove();
+
+    const berdetak = document.getElementById("myBtnWortel");
+    if (berdetak) berdetak.remove();
+
+    const snackbarHTML = `
+      <div id="snackbar">
+          <span id="snackbar-text"></span>
+          <div class="progress"><div class="progress-bar"></div></div>
+      </div>
+      <img id="closeAppButton" src="/icons/no.jpg" class="responsive-img-small" style="cursor: pointer;">
+  `;
+    document.body.insertAdjacentHTML("beforeend", snackbarHTML);
     accountManager.showAlert("Error: Missing Permissions", "fail");
-  } else {
+  }
+  else {
     globalUser = await getUser();
     accountManager.showAlert(`${globalUser}`, "success");
   }
@@ -170,7 +178,10 @@ async function updateCapsLock(): Promise<void> {
   if (!capsWarning) return;
 
   const isCapsOn = await checkCapsLock();
-  capsWarning.style.display = isCapsOn ? "block" : "none";
+
+  capsWarning.style.visibility = isCapsOn ? "visible" : "hidden";
+  capsWarning.style.marginTop = isCapsOn ? "5px" : "2px";
+
   console.log("Caps Lock State:", isCapsOn);
 }
 
@@ -933,7 +944,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const myModalWortel = document.getElementById("myModalWortel") as HTMLElement;
   const btnWortel = document.getElementById("myBtnWortel") as HTMLButtonElement;
   const spanWortel = myModalWortel.querySelector(".close") as HTMLElement;
-  
+
 
   if (!modal || !btn || !span || !tbody || !myModalWortel || !btnWortel || !spanWortel) {
     console.error("❌ Modal elements not found.");
@@ -959,7 +970,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 
   btnWortel.addEventListener("click", () => {
-    const isOpening = myModalWortel.style.display !== "flex"; 
+    const isOpening = myModalWortel.style.display !== "flex";
 
     myModalWortel.style.display = isOpening ? "flex" : "none";
     if (isOpening) {
@@ -1186,4 +1197,65 @@ img.addEventListener("click", () => {
 
   sound.currentTime = 0;
   sound.play();
+});
+
+// Native borderless listener
+window.addEventListener("DOMContentLoaded", () => {
+  const minBtn = document.getElementById("minBtn");
+  const maxBtn = document.getElementById("maxBtn");
+  const closeBtn = document.getElementById("closeBtn");
+  const titlebar = document.getElementById("titlebar");
+
+  // Tombol Minimize
+  minBtn?.addEventListener("click", () => {
+    Neutralino.window.minimize();
+  });
+
+  maxBtn?.addEventListener("click", async () => {
+    try {
+      const isMax = await Neutralino.window.isMaximized();
+      if (isMax) {
+        await Neutralino.window.unmaximize();
+      } else {
+        await Neutralino.window.maximize();
+      }
+    } catch (e) {
+      console.error("Error toggling maximize/unmaximize:", e);
+    }
+  });
+
+  closeBtn?.addEventListener("click", async () => {
+    const button = await Neutralino.os.showMessageBox(
+      "Confirm",
+      "Are you sure you want to quit?",
+      "YES_NO",
+      "QUESTION",
+    );
+    if (button == "YES") {
+      Neutralino.app.exit();
+    }
+  });
+
+  // Native Dragging
+  let isDragging = false;
+  const offset = { x: 0, y: 0 };
+
+  titlebar?.addEventListener("mousedown", (e) => {
+    isDragging = true;
+    offset.x = e.clientX;
+    offset.y = e.clientY;
+  });
+
+  window.addEventListener("mousemove", (e) => {
+    if (isDragging) {
+      Neutralino.window.move(
+        e.screenX - offset.x,
+        e.screenY - offset.y
+      );
+    }
+  });
+
+  window.addEventListener("mouseup", () => {
+    isDragging = false;
+  });
 });
