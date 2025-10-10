@@ -1,3 +1,4 @@
+const staging = true;
 let ws: WebSocket | null = null;
 let globalUser: string;
 
@@ -30,6 +31,13 @@ enum ActivityAssets {
   Maintaining = "https://raw.githubusercontent.com/ScathachGrip/nikkePwned/refs/heads/master/resources/static/rpc_maintain.png",
   Registering = "https://raw.githubusercontent.com/ScathachGrip/nikkePwned/refs/heads/master/resources/static/rpc_register.png",
   Testing = "https://raw.githubusercontent.com/ScathachGrip/nikkePwned/refs/heads/master/resources/static/rpc_testing.png",
+}
+
+enum SystemInfoPrefix {
+  CPU = "\"Get-CimInstance Win32_VideoController | Select-Object -ExpandProperty Name\"",
+  GPU = "\"Get-CimInstance Win32_Processor | Select-Object -ExpandProperty Name\"",
+  MOBO = "\"(Get-CimInstance Win32_BaseBoard | Select-Object -ExpandProperty Manufacturer) + ' (' + (Get-CimInstance Win32_BaseBoard | Select-Object -ExpandProperty Product) + ')'\"",
+  MOUSE = "\"Get-CimInstance Win32_PointingDevice | Select-Object -ExpandProperty Name\""
 }
 
 /**
@@ -109,12 +117,15 @@ async function enforceAdminPrivileges(): Promise<void> {
     const berdetak = document.getElementById("myBtnWortel");
     if (berdetak) berdetak.remove();
 
+    const themeToggle = document.getElementById("themeToggle");
+    if (themeToggle) themeToggle.remove();
+
     const snackbarHTML = `
       <div id="snackbar">
           <span id="snackbar-text"></span>
           <div class="progress"><div class="progress-bar"></div></div>
       </div>
-      <img id="closeAppButton" src="/icons/no.jpg" class="responsive-img-small" style="cursor: pointer;">
+      <img id="closeAppButton" src="/icons/no.jpg" class="responsive-img-small funFadeInUp" style="cursor: pointer;">
   `;
     document.body.insertAdjacentHTML("beforeend", snackbarHTML);
     accountManager.showAlert("Error: Missing Permissions", "fail");
@@ -126,6 +137,42 @@ async function enforceAdminPrivileges(): Promise<void> {
 }
 
 enforceAdminPrivileges();
+
+/**
+ * Fetch CPU, GPU, Motherboard, and Mouse info in parallel.
+ * @returns {Promise<void>}
+ */
+async function getSystemInfo(): Promise<void> {
+  try {
+    const [resultGpu, resultCpu, resultMobo, resultMouse] = await Promise.all([
+      Neutralino.os.execCommand(
+        `powershell -Command ${SystemInfoPrefix.CPU}`
+      ),
+      Neutralino.os.execCommand(
+        `powershell -Command ${SystemInfoPrefix.GPU}`
+      ),
+      Neutralino.os.execCommand(
+        `powershell -Command ${SystemInfoPrefix.MOBO}`
+      ),
+      Neutralino.os.execCommand(
+        `powershell -Command ${SystemInfoPrefix.MOUSE}`
+      )
+    ]);
+
+    const applyItem = {
+      cpu: resultCpu.stdOut.trim(),
+      gpu: resultGpu.stdOut.trim(),
+      mobo: resultMobo.stdOut.trim(),
+      mouse: resultMouse.stdOut.trim()
+    };
+
+    console.log("✅ Fetched info:", applyItem);
+  } catch (err) {
+    console.error("⚠️ Failed to fetch system info:", err);
+  }
+}
+
+if (!staging) getSystemInfo();
 
 /**
  * Checks if `discord-rpc.exe` is currently running.
@@ -178,10 +225,8 @@ async function updateCapsLock(): Promise<void> {
   if (!capsWarning) return;
 
   const isCapsOn = await checkCapsLock();
-
-  capsWarning.style.visibility = isCapsOn ? "visible" : "hidden";
-  capsWarning.style.marginTop = isCapsOn ? "5px" : "2px";
-
+  capsWarning.style.display = isCapsOn ? "block" : "none";
+  capsWarning.style.marginTop = isCapsOn ? "-15px" : "2px";
   console.log("Caps Lock State:", isCapsOn);
 }
 
@@ -235,7 +280,7 @@ class PwnedManager {
       if (!data) return;
 
       const accounts: Account[] = JSON.parse(data);
-      this.select.innerHTML = "<option value=\"\">Select an Account</option>";
+      this.select.innerHTML = "<option value=\"\">👉Select an Account</option>";
 
       accounts.forEach((acc: Account, index: number) => {
         const option = document.createElement("option");
@@ -520,6 +565,7 @@ Neutralino.init();
 Neutralino.events.on("ready", async () => {
   console.log("🟢 Neutralino App Ready");
 
+  
   const config = await Neutralino.app.getConfig();
   (document.getElementById("appVersion") as HTMLElement).innerText =
     config.version || "Unknown";
@@ -537,6 +583,41 @@ Neutralino.events.on("ready", async () => {
     pathDisplay.textContent = launcherPath;
     runBtn.disabled = false;
   }
+
+  const body = document.body;
+  const themeToggle = document.getElementById("themeToggle") as HTMLElement | null;
+  const appLogo = document.getElementById("appLogo") as HTMLImageElement | null;
+
+  if (!themeToggle) {
+    console.error("Theme toggle element not found");
+    return;
+  }
+
+  /**
+   * Apply the theme and update the logo.
+   * @param {boolean} isLight
+   */
+  const applyTheme = async (isLight: boolean): Promise<void> => {
+    body.classList.toggle("light-mode", isLight);
+    if (appLogo) appLogo.src = isLight ? "/icons/logo-light.png" : "/icons/logo.png";
+    await Neutralino.storage.setData("theme", isLight ? "light" : "dark");
+  };
+
+  // Load saved theme from Neutralino storage (persistent between sessions)
+  try {
+    const savedTheme = await Neutralino.storage.getData("theme");
+    applyTheme(savedTheme === "light");
+  } catch {
+    // First run: default to dark
+    await Neutralino.storage.setData("theme", "dark");
+    applyTheme(false);
+  }
+
+  // Toggle theme on click
+  themeToggle.addEventListener("click", async (): Promise<void> => {
+    const isLight = !body.classList.contains("light-mode");
+    await applyTheme(isLight);
+  });
 
   /**
    * Handles the "Select Path" button click event to choose the game executable.
@@ -749,6 +830,8 @@ Neutralino.events.on("ready", async () => {
         );
 
         if (await isLauncherRunning()) {
+          haik.currentTime = 0;
+          haik.play();
           await Neutralino.os.showNotification(
             `${account.nickname} `,
             "Successfully logged in!",
@@ -1156,6 +1239,7 @@ const dcCount = document.getElementById("dcCount") as HTMLInputElement;
 const reset = document.getElementById("reset") as HTMLButtonElement;
 const img = document.getElementById("gambarKlik") as HTMLImageElement;
 const sound = new Audio("/static/ichad.wav");
+const haik = new Audio("/static/haikchad.wav");
 
 let prevClickMicrotime = microtime(true);
 
@@ -1259,3 +1343,24 @@ window.addEventListener("DOMContentLoaded", () => {
     isDragging = false;
   });
 });
+
+const placeholderText: string = `{
+    "nickname": "FUFUFAFA",
+    "email": "hey@scathach.id",
+    "password": "ReDaCtEd123"
+}`;
+
+const accountTextArea = document.getElementById("jsonInput") as HTMLTextAreaElement;
+let i = 0;
+
+function typePlaceholder(): void {
+  if (i <= placeholderText.length) {
+    accountTextArea.setAttribute("placeholder", placeholderText.slice(0, i));
+    i++;
+    setTimeout(typePlaceholder, 40); 
+  } else {
+    return; 
+  }
+}
+
+typePlaceholder();

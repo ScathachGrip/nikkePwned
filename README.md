@@ -30,7 +30,7 @@ The motivation of this project is simplified login process, allowing users inter
   - [Limitations](#Limitations)
     - [Prevent antivirus things](./LIMITATIONS.md#prevent-windows-defender-from-flagging-the-tool)
     - [Tool flagged as potential malware](./LIMITATIONS.md#this-tool-flagged-as-potential-malware)
-  - [Frequently asked questions ](#frequently-asked-questions)
+  - [Application safety report](#application-safety-report)
   - [Pronunciation](#Pronunciation)
   - [Acknowledgements](./CLOSING_REMARKS.md)
   - [Legal](#legal)
@@ -39,6 +39,7 @@ The motivation of this project is simplified login process, allowing users inter
 Managing multiple accounts can be frustrating and inefficient, especially when you need to **log in manually one by one**. For users who frequently switch between multiple accounts, constantly entering login information can be a repetitive and tiresome task.  
 
 # The Solution  
+![Cute cat](./resources/static/flow.png)  
 This extension was designed to simplified login process, **automate the login process**, allowing users to log in to their accounts **quickly and effortlessly**. Instead copying pasting or manually typing credentials every time, this tool handles the process for you, **saving time and reducing errors**. By streamlining account management, this tool makes switching between accounts **seamless and efficient**, eliminating the hassle of repetitive logins. Whether you're managing a handful of accounts or dozens, this tool ensures a smoother, faster, and more convenient login experience. 
 
 
@@ -70,7 +71,7 @@ This extension was designed to simplified login process, **automate the login pr
 **OPTIONAL**: this tools has DISCORD rich presence support if you like to..  
 Just open `discord-rpc.exe` BEFORE `nikkepwned-win_x64.exe` for realtime state checks.  
 
-<img width="950" src="resources/icons/rpc.png" alt="nikkepwned"></a>
+<img width="950" src="resources/icons/rpc_dd.png" alt="nikkepwned"></a>
 
 ## Essential Features
 
@@ -171,7 +172,16 @@ This tool must be `run as Administrator` to function correctly because:
 
 > Read more: [LIMITATIONS.md for clearly explanation.](./LIMITATIONS.md)
 
-## Frequently asked questions 
+
+## Application Safety Report
+
+**Security Notice**. For transparency, this application was analyzed by multiple third‑party scanning and sandboxing services. Detection engines may sometimes classify the binary as suspicious because it launches PowerShell commands through `<Neutralino.os.execCommand()>` and issues simulated keystrokes to interact with the UI (e.g., `[System.Windows.Forms.SendKeys]::SendWait`). These actions are implemented solely to automate legitimate user interactions (automated login for the NIKKE client) and not for credential harvesting, persistence, or remote access. Such automation patterns can match behavioral signatures used by endpoint protection products; therefore, if you encounter a positive detection, treat it as a potential false positive and consult the linked scan reports or contact the AV vendor for a formal false‑positive review.
+
+- **[VirusTotal Scan Report](https://www.virustotal.com/gui/file/08bc7cb8491627835ea958595386e0d3007cc3a150f1c6d28f03739d4629e9c7)**
+- **[Hybrid Analysis Report](https://hybrid-analysis.com/sample/08bc7cb8491627835ea958595386e0d3007cc3a150f1c6d28f03739d4629e9c7)**
+- **[Jotti's Malware Scan Report](https://virusscan.jotti.org/en-US/filescanjob/x2zfdx6pqb)**
+- **[MetaDefender Report](https://metadefender.com/results/file/bzI1MDkxOW5hbmtUNjA5NW5Id2hTWm9jZHNK_mdaas)**  
+
 **Q: Is this safe?**  
 > Yes, my code is fully transparent, I even write it with sweet and readable COMMENTS to make more casual or entry level can understand. You can check the source yourself—take a look at [app.ts](./src/app.ts) and [discord-rpc.cjs](./discord-rpc.cjs). There are no hidden scripts or anything suspicious.
 

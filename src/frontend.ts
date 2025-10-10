@@ -27,947 +27,1281 @@ const fs = require("fs");
 
 const htmlContent = `
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Account Index</title>
-    <link rel="stylesheet" href="https://fonts.bunny.net/css?family=manrope:300,400,500,600,700,800&display=swap">
-    <link rel="icon" type="image/x-icon" href="/icons/favicon.ico" />
-    <style>
-      :root {
-        --bg: #0f0f0fff;
-        --titlebar-bg: #0f0f0fff;
-        --accent: #ff8a00;
-        /* orange color */
-        --muted: #bdbdbd;
-      }
 
-      * {
-        box-sizing: border-box
-      }
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Account Index</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap">
+  <link rel="icon" type="image/x-icon" href="/icons/favicon.ico" />
+  <style>
+    :root {
+      --bg: #0f0f0fff;
+      --titlebar-bg: #0f0f0fff;
+      --accent: #e05bc4ff;
+      --muted: #bdbdbd;
+      --text: #eee;
+      transition: background-color 0.4s ease, color 0.4s ease;
+    }
 
-      html,
-      body {
-        height: 100vh;
-        display: flex;
-        margin: 0;
-        font-family: 'Manrope', sans-serif;
-        background: var(--bg);
-        color: #eee;
-        flex-direction: column;
-        /* susun vertikal */
-        -webkit-font-smoothing: antialiased
-      }
+    .light-mode {
+      --bg: #ffffff;
+      --titlebar-bg: #ffffff;
+      --accent: #ff6f61;
+      --muted: #666;
+      --text: #111;
+    }
 
-      .titlebar {
-        -webkit-app-region: drag;
-        height: 36px;
-        background: var(--titlebar-bg);
-        -webkit-app-region: drag;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 0 8px;
-      }
+    .funFadeInUp {
+      opacity: 0;
+      transform: translateY(40px) rotate(-8deg) scale(0.85);
+      animation: funFadeInUp 1s cubic-bezier(0.42, 0, 0.58, 1) forwards;
+      animation-delay: 0.5s;
+    }
 
-      .main-area {
-        flex: 1;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-      }
-
-      .title-left {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-      }
-
-      .app-icon {
-        width: 18px;
-        height: 18px;
-        border-radius: 3px;
-        background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02));
-        border: 1px solid rgba(255, 255, 255, 0.04);
-        box-shadow: 0 0 0 2px rgba(255, 138, 0, 0.04) inset;
-      }
-
-      .app-title {
-        font-size: 13px;
-        color: var(--muted);
-        letter-spacing: 0.2px;
-      }
-
-      .window-controls {
-        display: flex;
-        gap: 8px;
-        align-items: center;
-        -webkit-app-region: no-drag;
-      }
-
-      .window-controls button {
-        -webkit-app-region: no-drag;
-        cursor: pointer;
-      }
-
-      .ctl {
-        width: 24px;
-        height: 24px;
-        border: 1px solid #666;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: transparent;
-        cursor: pointer;
-        padding: 0;
-        margin-top: -1px;
-      }
-
-      /* mimic screenshot: orange outline and small icon inside */
-      .ctl svg {
-        fill: none;
-        stroke: currentColor;
-        color: var(--accent);
-      }
-
-      /* hover/active */
-      .ctl:hover {
-        background: rgba(255, 138, 0, 0.06);
-        transform: translateY(-1px);
-      }
-
-      .ctl:active {
-        transform: translateY(0);
-      }
-
-      .ctl-close {
-        border-color: rgba(255, 138, 0, 0.9);
-        background: rgba(255, 138, 0, 0.04);
-        color: var(--accent);
-      }
-
-      .ctl-close:hover {
-        background: rgba(255, 138, 0, 0.14);
-      }
-
-      .container {
-        width: 90% !important;
-        max-width: 450px !important;
-        background: #24242bff !important;
-        padding: 20px !important;
-        border-radius: 10px !important;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2) !important;
-        margin: 20px auto !important;
-      }
-
-      textarea {
-        width: 100%;
-        height: 100px;
-        background: #333344;
-        color: white;
-        border: none;
-        padding: 10px;
-        border-radius: 5px;
-        resize: none;
-        box-sizing: border-box;
-      }
-
-      select,
-      button {
-        width: 100%;
-        padding: 10px;
-        margin-top: 10px;
-        font-size: 16px;
-        border: none;
-        border-radius: 5px;
-      }
-
-      select {
-        background: #444455;
-        color: white;
-      }
-
-      #registerBtn {
-        background: #007bff;
-        color: white;
-      }
-
-      #registerBtn:hover {
-        background: #529be8;
-      }
-
-      #runBtn {
-        background: #28a745;
-        color: white;
-      }
-
-      #runBtn:hover {
-        background: #68e986;
-      }
-
-      #removeBtn {
-        background: #a20a0a;
-        color: white;
-      }
-
-      #removeBtn:hover {
-        background: #d74141;
-      }
-
-      .agold {
-        color: #FFD700;
-        text-decoration: none;
-      }
-
-      .agold:hover {
-        color: rgb(156, 135, 15);
-      }
-
-      .responsive-img {
-        width: 100%;
-        height: auto;
-        max-width: 400px;
-        display: block;
-        margin: 0 auto;
-      }
-
-      .responsive-img-small {
-        width: 100%;
-        height: auto;
-        max-width: 320px;
-        display: block;
-        margin: 0 auto;
-      }
-
-      #selectPathBtn {
-        margin-left: 3px;
-        background-color: #007bff;
-        color: white;
-        font-size: 12px;
-        border: none;
-        padding: 3px 9px;
-        cursor: pointer;
-        border-radius: 3px;
-        width: auto;
-        min-width: 50px;
-      }
-
-      #selectPathBtn:hover {
-        background-color: #529be8;
-      }
-
-      #pathContainer {
-        display: flex;
-        align-items: center;
-        gap: 5px;
-      }
-
-      #selectedPath {
-        font-family: monospace;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-
-      /* Base Snackbar container */
-      #snackbar {
-        visibility: hidden;
-        max-width: 320px;
-        color: #fff;
-        text-align: left;
-        border-radius: 8px;
-        padding: 14px 16px;
-        position: fixed;
-        z-index: 1000;
-        top: 20px;
-        right: 20px;
-        font-size: 14px;
-        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
+    @keyframes funFadeInUp {
+      0% {
         opacity: 0;
-        transform: translateY(-10px);
-        transition: opacity 0.3s, transform 0.3s;
+        transform: translateY(40px) rotate(-8deg) scale(0.85);
       }
 
-      /* Success Snackbar */
-      #snackbar.success {
-        background-color: #222;
-        /* Dark gray */
-      }
-
-      /* Fail Snackbar */
-      #snackbar.fail {
-        background-color: rgb(133, 12, 12);
-        /* Red */
-      }
-
-      /* Show Snackbar */
-      #snackbar.show {
-        visibility: visible;
+      25% {
         opacity: 1;
-        transform: translateY(0);
+        transform: translateY(-10px) rotate(4deg) scale(1.05);
       }
 
-      /* Snackbar Text */
-      #snackbar-text {
-        flex: 1;
-        word-wrap: break-word;
+      45% {
+        transform: translateY(5px) rotate(-2deg) scale(0.98);
       }
 
-      .progress {
-        height: 4px;
-        width: 100%;
-        background-color: rgba(255, 255, 255, 0.2);
-        border-radius: 2px;
-        overflow: hidden;
-        position: relative;
+      60% {
+        transform: translateY(-3px) rotate(1deg) scale(1.02);
       }
 
-      .progress-bar {
-        height: 100%;
-        width: 0%;
-        position: absolute;
-        left: 0;
-        top: 0;
+      75% {
+        transform: translateY(1px) rotate(-0.5deg) scale(1.01);
       }
 
-      /* Success Bar */
-      #snackbar.success .progress-bar {
-        background-color: rgb(145, 255, 0);
-        /* Orange */
+      100% {
+        opacity: 1;
+        transform: translateY(0) rotate(0deg) scale(1);
+      }
+    }
+
+    * {
+      box-sizing: border-box
+    }
+
+    html,
+    body {
+      height: 100vh;
+      display: flex;
+      margin: 0;
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      flex-direction: column;
+
+      -webkit-font-smoothing: antialiased; transition: background 0.4s ease, color 0.4s ease;
+
+      /*
+      background-image:
+        linear-gradient(
+          color-mix(in srgb, var(--bg) 80%, transparent),
+          color-mix(in srgb, var(--bg) 80%, transparent)
+        ),
+        url('someshit');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-attachment: fixed; 
+      */
+    }
+
+    html,
+    body,
+    button,
+    input,
+    select,
+    textarea,
+    option {
+      font-family: 'DM Sans', sans-serif !important;
+      -webkit-font-smoothing: antialiased;
+
+    }
+
+    .titlebar {
+      -webkit-app-region: drag;
+      height: 36px;
+      background: var(--titlebar-bg);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 8px;
+      transition: background 0.4s ease;
+    }
+
+    .theme-switch {
+      position: relative;
+      width: 50px;
+      height: 24px;
+      background: var(--muted);
+      border-radius: 24px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    .theme-switch::before {
+      content: "";
+      position: absolute;
+      top: 2px;
+      left: 3px;
+      width: 20px;
+      height: 20px;
+      background: var(--accent);
+      border-radius: 50%;
+      transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .light-mode .theme-switch::before {
+      transform: translateX(26px);
+    }
+
+    .main-area {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .title-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .app-icon {
+      width: 18px;
+      height: 18px;
+      border-radius: 3px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02));
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      box-shadow: 0 0 0 2px rgba(255, 138, 0, 0.04) inset;
+    }
+
+    .app-title {
+      font-size: 13px;
+      color: var(--muted);
+      letter-spacing: 0.2px;
+    }
+
+    .window-controls {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      -webkit-app-region: no-drag;
+    }
+
+    .window-controls button {
+      -webkit-app-region: no-drag;
+      cursor: pointer;
+    }
+
+    .ctl {
+      width: 24px;
+      height: 24px;
+      border: 1px solid #666;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      cursor: pointer;
+      padding: 0;
+      margin-top: -1px;
+    }
+
+    .ctl svg {
+      fill: none;
+      stroke: currentColor;
+      color: var(--accent);
+    }
+
+    .ctl:hover {
+      background: rgba(255, 138, 0, 0.06);
+      transform: translateY(-1px);
+    }
+
+    .ctl:active {
+      transform: translateY(0);
+    }
+
+    .ctl-close {
+      border-color: rgba(255, 138, 0, 0.9);
+      background: rgba(255, 138, 0, 0.04);
+      color: var(--accent);
+    }
+
+    .ctl-close:hover {
+      background: rgba(255, 138, 0, 0.14);
+    }
+
+    .container {
+      width: 90% !important;
+      max-width: 450px !important;
+      background: #24242bff !important;
+      padding: 20px !important;
+      border-radius: 10px !important;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2) !important;
+      margin: 20px auto !important;
+    }
+
+    .light-mode .container {
+      background: #ffffff !important;
+      color: #000000 !important;
+    }
+
+    textarea {
+      width: 100%;
+      height: 100px;
+      background: #333344;
+      color: white;
+      border: none;
+      padding: 10px;
+      border-radius: 5px;
+      resize: none;
+      box-sizing: border-box;
+      scrollbar-width: thin;
+      scrollbar-color: #c0392b #333344;
+    }
+
+    .light-mode textarea {
+      background: #f0f0f0;
+      color: #000000;
+      scrollbar-color: #007bff #f0f0f0;
+      scrollbar-width: thin;
+    }
+
+    select,
+    button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      font-size: 16px;
+      border: none;
+      border-radius: 5px;
+    }
+
+    select {
+      background: #1d1d25ff;
+      color: white;
+    }
+
+    select::-webkit-scrollbar {
+      width: 5px;
+    }
+
+    select::-webkit-scrollbar-track {
+      background-color: #1d1d25ff;
+    }
+
+    select::-webkit-scrollbar-thumb {
+      background-color: red;
+      border-radius: 5px;
+    }
+
+    select::-webkit-scrollbar-thumb:hover {
+      background-color: gold;
+    }
+
+    .light-mode select {
+      background: #f0f0f0;
+      color: #000000;
+    }
+
+    .light-mode select::-webkit-scrollbar-track {
+      background-color: #f0f0f0;
+    }
+
+    #registerBtn {
+      border-radius: 10px;
+      background: #007bff;
+      color: white;
+    }
+
+    #registerBtn:hover {
+      background: #529be8;
+    }
+
+    .light-mode #registerBtn {
+      background: #222;
+      color: white;
+    }
+
+    .light-mode #registerBtn:hover {
+      background: #555;
+    }
+
+    #runBtn {
+      border-radius: 5px;
+      background: #28a745;
+      color: white;
+    }
+
+    #runBtn:hover {
+      background: #68e986;
+    }
+
+    #removeBtn {
+      border-radius: 5px;
+      background: #a20a0a;
+      color: white;
+    }
+
+    #removeBtn:hover {
+      background: #d74141;
+    }
+
+    .agold {
+      color: #FFD700;
+      text-decoration: none;
+    }
+
+    .agold:hover {
+      color: rgb(156, 135, 15);
+    }
+
+    .responsive-img {
+      width: 100%;
+      height: auto;
+      max-width: 400px;
+      display: block;
+      margin: 0 auto;
+    }
+
+    .responsive-img-small {
+      width: 100%;
+      height: auto;
+      max-width: 320px;
+      display: block;
+      margin: 0 auto;
+    }
+
+    #selectPathBtn {
+      margin-left: 3px;
+      background-color: #b91515ff;
+      color: white;
+      font-size: 12px;
+      border: none;
+      padding: 3px 9px;
+      cursor: pointer;
+      border-radius: 10px;
+      width: auto;
+      min-width: 50px;
+    }
+
+    #selectPathBtn:hover {
+      background-color: #e03030ff;
+    }
+
+    .light-mode #selectPathBtn {
+      background-color: #007bff;
+    }
+
+    .light-mode #selectPathBtn:hover {
+      background-color: #529be8;
+    }
+
+    #pathContainer {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    #selectedPath {
+      font-family: monospace;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    #snackbar {
+      visibility: hidden;
+      max-width: 420px;
+      color: #fff;
+      text-align: left;
+      border-radius: 8px;
+      padding: 14px 16px;
+      position: fixed;
+      z-index: 1000;
+      top: 40px;
+      right: 20px;
+      font-size: 14px;
+      box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      opacity: 0;
+      transform: translateY(-10px);
+      transition: opacity 0.3s, transform 0.3s;
+    }
+
+    .light-mode #snackbar {
+      color: #000;
+    }
+
+    #snackbar.success {
+      background-color: #222;
+    }
+
+    .light-mode #snackbar.success {
+      background-color: #f0f5f2ff;
+    }
+
+    #snackbar.fail {
+      background-color: rgb(133, 12, 12);
+    }
+
+    #snackbar.show {
+      visibility: visible;
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    #snackbar-text {
+      flex: 1;
+      word-wrap: break-word;
+    }
+
+    .progress {
+      height: 4px;
+      width: 100%;
+      background-color: rgba(255, 255, 255, 0.2);
+      border-radius: 2px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      position: absolute;
+      left: 0;
+      top: 0;
+    }
+
+    #snackbar.success .progress-bar {
+      background-color: rgb(145, 255, 0);
+    }
+
+    .light-mode #snackbar.success .progress-bar {
+      background-color: rgb(0, 145, 0);
+    }
+
+    #snackbar.fail .progress-bar {
+      background-color: rgb(166, 255, 0);
+    }
+
+    .light-mode #snackbar.fail .progress-bar {
+      background-color: rgb(255, 0, 0);
+    }
+
+    @media (max-width: 600px) {
+      #snackbar {
+        max-width: 90%;
+        right: 5%;
+        left: auto;
+        font-size: 13px;
+        padding: 12px;
+      }
+    }
+
+    .modal {
+      border: none !important;
+      display: none;
+
+      position: fixed;
+      z-index: 1000;
+
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.68);
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+
+      -webkit-animation-name: animatebottom;
+
+      -webkit-animation-duration: 0.4s;
+      animation-name: animatebottom;
+      animation-duration: 0.4s
+    }
+
+    .modal-content {
+      border: none !important;
+      background-color: rgb(23, 22, 22);
+      padding: 20px;
+      border-radius: 10px;
+      border: 1px solid #888;
+      width: 80%;
+      max-width: 700px;
+
+      max-height: 80vh;
+
+      overflow-y: auto;
+
+      display: flex;
+      flex-direction: column;
+      -webkit-animation-name: animatebottom;
+      -webkit-animation-duration: 0.4s;
+      animation-name: animatebottom;
+      animation-duration: 0.4s
+    }
+
+    .light-mode .modal-content {
+      background-color: #f0f0f0;
+      color: #000000;
+      border: 1px solid #ccc;
+    }
+
+    .modal-content {
+      scrollbar-color: #555 #222;
+
+      scrollbar-width: thin;
+    }
+
+    .light-mode .modal-content {
+      scrollbar-color: #777 #ddd;
+
+      scrollbar-width: thin;
+    }
+
+    .modal-content::-webkit-scrollbar {
+      width: 8px;
+
+    }
+
+    .modal-content::-webkit-scrollbar-track {
+      background: #222;
+
+      border-radius: 10px;
+    }
+
+    .light-mode .modal-content::-webkit-scrollbar-track {
+      background: #ddd;
+
+      border-radius: 10px;
+    }
+
+    .modal-content::-webkit-scrollbar-thumb {
+      background: #555;
+
+      border-radius: 10px;
+    }
+
+    .light-mode .modal-content::-webkit-scrollbar-thumb {
+      background: #777;
+
+      border-radius: 10px;
+    }
+
+    .modal-content::-webkit-scrollbar-thumb:hover {
+      background: #777;
+
+    }
+
+    .light-mode .modal-content::-webkit-scrollbar-thumb:hover {
+      background: #999;
+
+    }
+
+    .close {
+      color: #aaaaaa;
+      align-self: flex-end;
+      font-size: 20px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .light-mode .close {
+      color: #555555;
+    }
+
+    .close:hover {
+      color: #ffffff;
+    }
+
+    .light-mode .close:hover {
+      color: #000000;
+    }
+
+    #myBtn {
+      background-color: rgb(20, 21, 22);
+      color: white;
+      font-size: 12px;
+      border: none;
+      padding: 3px 9px;
+      cursor: pointer;
+      border-radius: 3px;
+      width: auto;
+      min-width: 50px;
+    }
+
+    #myBtn:hover {
+      background-color: rgb(71, 73, 74);
+    }
+
+    #purgeBtn {
+      background-color: rgb(105, 5, 5);
+      color: white;
+      font-size: 12px;
+      border: none;
+      padding: 3px 9px;
+      cursor: pointer;
+      border-radius: 3px;
+      width: auto;
+      min-width: 50px;
+    }
+
+    #purgeBtn:hover {
+      background-color: rgb(196, 15, 15);
+    }
+
+    #delayBtn {
+      background-color: rgb(20, 21, 22);
+      color: white;
+      font-size: 12px;
+      border: 1px solid rgb(71, 73, 74);
+      padding: 3px 6px;
+      border-radius: 3px;
+      width: 25px;
+      height: 25px;
+
+      text-align: center;
+      vertical-align: middle;
+    }
+
+    #delayBtn,
+    label[for="delayBtn"] {
+      margin-top: 8px;
+
+    }
+
+    #delayBtn:focus {
+      outline: none;
+      border-color: rgb(100, 100, 100);
+    }
+
+    #delayBtn:focus {
+      outline: none;
+      border-color: rgb(100, 100, 100);
+    }
+
+    #delayBtnLogin {
+      background-color: rgb(20, 21, 22);
+      color: white;
+      font-size: 10px;
+      border: 1px solid rgb(71, 73, 74);
+      padding: 3px 6px;
+      border-radius: 3px;
+      width: 25px;
+      height: 25px;
+
+      text-align: center;
+      vertical-align: middle;
+    }
+
+    #delayBtnLogin,
+    label[for="delayBtnLogin"] {
+      margin-top: 8px;
+
+    }
+
+    #delayBtnLogin:focus {
+      outline: none;
+      border-color: rgb(100, 100, 100);
+    }
+
+    #delayBtnLogin:focus {
+      outline: none;
+      border-color: rgb(100, 100, 100);
+    }
+
+    table,
+    th,
+    td,
+    tr {
+      border-radius: 10px;
+      background-color: rgb(16, 16, 16) !important;
+      color: white !important;
+      border: none !important;
+    }
+
+    .light-mode table,
+    .light-mode th,
+    .light-mode td,
+    .light-mode tr {
+      background-color: rgb(240, 240, 240) !important;
+      color: black !important;
+    }
+
+    table {
+      border-collapse: collapse;
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      table-layout: fixed;
+    }
+
+    table caption {
+      font-size: 1.5em;
+      margin: .5em 0 .75em;
+    }
+
+    table tr {
+      background-color: rgb(5, 5, 5);
+      border: 1px solid #ddd;
+      padding: .35em;
+    }
+
+    table th,
+    table td {
+      padding: .625em;
+      text-align: center;
+    }
+
+    table th {
+      font-size: .85em;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+
+    @keyframes animatebottom {
+      from {
+        bottom: -300px;
+        opacity: 0
       }
 
-      /* Fail Bar */
-      #snackbar.fail .progress-bar {
-        background-color: rgb(166, 255, 0);
-        /* Bright Red */
+      to {
+        bottom: 0;
+        opacity: 1
       }
+    }
 
-      /* Responsive: Adjust for small screens */
-      @media (max-width: 600px) {
-        #snackbar {
-          max-width: 90%;
-          right: 5%;
-          left: auto;
-          font-size: 13px;
-          padding: 12px;
-        }
-      }
-
-      .modal {
-        border: none !important;
-        display: none;
-        /* Hidden by default */
-        position: fixed;
-        z-index: 1000;
-        /* High z-index */
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.68);
-        /* Black w/ opacity */
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        overflow: hidden;
-        /* Prevent full-page scrolling */
-        -webkit-animation-name: animatebottom;
-        /* Fade in the background */
-        -webkit-animation-duration: 0.4s;
-        animation-name: animatebottom;
-        animation-duration: 0.4s
-      }
-
-      /* Modal Content */
-      .modal-content {
-        border: none !important;
-        background-color: rgb(23, 22, 22);
-        padding: 20px;
-        border-radius: 10px;
-        border: 1px solid #888;
-        width: 80%;
-        max-width: 700px;
-        /* Limit modal width */
-        max-height: 80vh;
-        /* Prevent modal from taking full height */
-        overflow-y: auto;
-        /* Enable scrolling inside modal */
-        display: flex;
-        flex-direction: column;
-        -webkit-animation-name: animatebottom;
-        -webkit-animation-duration: 0.4s;
-        animation-name: animatebottom;
-        animation-duration: 0.4s
-      }
-
-      .modal-content {
-        scrollbar-color: #555 #222;
-        /* thumb color, track color */
-        scrollbar-width: thin;
-      }
-
-      .modal-content::-webkit-scrollbar {
-        width: 8px;
-        /* Adjust width */
-      }
-
-      .modal-content::-webkit-scrollbar-track {
-        background: #222;
-        /* Dark background */
-        border-radius: 10px;
-      }
-
-      .modal-content::-webkit-scrollbar-thumb {
-        background: #555;
-        /* Dark gray scrollbar */
-        border-radius: 10px;
-      }
-
-      .modal-content::-webkit-scrollbar-thumb:hover {
-        background: #777;
-        /* Lighter gray on hover */
-      }
-
-      /* The Close Button */
-      .close {
-        color: #aaaaaa;
-        align-self: flex-end;
-        font-size: 20px;
-        font-weight: bold;
-        cursor: pointer;
-      }
-
-      .close:hover {
-        color: #ffffff;
-      }
-
-      /* Button Styling */
-      #myBtn {
-        background-color: rgb(20, 21, 22);
-        color: white;
-        font-size: 12px;
-        border: none;
-        padding: 3px 9px;
-        cursor: pointer;
-        border-radius: 3px;
-        width: auto;
-        min-width: 50px;
-      }
-
-      #myBtn:hover {
-        background-color: rgb(71, 73, 74);
-      }
-
-      #purgeBtn {
-        background-color: rgb(105, 5, 5);
-        color: white;
-        font-size: 12px;
-        border: none;
-        padding: 3px 9px;
-        cursor: pointer;
-        border-radius: 3px;
-        width: auto;
-        min-width: 50px;
-      }
-
-      #purgeBtn:hover {
-        background-color: rgb(196, 15, 15);
-      }
-
-      #delayBtn {
-        background-color: rgb(20, 21, 22);
-        color: white;
-        font-size: 12px;
-        border: 1px solid rgb(71, 73, 74);
-        padding: 3px 6px;
-        border-radius: 3px;
-        width: 30px;
-        height: 25px;
-        /* Match button height */
-        text-align: center;
-        vertical-align: middle;
-      }
-
-      /* Push input and label lower */
-      #delayBtn,
-      label[for="delayBtn"] {
-        margin-top: 8px;
-        /* Adjust for lower positioning */
-      }
-
-      #delayBtn:focus {
-        outline: none;
-        border-color: rgb(100, 100, 100);
-      }
-
-      #delayBtn:focus {
-        outline: none;
-        border-color: rgb(100, 100, 100);
-      }
-
-      #delayBtnLogin {
-        background-color: rgb(20, 21, 22);
-        color: white;
-        font-size: 12px;
-        border: 1px solid rgb(71, 73, 74);
-        padding: 3px 6px;
-        border-radius: 3px;
-        width: 30px;
-        height: 25px;
-        /* Match button height */
-        text-align: center;
-        vertical-align: middle;
-      }
-
-      /* Push input and label lower */
-      #delayBtnLogin,
-      label[for="delayBtnLogin"] {
-        margin-top: 8px;
-        /* Adjust for lower positioning */
-      }
-
-      #delayBtnLogin:focus {
-        outline: none;
-        border-color: rgb(100, 100, 100);
-      }
-
-      #delayBtnLogin:focus {
-        outline: none;
-        border-color: rgb(100, 100, 100);
-      }
-
-      table,
-      th,
-      td,
-      tr {
-        border-radius: 10px;
-        background-color: rgb(16, 16, 16) !important;
-        color: white !important;
-        border: none !important;
-      }
-
-      table {
-        border-collapse: collapse;
-        margin: 0;
-        padding: 0;
-        width: 100%;
-        table-layout: fixed;
-      }
-
+    @media screen and (max-width: 600px) {
       table caption {
-        font-size: 1.5em;
-        margin: .5em 0 .75em;
+        font-size: 1.3em;
+      }
+
+      table thead {
+        clip: rect(0 0 0 0);
+        height: 1px;
+        margin: -1px;
+        overflow: hidden;
+        padding: 0;
+        position: absolute;
+        width: 1px;
       }
 
       table tr {
-        background-color: rgb(5, 5, 5);
-        border: 1px solid #ddd;
-        padding: .35em;
+        display: block;
+        margin-bottom: .625em;
       }
 
-      table th,
       table td {
-        padding: .625em;
-        text-align: center;
+        display: block;
+        font-size: .8em;
+        text-align: right;
       }
 
-      table th {
-        font-size: .85em;
-        letter-spacing: .1em;
+      table td::before {
+
+        content: attr(data-label);
+        float: left;
+        font-weight: bold;
         text-transform: uppercase;
       }
 
-      @keyframes animatebottom {
-        from {
-          bottom: -300px;
-          opacity: 0
-        }
+      table td:last-child {
+        border-bottom: 0;
+      }
+    }
 
-        to {
-          bottom: 0;
-          opacity: 1
-        }
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    input[type="number"] {
+      -moz-appearance: textfield;
+    }
+
+    #logoContainer {
+      position: relative;
+    }
+
+    #capsWarning {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      margin: 2px auto;
+      padding: 2px 8px;
+      color: red;
+      width: fit-content;
+      font-size: 0.8rem;
+      font-weight: 900;
+      display: none;
+      white-space: nowrap;
+      z-index: 10;
+    }
+
+    .caps-on #capsWarning {
+      display: block;
+    }
+
+
+    .search-box {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 16px;
+
+    }
+
+    .search-box .search-icon {
+      width: 30px;
+      height: 30px;
+    }
+
+    #searchInput {
+      flex: 1;
+      max-width: 300px;
+      padding: 6px 10px;
+      font-size: 14px;
+      color: #eee;
+      background-color: #111;
+      border: 1px solid rgb(0, 0, 0);
+      border-radius: 4px;
+      transition: border-color 0.2s, background-color 0.2s;
+    }
+
+    .light-mode #searchInput {
+      color: #000;
+      background-color: #eee;
+      border: 1px solid #ccc;
+    }
+
+    #searchInput:focus {
+      outline: none;
+      border-color: rgb(41, 39, 39);
+      background-color: #111;
+    }
+
+    .light-mode #searchInput:focus {
+      border-color: #888;
+      background-color: #eee;
+    }
+
+    @keyframes berdetak {
+
+      0%,
+      100% {
+        transform: scale(1);
       }
 
-      @media screen and (max-width: 600px) {
-        table caption {
-          font-size: 1.3em;
-        }
+      50% {
+        transform: scale(1.1);
+      }
+    }
 
-        table thead {
-          clip: rect(0 0 0 0);
-          height: 1px;
-          margin: -1px;
-          overflow: hidden;
-          padding: 0;
-          position: absolute;
-          width: 1px;
-        }
-
-        table tr {
-          display: block;
-          margin-bottom: .625em;
-        }
-
-        table td {
-          display: block;
-          font-size: .8em;
-          text-align: right;
-        }
-
-        table td::before {
-          /*
-          * aria-label has no advantage, it won't be read inside a table
-          content: attr(aria-label);
-          */
-          content: attr(data-label);
-          float: left;
-          font-weight: bold;
-          text-transform: uppercase;
-        }
-
-        table td:last-child {
-          border-bottom: 0;
-        }
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
       }
 
-      input[type="number"]::-webkit-inner-spin-button,
-      input[type="number"]::-webkit-outer-spin-button {
-        -webkit-appearance: none;
-        margin: 0;
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    .berdetak {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background-color: #5c0939ff;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      animation: berdetak 1s ease-in-out infinite;
+      z-index: 9999;
+      cursor: pointer;
+    }
+
+    .light-mode .berdetak {
+      background-color: #fa95d8ff;
+    }
+
+    .berdetak:hover {
+      animation: spin 2s linear infinite;
+    }
+
+    .berdetak img {
+      width: 50px;
+      height: 50px;
+      pointer-events: none;
+
+    }
+
+    .tia {
+      position: fixed;
+      bottom: 80px;
+      right: 20px;
+      background-color: #3b3838ff;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+
+      z-index: 9999;
+      cursor: pointer;
+    }
+
+    .light-mode .tia {
+      background-color: #c4babaff;
+    }
+
+    .tia:hover {
+      animation: spin 2s linear infinite;
+    }
+
+    .tiaa img {
+      width: 50px;
+      height: 50px;
+      pointer-events: none;
+
+    }
+
+    #click {
+      background-color: #292929;
+      color: #eee;
+      padding: 1rem;
+      border-radius: 6px;
+      margin-bottom: 1rem;
+      border: 1px solid #444;
+      font-size: 0.95rem;
+    }
+
+    .light-mode #click {
+      background-color: #f9f9f9;
+      color: #000;
+      border: 1px solid #ccc;
+    }
+
+    input[type="text"] {
+      background-color: #222;
+      color: #eee;
+      border: 1px solid #555;
+      border-radius: 4px;
+      padding: 4px 8px;
+      margin-bottom: 0.5rem;
+      width: 60px;
+      font-size: 0.9rem;
+      vertical-align: middle;
+    }
+
+    .light-mode input[type="text"] {
+      background-color: #f0f0f0;
+      color: #000;
+      border: 1px solid #ccc;
+    }
+
+    button#reset {
+      background-color: #a80a24;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      padding: 4px 10px;
+      font-size: 0.85rem;
+      height: 28px;
+      margin-left: 6px;
+      cursor: pointer;
+      transform: translateY(-5px);
+    }
+
+    button#reset:hover {
+      background-color: #c41630;
+    }
+
+    #dcCount {
+      background-color: #222;
+      color: #eee;
+      border: 1px solid #555;
+      border-radius: 4px;
+      padding: 4px 8px;
+      margin-bottom: 0.5rem;
+      width: 60px;
+      font-size: 0.9rem;
+    }
+
+    .light-mode #dcCount {
+      background-color: #f0f0f0;
+      color: #000;
+      border: 1px solid #ccc;
+    }
+
+    #textarea {
+      background-color: #111;
+      color: #eee;
+      border: 1px solid #444;
+      border-radius: 4px;
+      padding: 6px;
+      width: 100%;
+      margin-top: 0.5rem;
+      resize: vertical;
+      font-family: monospace;
+      font-size: 0.85rem;
+    }
+
+    .light-mode #textarea {
+      background-color: #f9f9f9;
+      color: #000;
+      border: 1px solid #ccc;
+    }
+
+    .gambarklik {
+      width: 100%;
+      height: auto;
+      cursor: pointer;
+    }
+
+    @keyframes vibrate {
+
+      0%,
+      100% {
+        transform: translate(0, 0);
       }
 
-      input[type="number"] {
-        -moz-appearance: textfield;
+      20% {
+        transform: translate(-15px, 15px);
       }
 
-      #capsWarning {
-        visibility: hidden;
-        font-size: 12px;
-        font-weight: 900;
-        text-align: center;
-        margin: 2px auto;
-        color: red;
-        width: fit-content;
-        transition: all 0.2s ease;
+      40% {
+        transform: translate(15px, -15px);
       }
 
-      .search-box {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        margin-bottom: 16px;
-        /* jarak bawah */
+      60% {
+        transform: translate(-15px, -15px);
       }
 
-      .search-box .search-icon {
-        width: 30px;
-        height: 30px;
+      80% {
+        transform: translate(15px, 15px);
       }
+    }
 
-      #searchInput {
-        flex: 1;
-        max-width: 300px;
-        padding: 6px 10px;
-        font-size: 14px;
-        color: #eee;
-        background-color: #111;
-        border: 1px solid rgb(0, 0, 0);
-        border-radius: 4px;
-        transition: border-color 0.2s, background-color 0.2s;
-      }
+    .vibrate {
+      animation: vibrate 0.08s linear;
+    }
 
-      #searchInput:focus {
-        outline: none;
-        border-color: rgb(41, 39, 39);
-        background-color: #111;
-      }
+    .smol {
+      margin: 0;
+      padding: 0;
+      height: 7px;
 
-      @keyframes berdetak {
+      color: red;
+      font-size: 12px;
+      visibility: hidden;
 
-        0%,
-        100% {
-          transform: scale(1);
-        }
+    }
 
-        50% {
-          transform: scale(1.1);
-        }
-      }
+    .window-controls {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
 
-      @keyframes spin {
-        0% {
-          transform: rotate(0deg);
-        }
+    .ctl {
+      width: 22px;
+      height: 22px;
+      background: transparent;
+      border: none;
+      outline: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+    }
 
-        100% {
-          transform: rotate(360deg);
-        }
-      }
+    .dot {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      display: block;
+      transition: transform 0.15s ease, filter 0.15s ease;
+    }
 
-      .berdetak {
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        background-color: white;
-        width: 50px;
-        height: 50px;
-        border-radius: 50%;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        animation: berdetak 1s ease-in-out infinite;
-        z-index: 9999;
-        cursor: pointer;
-      }
+    .dot-close {
+      background-color: #a01b14ff;
+    }
 
-      .berdetak:hover {
-        animation: spin 2s linear infinite;
-      }
+    .dot-min {
+      background-color: #febc2e;
+    }
 
-      .berdetak img {
-        width: 50px;
-        height: 50px;
-        pointer-events: none;
-        /* so the hover still works on the span */
-      }
+    .dot-max {
+      background-color: #4b37b9ff;
+    }
 
-      #click {
-        background-color: #292929;
-        color: #eee;
-        padding: 1rem;
-        border-radius: 6px;
-        margin-bottom: 1rem;
-        border: 1px solid #444;
-        font-size: 0.95rem;
-      }
+    .ctl:hover .dot {
+      transform: scale(1.1);
+      filter: brightness(1.15);
+    }
 
-      input[type="text"] {
-        background-color: #222;
-        color: #eee;
-        border: 1px solid #555;
-        border-radius: 4px;
-        padding: 4px 8px;
-        margin-bottom: 0.5rem;
-        width: 60px;
-        font-size: 0.9rem;
-        vertical-align: middle;
-      }
+    #accountSelect {
+      transition: all 0.3s ease;
+    }
+  </style>
+</head>
 
-      button#reset {
-        background-color: #a80a24;
-        color: #fff;
-        border: none;
-        border-radius: 4px;
-        padding: 4px 10px;
-        font-size: 0.85rem;
-        height: 28px;
-        margin-left: 6px;
-        cursor: pointer;
-        transform: translateY(-5px);
-      }
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>NikkePwned</title>
+</head>
 
-      button#reset:hover {
-        background-color: #c41630;
-      }
-
-      #dcCount {
-        background-color: #222;
-        color: #eee;
-        border: 1px solid #555;
-        border-radius: 4px;
-        padding: 4px 8px;
-        margin-bottom: 0.5rem;
-        width: 60px;
-        font-size: 0.9rem;
-      }
-
-      #textarea {
-        background-color: #111;
-        color: #eee;
-        border: 1px solid #444;
-        border-radius: 4px;
-        padding: 6px;
-        width: 100%;
-        margin-top: 0.5rem;
-        resize: vertical;
-        font-family: monospace;
-        font-size: 0.85rem;
-      }
-
-      .gambarklik {
-        width: 100%;
-        height: auto;
-        cursor: pointer;
-      }
-
-      @keyframes vibrate {
-
-        0%,
-        100% {
-          transform: translate(0, 0);
-        }
-
-        20% {
-          transform: translate(-15px, 15px);
-        }
-
-        40% {
-          transform: translate(15px, -15px);
-        }
-
-        60% {
-          transform: translate(-15px, -15px);
-        }
-
-        80% {
-          transform: translate(15px, 15px);
-        }
-      }
-
-      .vibrate {
-        animation: vibrate 0.08s linear;
-      }
-
-      .smol {
-        margin: 0;
-        padding: 0;
-        height: 7px;
-        /* jarak default */
-        color: red;
-        font-size: 12px;
-        visibility: hidden;
-        /* hide dulu */
-      }
-    </style>
-  </head>
-  <head>
-    <meta charset="utf-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>NikkePwned</title>
-  </head>
-  <body>
-    <div id="titlebar" class="titlebar">
-      <div class="title-left">
-        <div class="app-icon" aria-hidden="true"></div>
-        <span class="app-title">nikkePwned</span>
-      </div>
-      <div class="window-controls" role="group" aria-label="Window controls">
-        <button id="minBtn" class="ctl ctl-min" aria-label="Minimize" title="Minimize">
-          <!-- minus icon -->
-          <svg viewBox="0 0 10 2" width="14" height="14" aria-hidden="true">
-            <rect width="10" height="2" rx="1"></rect>
-          </svg>
-        </button>
-        <button id="maxBtn" class="ctl ctl-max" aria-label="Maximize" title="Maximize">
-          <!-- square icon -->
-          <svg viewBox="0 0 10 10" width="12" height="12" aria-hidden="true">
-            <rect x="1" y="1" width="8" height="8" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.4"></rect>
-          </svg>
-        </button>
-        <button id="closeBtn" class="ctl ctl-close" aria-label="Close" title="Close">
-          <!-- X icon -->
-          <svg viewBox="0 0 10 10" width="12" height="12" aria-hidden="true">
-            <path d="M1 1 L9 9 M9 1 L1 9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></path>
-          </svg>
-        </button>
-      </div>
+<body>
+  <div id="titlebar" class="titlebar">
+    <div class="title-left">
+      <div class="app-icon" aria-hidden="true"></div>
+      <span class="app-title">nikkePwned</span>
     </div>
-    <!-- your app content -->
-    <div class="main-area">
-      <div class="container">
-        <img src="/icons/logo.png" alt="Description" class="responsive-img" />
-        <div id="capsWarning" class="smol">⚠️ Caps Lock is ON</div>
-        <div id="pathContainer" style="display: flex; align-items: center">
-          <pre id="selectedPath">
-Please select where nikke_launcher.exe was installed.</pre>
-          <button id="selectPathBtn">Edit</button>
-        </div>
-        <textarea id="jsonInput" placeholder="Enter account JSON here..."></textarea>
-        <button id="registerBtn">🔑Register Accounts</button>
-        <br />
-        <br />
-        <select id="accountSelect">
-          <option value="">Select account</option>
-        </select>
-        <button id="runBtn">Proceed auto login</button>
-        <br />
-        <button id="removeBtn">or Remove account</button>
-        <div style="
+    <div class="window-controls" role="group" aria-label="Window controls">
+      <button id="minBtn" class="ctl ctl-min" aria-label="Minimize" title="Minimize">
+        <span class="dot dot-min"></span>
+      </button>
+      <button id="maxBtn" class="ctl ctl-max" aria-label="Maximize" title="Maximize">
+        <span class="dot dot-max"></span>
+      </button>
+      <button id="closeBtn" class="ctl ctl-close" aria-label="Close" title="Close">
+        <span class="dot dot-close"></span>
+      </button>
+    </div>
+
+  </div>
+  <!-- your app content -->
+  <div class="main-area">
+    <div class="container funFadeInUp">
+      <div id="logoContainer" style="position: relative; display: inline-block;">
+        <img src="/icons/logo.png" id="appLogo" alt="Description" class="responsive-img" />
+        <div id="capsWarning">⚠️ Caps Lock is ON</div>
+      </div>
+      <div id="pathContainer" style="display: flex; align-items: center">
+        🧩
+        <pre id="selectedPath" style="color: #298fd8ff;">
+Select where nikke_launcher.exe was installed.</pre>
+        <button id="selectPathBtn" style="font-weight: 900;">✏️Edit</button>
+      </div>
+      <textarea id="jsonInput" placeholder="Enter account JSON here..."></textarea>
+      <button id="registerBtn" style="font-weight: 900;">📝Register Accounts</button>
+      <br />
+      <br />
+      <select id="accountSelect">
+        <option value="" style="font-weight: 900;">👉Select account</option>
+      </select>
+      <button id="runBtn" style="font-weight: 900;">🚀Proceed auto login</button>
+      <br />
+      <button id="removeBtn" style="font-weight: 900;">🚫Remove account</button>
+      <div style="
           display: flex;
           align-items: center;
           justify-content: center;
           gap: 6px;
           height: 32px;
         ">
-          <label for="delayBtn" style="white-space: nowrap; line-height: 1; font-size: 12px;">Delay (switch):</label>
-          <input type="number" id="delayBtn" name="delayswitch" min="1" max="5" step="1" value="3" style="font-size: 12px;" />
-          <label for="delayBtnLogin" style="white-space: nowrap; line-height: 1; font-size: 12px;">Delay (login):</label>
-          <input type="number" id="delayBtnLogin" name="delaylogin" min="1" max="5" step="1" value="3" style="font-size: 12px;" />
-          <button id="myBtn">🔍Logs</button>
-          <button id="purgeBtn">⛔Purge Data</button>
-        </div>
+        <label for="delayBtn" style="white-space: nowrap; line-height: 1; font-size: 12px;">Delay (switch):</label>
+        <input type="number" id="delayBtn" name="delayswitch" min="1" max="5" step="1" value="3"
+          style="font-size: 12px;" />
+        <label for="delayBtnLogin" style="white-space: nowrap; line-height: 1; font-size: 12px;">Delay (login):</label>
+        <input type="number" id="delayBtnLogin" name="delaylogin" min="1" max="5" step="1" value="3"
+          style="font-size: 12px;" />
+        <button id="myBtn">🔍Logs</button>
+        <button id="purgeBtn">⛔Purge Data</button>
       </div>
-      <div id="snackbar">
-        <span id="snackbar-text"></span>
-        <div class="progress">
-          <div class="progress-bar"></div>
-        </div>
+    </div>
+    <div id="snackbar">
+      <span id="snackbar-text"></span>
+      <div class="progress">
+        <div class="progress-bar"></div>
       </div>
-      <div id="myModal" class="modal" style="display: none">
-        <div class="modal-content">
-          <span class="close">&times;</span>
-          <div class="search-box">
-            <input type="text" id="searchInput" placeholder="search string" />
-          </div>
-          <table>
-            <thead>
-              <tr>
-                <th scope="col">String</th>
-                <th scope="col">Type</th>
-                <th scope="col">isSuccess</th>
-                <th scope="col">Date</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td data-label="String">null</td>
-                <td data-label="Type">null</td>
-                <td data-label="isSuccess">null</td>
-                <td data-label="Date">null</td>
-              </tr>
-            </tbody>
-          </table>
+    </div>
+    <div id="myModal" class="modal" style="display: none">
+      <div class="modal-content">
+        <span class="close">&times;</span>
+        <div class="search-box">
+          <input type="text" id="searchInput" placeholder="search string" />
         </div>
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">String</th>
+              <th scope="col">Type</th>
+              <th scope="col">isSuccess</th>
+              <th scope="col">Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td data-label="String">null</td>
+              <td data-label="Type">null</td>
+              <td data-label="isSuccess">null</td>
+              <td data-label="Date">null</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
-      <div id="myModalWortel" class="modal" style="display: none">
-        <div class="modal-content">
-          <span class="close">&times;</span>
-          <div class="asuwh">
-            <div id="click" class="click" style="background: orange; padding: 1rem; margin-bottom: 1rem;">
-              <img src="/static/my.png" id="gambarKlik" class="gambarklik" alt="Click me!" />
-            </div> Clicks: <input id="count" type="text" value="0" size="4">
-            <button id="reset">Reset</button>
-            <br /> Fast double click count: <input id="dcCount" type="text" value="0" size="4">
-            <br />
-            <textarea id="textarea" rows="10" cols="50"></textarea>
-          </div>
+    </div>
+    <div id="myModalWortel" class="modal" style="display: none">
+      <div class="modal-content">
+        <span class="close">&times;</span>
+        <div class="asuwh">
+          <div id="click" class="click" style="padding: 1rem; margin-bottom: 1rem;">
+            <img src="/static/my.png" id="gambarKlik" class="gambarklik" alt="Click me!" />
+          </div> Clicks:
+          <input id="count" type="text" value="0" size="4">
+          <button id="reset">Reset</button>
+          <br /> Fast double click count:
+          <input id="dcCount" type="text" value="0" size="4">
+          <br />
+          <textarea id="textarea" rows="10" cols="50"></textarea>
         </div>
       </div>
     </div>
-    <p class="pwned-version" style="text-align:center; margin-top:12px">Password Manager for NIKKE v<span id="appVersion">Loading...</span>
-    </p>
-    <span class="berdetak" id="myBtnWortel">
-      <img src="/static/rpc_testing.png" alt="sun" style="width: 30px; height: 30px" />
-    </span>
-    <script src="js/neutralino.js"></script>
-    <script src="js/app.js"></script>
-  </body>
+  </div>
+  <p class="pwned-version" style="text-align:center; margin-top:12px">Password Manager for NIKKE v<span
+      id="appVersion">Loading...</span>
+
+  </p>
+  <span class="berdetak" id="myBtnWortel">
+    <img src="/static/rpc_testing.png" alt="sun" style="width: 30px; height: 30px" />
+  </span>
+  <span class="tia" id="themeToggle">
+    <img src="/static/rpc_idle.png" alt="sun" style="width: 30px; height: 30px" />
+  </span>
+  <script src="js/neutralino.js"></script>
+  <script src="js/app.js"></script>
+</body>
+
 </html>
 `;
 
