@@ -1170,8 +1170,34 @@ const htmlContent = `
     #accountSelect {
       transition: all 0.3s ease;
     }
+
+   #loading {
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+  }
+
+  #loading img {
+    width: 130px;
+    height: 130px;
+    animation: bounceLoader 0.6s infinite alternate ease-out;
+  }
+
+  @keyframes bounceLoader {
+    0% {
+      transform: translateY(0) scale(1);
+    }
+    100% {
+      transform: translateY(-40px) scale(1.1);
+    }
+  }
   </style>
 </head>
+
 
 <head>
   <meta charset="utf-8" />
@@ -1179,6 +1205,10 @@ const htmlContent = `
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>NikkePwned</title>
 </head>
+
+<div id="loading">
+  <img id="loadingImg" src="" />
+</div>
 
 <body>
   <div id="titlebar" class="titlebar">
