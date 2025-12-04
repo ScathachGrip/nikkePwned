@@ -1,4 +1,5 @@
 const staging = true;
+const externalLoading = true;
 let ws: WebSocket | null = null;
 let globalUser: string;
 
@@ -457,7 +458,6 @@ class PwnedManager {
     }, 3000);
   }
 
-
   /**
    * Converts a timestamp to a readable date and "time ago" format.
    * @param {number} timestamp - The timestamp stored with Date.now().
@@ -551,6 +551,47 @@ class PwnedManager {
     } catch (e) {
       console.warn("⚠️ Failed to load history:", e);
     }
+  }
+
+  private loadingImgs: string[] = [
+    "ext_load_1",
+    "ext_load_2",
+    "ext_load_3",
+    "ext_load_4",
+    "ext_load_5",
+  ];
+
+  private getRandomLoader(): string {
+    return this.loadingImgs[Math.floor(Math.random() * this.loadingImgs.length)];
+  }
+
+  /**
+   * Starts the loading animation and changes the cursor to "wait".
+   * This function updates the loading image to a random loader
+   * 
+   * @returns {void} No return value; only updates the windows UI.
+   */
+  public startLoading(): void {
+    document.body.style.cursor = "wait";
+    const img = document.getElementById("loadingImg") as HTMLImageElement | null;
+    if (img) {
+      img.src = `/static/loading/${this.getRandomLoader()}.webp`;
+    }
+
+    const el = document.getElementById("loading");
+    if (el) el.style.display = "flex";
+  }
+
+  /**
+   * Finishes the loading animation and resets the cursor to "default".
+   * This function hides the loading element and resets the cursor style.
+   * 
+   * @returns {void} No return value; only updates the windows UI.
+  */
+  public finishLoading(): void {
+    document.body.style.cursor = "default";
+    const el = document.getElementById("loading");
+    if (el) el.style.display = "none";
   }
 
 }
@@ -820,6 +861,19 @@ Neutralino.events.on("ready", async () => {
           return;
         }
 
+        await new Promise(r => setTimeout(r, 0));
+
+        if (externalLoading) {
+          try {
+            accountManager.startLoading();
+            setTimeout(() => accountManager.finishLoading(), Number(getDelay) * 1000 || 3000);
+            console.log("loading jalan");
+          } catch (err: unknown) {
+            setTimeout(() => accountManager.finishLoading(), 3000);
+            console.log("loading gagal: " + (err as Error).message);
+          }
+        }
+
         console.log(`Opening NIKKE Launcher... (${launcherPath})`);
         await Neutralino.os.execCommand(
           `powershell -ExecutionPolicy Bypass -Command "Start-Process '${launcherPath}' -Verb RunAs"`,
@@ -1003,6 +1057,7 @@ Neutralino.events.on("ready", async () => {
   );
 });
 
+
 // Browser.events: DOMContentLoaded
 document.addEventListener("DOMContentLoaded", async () => {
   // Handling account selection
@@ -1027,7 +1082,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   const myModalWortel = document.getElementById("myModalWortel") as HTMLElement;
   const btnWortel = document.getElementById("myBtnWortel") as HTMLButtonElement;
   const spanWortel = myModalWortel.querySelector(".close") as HTMLElement;
-
 
   if (!modal || !btn || !span || !tbody || !myModalWortel || !btnWortel || !spanWortel) {
     console.error("❌ Modal elements not found.");
