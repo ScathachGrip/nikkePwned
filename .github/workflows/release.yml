@@ -22,6 +22,9 @@ jobs:
         with:
           node-version: 20
 
+      - name: Install Neutralino CLI
+        run: npm install -g @neutralinojs/neu
+
       - name: Install dependencies
         run: npm install
 
@@ -36,8 +39,13 @@ jobs:
 
       - name: Create tag
         run: |
-          git tag ${{ steps.pkg.outputs.version }}
-          git push origin ${{ steps.pkg.outputs.version }}
+          TAG=${{ steps.pkg.outputs.version }}
+          if git ls-remote --tags origin $TAG | grep $TAG; then
+            echo "Tag already exists"
+          else
+            git tag $TAG
+            git push origin $TAG
+          fi
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
