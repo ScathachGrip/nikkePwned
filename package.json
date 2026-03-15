@@ -2,7 +2,7 @@
   "name": "nikkepwned",
   "description": "Password Manager for NIKKE",
   "funding": "https://github.com/sponsors/sinkaroid",
-  "version": "3.0.1-indev",
+  "version": "3.0.2-indev",
   "scripts": {
     "clean": "rimraf --glob \"dist\" \"build\" \"out\" \"release\" \"*.exe\" \"*.zip\"",
     "prebuild": "ts-node src/frontend.ts",
