@@ -1478,19 +1478,3 @@ function typePlaceholder(): void {
 }
 
 typePlaceholder();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
