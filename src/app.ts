@@ -233,14 +233,44 @@ async function updateCapsLock(): Promise<void> {
 
 
 /**
- * Checks if the Discord Rich Presence (RPC) WebSocket is running.
- * If the RPC process is running, attempts to connect to the WebSocket server.
+ * Ensures discord-rpc.exe is running (same directory) and connects to the WebSocket server.
  */
-isRPCRunning().then((running) => {
+async function ensureRPCRunning(): Promise<boolean> {
+  const alreadyRunning = await isRPCRunning();
+  if (alreadyRunning) return true;
+
+  try {
+    await Neutralino.os.execCommand(
+      "powershell -ExecutionPolicy Bypass -Command \"Start-Process -WindowStyle Hidden -FilePath \\\"$PWD\\discord-rpc.exe\\\"\"",
+    );
+    await new Promise((r) => setTimeout(r, 1000));
+    return await isRPCRunning();
+  } catch (err) {
+    console.error("Failed to start discord-rpc.exe:", err);
+    return false;
+  }
+}
+
+async function stopRPCProcess(): Promise<void> {
+  try {
+    await Neutralino.os.execCommand("taskkill /F /IM discord-rpc.exe");
+  } catch (err) {
+    console.warn("Failed to stop discord-rpc.exe:", err);
+  }
+}
+
+async function exitApp(): Promise<void> {
+  await stopRPCProcess();
+  Neutralino.app.exit();
+}
+
+ensureRPCRunning().then((running) => {
   if (running) {
     ws = new WebSocket("ws://localhost:6464");
     ws.onopen = () => console.log("🟢 Connected to RPC WebSocket");
     ws.onerror = (err) => console.warn("⚠️ WebSocket error:", err);
+  } else {
+    console.warn("RPC not running. WebSocket not connected.");
   }
 });
 
@@ -816,10 +846,29 @@ Neutralino.events.on("ready", async () => {
   (document.getElementById("runBtn") as HTMLButtonElement).addEventListener(
     "click",
     async () => {
-      const getDelay =
-        (await Neutralino.storage.getData("delay_switch")) || "3";
-      const getDelayLogin =
-        (await Neutralino.storage.getData("delay_login")) || "3";
+      const now = new Date();
+      const pad2 = (n: number): string => (n < 10 ? `0${n}` : String(n));
+      const todayKey = `${now.getFullYear()}-${pad2(now.getMonth() + 1)}-${pad2(now.getDate())}`;
+      const lastRunDate = await Neutralino.storage
+        .getData("last_run_date")
+        .catch(() => "");
+
+      const isFirstRunToday = lastRunDate !== todayKey;
+      console.log(
+        `DailyDelay: todayKey=${todayKey}, lastRunDate=${lastRunDate}, firstRunToday=${isFirstRunToday}`,
+      );
+      const storedDelaySwitch =
+        (await Neutralino.storage.getData("delay_switch")) || "5";
+      const storedDelayLogin =
+        (await Neutralino.storage.getData("delay_login")) || "5";
+      const getDelay = isFirstRunToday ? "5" : storedDelaySwitch;
+      const getDelayLogin = isFirstRunToday ? "5" : storedDelayLogin;
+
+      console.log(`Using delay: ${getDelay}s (switch), ${getDelayLogin}s (login)`);
+
+      if (isFirstRunToday) {
+        await Neutralino.storage.setData("last_run_date", todayKey);
+      }
 
       const select = document.getElementById(
         "accountSelect",
@@ -866,6 +915,7 @@ Neutralino.events.on("ready", async () => {
         if (externalLoading) {
           try {
             accountManager.startLoading();
+            console.log(`Loading delay (switch): ${getDelay}s`);
             setTimeout(() => accountManager.finishLoading(), Number(getDelay) * 1000 || 3000);
             console.log("loading jalan");
           } catch (err: unknown) {
@@ -1067,8 +1117,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   // Handling exit onlick closeAppButton
-  document.body.addEventListener("click", ({ target }) => {
-    if ((target as HTMLElement).id === "closeAppButton") Neutralino.app.exit();
+  document.body.addEventListener("click", async ({ target }) => {
+    if ((target as HTMLElement).id === "closeAppButton") await exitApp();
   });
 
   // Modal-related elements
@@ -1145,8 +1195,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       storedDelay = await Neutralino.storage.getData("delay_switch");
     } catch (error) {
       if ((error as { code: string }).code === "NE_ST_NOSTKEX") {
-        await Neutralino.storage.setData("delay_switch", "3");
-        console.warn("⚠️ No existing delay switch found, setting default (3).");
+        await Neutralino.storage.setData("delay_switch", "5");
+        console.warn("⚠️ No existing delay switch found, setting default (5).");
       } else {
         throw error;
       }
@@ -1181,7 +1231,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         Date.now(),
       );
     } else {
-      await Neutralino.storage.setData("delay_switch", "3");
+      await Neutralino.storage.setData("delay_switch", "5");
       console.warn("⚠️ Delay value switch out of range (1-8).");
       accountManager.showAlert(
         "Delay value switch out of range: Expected (1-8) seconds.",
@@ -1206,8 +1256,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       storedDelay = await Neutralino.storage.getData("delay_login");
     } catch (error) {
       if ((error as { code: string }).code === "NE_ST_NOSTKEX") {
-        await Neutralino.storage.setData("delay_login", "3");
-        console.warn("⚠️ No existing delay login found, setting default (3).");
+        await Neutralino.storage.setData("delay_login", "5");
+        console.warn("⚠️ No existing delay login found, setting default (5).");
       } else {
         throw error;
       }
@@ -1242,7 +1292,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         Date.now(),
       );
     } else {
-      await Neutralino.storage.setData("delay_login", "3");
+      await Neutralino.storage.setData("delay_login", "5");
       console.warn("⚠️ Delay value login out of range (1-8).");
       accountManager.showAlert(
         "Delay value login out of range: Expected (1-8) seconds.",
@@ -1261,8 +1311,18 @@ Neutralino.events.on("windowClose", async () => {
     "QUESTION",
   );
   if (button == "YES") {
-    Neutralino.app.exit();
+    await exitApp();
   }
+});
+
+// Neutralino.events: appClose (covers app termination paths)
+Neutralino.events.on("appClose", async () => {
+  await stopRPCProcess();
+});
+
+// Browser: best-effort cleanup on unload (dev Ctrl+C may kill backend)
+window.addEventListener("beforeunload", () => {
+  void stopRPCProcess();
 });
 
 // Neutralino.events: serverOffline
@@ -1370,7 +1430,7 @@ window.addEventListener("DOMContentLoaded", () => {
       "QUESTION",
     );
     if (button == "YES") {
-      Neutralino.app.exit();
+      await exitApp();
     }
   });
 
@@ -1418,3 +1478,19 @@ function typePlaceholder(): void {
 }
 
 typePlaceholder();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

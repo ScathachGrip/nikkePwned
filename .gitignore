@@ -1,7 +1,10 @@
 # Developer tools' files
 .vscode
 .temp/auth_info.json
+.temp/window_state.config.json
 .temp
+.tmp/window_state.config.json
+.tmp
 .storage
 dist
 .lite_workspace.lua
