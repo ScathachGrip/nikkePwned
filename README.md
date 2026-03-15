@@ -45,6 +45,7 @@ This extension was designed to simplified login process, **automate the login pr
 
 ## Prerequisites
 - Windows 11 & Windows 10 64bit
+  - any other tests are welcome
 - You should turn-off antivirus
   - You should do some exception things or exclusion 
     - (if your antivirus scanning this tool however)
@@ -68,8 +69,8 @@ This extension was designed to simplified login process, **automate the login pr
 </table>
 
 ## Discord RPC supports
-**OPTIONAL**: this tools has DISCORD rich presence support if you like to..  
-Just open `discord-rpc.exe` BEFORE `nikkepwned-win_x64.exe` for realtime state checks.  
+**Started from `3.0.1-indev`**: this tools has automated created websocket connection to [Discord Rich Presence](https://docs.discord.com/developers/platform/rich-presence).  
+*If you willing to disable it check your task manager and kill it manual*
 
 <img width="950" src="resources/icons/rpc_dd.png" alt="nikkepwned"></a>
 
@@ -94,11 +95,11 @@ Just open `discord-rpc.exe` BEFORE `nikkepwned-win_x64.exe` for realtime state c
 
 - **Delay (Switch)**:
   - Time delay between account switches.  
-  - Default: `3` (Range: `1-8` seconds).
+  - Default: `5` (Range: `1-8` seconds).
 
 - **Delay (Login)**:
   - Time delay before login to prevent abuse.  
-  - Default: `3` (Range: `1-8` seconds).
+  - Default: `5` (Range: `1-8` seconds).
 
 - **Logs**:
   - Displays activity logs, including login attempts, path adjustments, and delay settings.
