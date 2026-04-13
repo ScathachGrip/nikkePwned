@@ -1,7 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/neutralinojs/neutralinojs/main/schemas/neutralino.config.schema.json",
-  "applicationId": "neu.js.nikkepwned",
-  "version": "3.0.3-indev",
+  "applicationId": "com.scathachgrip.nikkepwned",
+  "version": "4.0.1-indev",
   "applicationName": "NIKKEPwned",
   "author": "ScathachGrip",
   "description": "NIKKEPwned",
@@ -17,7 +17,7 @@
     "enabled": true,
     "writeToLogFile": true
   },
- "nativeAllowList": [
+  "nativeAllowList": [
     "app.*",
     "os.*",
     "debug.log",
@@ -53,7 +53,7 @@
       "fullScreen": false,
       "alwaysOnTop": false,
       "icon": "/resources/icons/appIcon.png",
-      "enableInspector": false,
+      "enableInspector": true,
       "borderless": true,
       "maximize": false,
       "hidden": false,
@@ -89,8 +89,7 @@
     "resourcesPath": "/resources/",
     "extensionsPath": "/extensions/",
     "clientLibrary": "/resources/js/neutralino.js",
-    "binaryVersion": "5.6.0",
-    "clientVersion": "5.6.0"
+    "binaryVersion": "6.7.0",
+    "clientVersion": "6.7.0"
   }
 }
-
