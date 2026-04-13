@@ -5,9 +5,9 @@ let globalUser: string;
 const RPC_BRIDGE_BINARY = "rpc-bridge.exe";
 const OPENROUTER_API_KEY_STORAGE_KEY = "openrouter_api_key";
 const OPENROUTER_MODEL_STORAGE_KEY = "openrouter_model";
-const DEFAULT_OPENROUTER_MODEL = "nvidia/nemotron-nano-12b-v2-vl:free";
+const DEFAULT_MODEL_ID = "nvidia/nemotron-nano-12b-v2-vl:free";
 let openRouterApiKey = "";
-let openRouterModel = DEFAULT_OPENROUTER_MODEL;
+let openRouterModel = DEFAULT_MODEL_ID;
 
 type PwnedType =
   | "Account Login"
@@ -348,12 +348,17 @@ class PwnedManager {
    * @throws {Error} If there is an issue retrieving or parsing the accounts data.
    */
   async loadAccounts(): Promise<void> {
+    const previousSelected = this.select.value;
+    this.select.innerHTML = "<option value=\"\">Select an Account</option>";
+
     try {
       const data = await Neutralino.storage.getData("accounts");
-      if (!data) return;
+      if (!data) {
+        this.syncAccountPickerUI();
+        return;
+      }
 
       const accounts: Account[] = JSON.parse(data);
-      this.select.innerHTML = "<option value=\"\">👉Select an Account</option>";
 
       accounts.forEach((acc: Account, index: number) => {
         const option = document.createElement("option");
@@ -362,10 +367,58 @@ class PwnedManager {
         this.select.appendChild(option);
       });
 
-      console.log(`✅ Loaded ${accounts.length} accounts.`);
+      if (previousSelected !== "" && accounts[Number(previousSelected)]) {
+        this.select.value = previousSelected;
+      } else {
+        this.select.value = "";
+      }
+
+      this.syncAccountPickerUI();
+      console.log(`Loaded ${accounts.length} accounts.`);
     } catch (error) {
+      this.syncAccountPickerUI();
       console.error("Failed to load accounts:", error);
     }
+  }
+
+  public syncAccountPickerUI(): void {
+    const pickerLabel = document.getElementById("accountPickerLabel");
+    const pickerList = document.getElementById("accountPickerList");
+    if (!pickerLabel || !pickerList) return;
+
+    const selectedOption = this.select.options[this.select.selectedIndex];
+    pickerLabel.textContent = selectedOption && selectedOption.value
+      ? selectedOption.textContent || "Select an Account"
+      : "Select an Account";
+
+    pickerList.innerHTML = "";
+    const options = Array.from(this.select.options).filter((opt) =>
+      opt.value !== ""
+    );
+
+    if (options.length === 0) {
+      const emptyState = document.createElement("button");
+      emptyState.type = "button";
+      emptyState.disabled = true;
+      emptyState.className = "account-picker-option-empty";
+      emptyState.textContent = "No accounts available yet.";
+      pickerList.appendChild(emptyState);
+      return;
+    }
+
+    options.forEach((opt) => {
+      const item = document.createElement("button");
+      item.type = "button";
+      item.className = "account-picker-option";
+      item.dataset.value = opt.value;
+      item.textContent = opt.textContent || "";
+
+      if (this.select.value === opt.value) {
+        item.classList.add("is-selected");
+      }
+
+      pickerList.appendChild(item);
+    });
   }
 
   /**
@@ -670,6 +723,63 @@ class PwnedManager {
 
 const accountManager = new PwnedManager();
 accountManager.loadAccounts();
+
+function initializeAccountPickerModal(): void {
+  const pickerBtn = document.getElementById("accountPickerBtn") as HTMLButtonElement | null;
+  const pickerModal = document.getElementById("accountPickerModal") as HTMLDivElement | null;
+  const pickerClose = document.getElementById("accountPickerClose") as HTMLButtonElement | null;
+  const pickerList = document.getElementById("accountPickerList") as HTMLDivElement | null;
+  const select = document.getElementById("accountSelect") as HTMLSelectElement | null;
+
+  if (!pickerBtn || !pickerModal || !pickerClose || !pickerList || !select) return;
+  if (pickerBtn.dataset.initialized === "true") return;
+
+  const openPicker = (): void => {
+    pickerModal.style.display = "flex";
+    pickerBtn.setAttribute("aria-expanded", "true");
+  };
+
+  const closePicker = (): void => {
+    pickerModal.style.display = "none";
+    pickerBtn.setAttribute("aria-expanded", "false");
+  };
+
+  pickerBtn.addEventListener("mousedown", () => {
+    void closeNikkeLauncher();
+  });
+
+  pickerBtn.addEventListener("click", () => {
+    accountManager.syncAccountPickerUI();
+    openPicker();
+    void updateCapsLock();
+  });
+
+  pickerClose.addEventListener("click", closePicker);
+
+  pickerModal.addEventListener("click", (event) => {
+    if (event.target === pickerModal) {
+      closePicker();
+    }
+  });
+
+  pickerList.addEventListener("click", (event) => {
+    const target = (event.target as HTMLElement).closest(".account-picker-option") as HTMLButtonElement | null;
+    if (!target?.dataset.value) return;
+
+    select.value = target.dataset.value;
+    accountManager.syncAccountPickerUI();
+    closePicker();
+    void updateCapsLock();
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && pickerModal.style.display === "flex") {
+      closePicker();
+    }
+  });
+
+  pickerBtn.dataset.initialized = "true";
+}
 
 let launcherPath: string = "";
 Neutralino.init();
@@ -1075,14 +1185,6 @@ Neutralino.events.on("ready", async () => {
         `${deletedNickname} deleted successfully!`,
         "success",
       );
-      accountSelect.innerHTML = "<option value=''>Select account</option>";
-      accounts.forEach((acc, index) => {
-        const option = document.createElement("option");
-        option.value = index.toString();
-        option.textContent = acc.email;
-        accountSelect.appendChild(option);
-      });
-
       await accountManager.loadAccounts();
       await accountManager.createLog(
         deletedNickname,
@@ -1163,6 +1265,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (accountSelect) {
     accountSelect.addEventListener("mousedown", closeNikkeLauncher);
   }
+  initializeAccountPickerModal();
+  accountManager.syncAccountPickerUI();
 
   // Handling exit onlick closeAppButton
   document.body.addEventListener("click", async ({ target }) => {
@@ -1186,6 +1290,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   const openRouterApiKeyInput = document.getElementById(
     "openrouterApiKey",
   ) as HTMLInputElement;
+  const openRouterApiKeyToggle = document.getElementById(
+    "openrouterApiKeyToggle",
+  ) as HTMLButtonElement;
   const openRouterModelSelect = document.getElementById(
     "openrouterModel",
   ) as HTMLSelectElement;
@@ -1205,12 +1312,32 @@ document.addEventListener("DOMContentLoaded", async () => {
     !btnOpenRouter ||
     !spanOpenRouter ||
     !openRouterApiKeyInput ||
+    !openRouterApiKeyToggle ||
     !openRouterModelSelect ||
     !saveOpenrouterKeyBtn
   ) {
     console.error("❌ Modal elements not found.");
     return;
   }
+
+  const setOpenRouterKeyVisibility = (visible: boolean): void => {
+    openRouterApiKeyInput.type = visible ? "text" : "password";
+    // Force unmask/mask rendering in case webview keeps previous mask state.
+    const inputStyle = openRouterApiKeyInput.style as CSSStyleDeclaration & {
+      webkitTextSecurity?: string;
+      textSecurity?: string;
+    };
+    inputStyle.webkitTextSecurity = visible ? "none" : "";
+    inputStyle.textSecurity = visible
+      ? "none"
+      : "";
+    openRouterApiKeyToggle.textContent = visible ? "Hide" : "Show";
+    openRouterApiKeyToggle.setAttribute("aria-pressed", String(visible));
+    openRouterApiKeyToggle.setAttribute(
+      "aria-label",
+      visible ? "Hide API key" : "Show API key",
+    );
+  };
 
   // Show modal and populate table
   btn.addEventListener("click", async () => {
@@ -1256,22 +1383,34 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 
   btnOpenRouter.addEventListener("click", () => {
+    openRouterApiKeyInput.value = openRouterApiKey;
+    openRouterModelSelect.value = openRouterModel || DEFAULT_MODEL_ID;
+    setOpenRouterKeyVisibility(false);
     myModalOpenRouter.style.display = "flex";
   });
 
   spanOpenRouter.addEventListener("click", () => {
+    setOpenRouterKeyVisibility(false);
     myModalOpenRouter.style.display = "none";
   });
 
   myModalOpenRouter.addEventListener("click", (event) => {
     if (event.target === myModalOpenRouter) {
+      setOpenRouterKeyVisibility(false);
       myModalOpenRouter.style.display = "none";
     }
   });
 
+  openRouterApiKeyToggle.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    const isVisible = openRouterApiKeyInput.type === "text";
+    setOpenRouterKeyVisibility(!isVisible);
+  });
+
   try {
     let storedApiKey = "";
-    let storedModel = DEFAULT_OPENROUTER_MODEL;
+    let storedModel = DEFAULT_MODEL_ID;
     try {
       storedApiKey = await Neutralino.storage.getData(
         OPENROUTER_API_KEY_STORAGE_KEY,
@@ -1293,14 +1432,15 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
       await Neutralino.storage.setData(
         OPENROUTER_MODEL_STORAGE_KEY,
-        DEFAULT_OPENROUTER_MODEL,
+        DEFAULT_MODEL_ID,
       );
     }
 
     openRouterApiKey = (storedApiKey || "").trim();
-    openRouterModel = (storedModel || DEFAULT_OPENROUTER_MODEL).trim();
+    openRouterModel = (storedModel || DEFAULT_MODEL_ID).trim();
     openRouterApiKeyInput.value = openRouterApiKey;
     openRouterModelSelect.value = openRouterModel;
+    setOpenRouterKeyVisibility(false);
     sendOpenRouterApiKeyToBridge();
   } catch (error) {
     console.error("Failed to load OpenRouter API key:", error);
@@ -1308,7 +1448,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   saveOpenrouterKeyBtn.addEventListener("click", async () => {
     openRouterApiKey = openRouterApiKeyInput.value.trim();
-    openRouterModel = openRouterModelSelect.value.trim() || DEFAULT_OPENROUTER_MODEL;
+    openRouterModel = openRouterModelSelect.value.trim() || DEFAULT_MODEL_ID;
     try {
       await Promise.all([
         Neutralino.storage.setData(
@@ -1322,6 +1462,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       ]);
       sendOpenRouterApiKeyToBridge();
       accountManager.showAlert("OpenRouter settings saved.", "success");
+      setOpenRouterKeyVisibility(false);
       myModalOpenRouter.style.display = "none";
     } catch (error) {
       console.error("Failed to save OpenRouter settings:", error);
@@ -1487,6 +1628,7 @@ document.addEventListener("visibilitychange", () => {
   }
 });
 document.getElementById("accountSelect")?.addEventListener("click", updateCapsLock);
+document.getElementById("accountPickerBtn")?.addEventListener("click", updateCapsLock);
 const searchInput = document.getElementById("searchInput") as HTMLInputElement;
 
 searchInput?.addEventListener("input", () => {

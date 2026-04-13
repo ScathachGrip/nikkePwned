@@ -25,7 +25,7 @@
 declare const require: any;
 const fs = require("fs");
 
-const OPENROUTER_MODELS = [
+const OPENROUTER_MODEL_POOL = [
   "nvidia/nemotron-nano-12b-v2-vl:free",
   "google/gemma-4-26b-a4b-it:free",
   "google/gemma-4-31b-it:free",
@@ -52,7 +52,7 @@ const OPENROUTER_MODELS = [
   "nousresearch/hermes-3-llama-3.1-405b:free",
 ];
 
-const openrouterModelOptionsHtml = OPENROUTER_MODELS.map(
+const openrouterModelOptionsHtml = OPENROUTER_MODEL_POOL.map(
   (model) => `<option value="${model}">${model}</option>`,
 ).join("\n");
 
@@ -352,6 +352,232 @@ const htmlContent = `
 
     .light-mode select::-webkit-scrollbar-track {
       background-color: #f0f0f0;
+    }
+
+    .account-picker-wrap {
+      position: relative;
+      margin-top: 10px;
+    }
+
+    #accountSelect {
+      position: absolute;
+      pointer-events: none;
+      opacity: 0;
+      width: 1px;
+      height: 1px;
+      margin: 0;
+      padding: 0;
+      border: 0;
+      overflow: hidden;
+    }
+
+    .account-picker-btn {
+      width: 100%;
+      margin-top: 0;
+      padding: 8px 14px;
+      border: none;
+      border-radius: 7px;
+      background: #1d1d25ff;
+      color: #f2f2f2;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-weight: 700;
+      font-size: 14px;
+      line-height: 1.1;
+      min-height: 36px;
+      cursor: pointer;
+      transition: border-color 0.2s ease, transform 0.2s ease;
+    }
+
+    .account-picker-btn:hover {
+      transform: translateY(-1px);
+    }
+
+    .account-picker-btn:active {
+      transform: translateY(0);
+    }
+
+    .account-picker-label {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      text-align: left;
+      padding-right: 10px;
+    }
+
+    .account-picker-arrow {
+      font-size: 13px;
+      opacity: 0.88;
+    }
+
+    .account-picker-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 1100;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.62);
+      padding: 16px;
+    }
+
+    .account-picker-modal-card {
+      width: min(520px, 100%);
+      border-radius: 10px;
+      border: 1px solid #4f4f5c;
+      background: #272730;
+      overflow: hidden;
+      box-shadow: 0 10px 26px rgba(0, 0, 0, 0.35);
+      animation: pickerPop 0.18s ease-out;
+    }
+
+    @keyframes pickerPop {
+      from {
+        opacity: 0;
+        transform: translateY(8px) scale(0.98);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    .account-picker-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 14px;
+      background: #e2e2e2;
+      color: #121212;
+      font-weight: 800;
+      font-size: 16px;
+    }
+
+    .account-picker-close {
+      border: none;
+      margin: 0;
+      width: 30px;
+      height: 30px;
+      border-radius: 6px;
+      padding: 0;
+      background: transparent;
+      color: #1f1f1f;
+      cursor: pointer;
+      font-size: 22px;
+      line-height: 1;
+    }
+
+    .account-picker-close:hover {
+      background: rgba(0, 0, 0, 0.08);
+    }
+
+    .account-picker-list {
+      max-height: 260px;
+      overflow-y: auto;
+      background: #d7d7d7;
+      padding: 4px 0;
+      scrollbar-width: thin;
+      scrollbar-color: red #f0f0f0;
+    }
+
+    .account-picker-list::-webkit-scrollbar {
+      width: 5px;
+    }
+
+    .account-picker-list::-webkit-scrollbar-track {
+      background-color: #f0f0f0;
+    }
+
+    .account-picker-list::-webkit-scrollbar-thumb {
+      background-color: red;
+      border-radius: 5px;
+    }
+
+    .account-picker-list::-webkit-scrollbar-thumb:hover {
+      background-color: gold;
+    }
+
+    .account-picker-option {
+      width: 100%;
+      margin: 0;
+      border-radius: 0;
+      border: none;
+      text-align: left;
+      padding: 9px 14px;
+      background: transparent;
+      color: #111;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background-color 0.15s ease;
+    }
+
+    .account-picker-option:hover {
+      background: #c5c5c5;
+    }
+
+    .account-picker-option.is-selected {
+      background: #bbbbbb;
+      font-weight: 800;
+    }
+
+    .account-picker-option-empty {
+      width: 100%;
+      margin: 0;
+      border: none;
+      border-radius: 0;
+      text-align: left;
+      padding: 10px 14px;
+      background: transparent;
+      color: #4d4d4d;
+      font-size: 14px;
+      cursor: default;
+    }
+
+    .light-mode .account-picker-btn {
+      background: #f0f0f0;
+      color: #222;
+      border: none;
+    }
+
+    .light-mode .account-picker-modal-card {
+      border-color: #c8c8c8;
+      background: #f9f9f9;
+    }
+
+    .light-mode .account-picker-head {
+      background: #e2e2e2;
+      color: #121212;
+    }
+
+    .light-mode .account-picker-close {
+      color: #1f1f1f;
+    }
+
+    .light-mode .account-picker-close:hover {
+      background: rgba(0, 0, 0, 0.08);
+    }
+
+    .light-mode .account-picker-list {
+      background: #efefef;
+      scrollbar-color: #007bff #f0f0f0;
+    }
+
+    .light-mode .account-picker-list::-webkit-scrollbar-track {
+      background-color: #f0f0f0;
+    }
+
+    .light-mode .account-picker-option {
+      color: #111;
+    }
+
+    .light-mode .account-picker-option:hover {
+      background: #e3e3e3;
+    }
+
+    .light-mode .account-picker-option.is-selected {
+      background: #d6d6d6;
     }
 
     #registerBtn {
@@ -661,20 +887,115 @@ const htmlContent = `
       margin-bottom: 10px;
     }
 
+    .openrouter-section-title {
+      margin: 0 0 6px 0;
+      font-size: 18px;
+      font-weight: 800;
+    }
+
+    .openrouter-helper {
+      margin: 0 0 10px 0;
+      font-size: 13px;
+      line-height: 1.45;
+      color: #d5d7dc;
+    }
+
+    .openrouter-panel {
+      margin: 0 0 12px 0;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid #3a3a4d;
+      background: #1f2129;
+      font-size: 12px;
+      line-height: 1.45;
+      color: #c7cad1;
+    }
+
+    .openrouter-panel strong {
+      color: #f2f4f7;
+      font-weight: 700;
+    }
+
+    .openrouter-label {
+      margin: 0 0 6px 0;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .openrouter-key-row {
+      position: relative;
+      margin-bottom: 10px;
+    }
+
+    .openrouter-key-row .openrouter-field {
+      display: block;
+      margin-bottom: 0;
+      width: 100%;
+      min-width: 0;
+      box-sizing: border-box;
+      padding-right: 78px;
+    }
+
+    .openrouter-visibility-btn {
+      position: absolute;
+      top: 50%;
+      right: 8px;
+      transform: translateY(-50%);
+      width: auto;
+      margin: 0;
+      border: 1px solid #4a4f5f;
+      border-radius: 5px;
+      padding: 4px 10px;
+      font-size: 11px;
+      font-weight: 700;
+      background: #2a2f3a;
+      color: #e6e9ef;
+      cursor: pointer;
+    }
+
+    .openrouter-visibility-btn:hover {
+      background: #343b4a;
+    }
+
     .light-mode .openrouter-field {
       background: #f5f5f5;
       color: #000;
       border: 1px solid #c8c8c8;
     }
 
+    .light-mode .openrouter-helper {
+      color: #2d2d2d;
+    }
+
+    .light-mode .openrouter-panel {
+      background: #f2f4f7;
+      color: #333;
+      border: 1px solid #d5d9df;
+    }
+
+    .light-mode .openrouter-panel strong {
+      color: #101828;
+    }
+
+    .light-mode .openrouter-visibility-btn {
+      border-color: #c8ccd5;
+      background: #e8ebf2;
+      color: #1a1f2b;
+    }
+
+    .light-mode .openrouter-visibility-btn:hover {
+      background: #dde3ef;
+    }
+
     .openrouter-save-btn {
       width: 100%;
-      background: #2f7de1;
+      background: #af4337;
       color: white;
       border-radius: 6px;
       padding: 10px;
       border: none;
       cursor: pointer;
+      font-weight: 700;
     }
 
     .light-mode .openrouter-save-btn {
@@ -1043,6 +1364,10 @@ const htmlContent = `
       background-color: #c4babaff;
     }
 
+    #themeToggle {
+      animation: spin 2s linear infinite;
+    }
+
     .tia:hover {
       animation: spin 2s linear infinite;
     }
@@ -1309,9 +1634,16 @@ Select where nikke_launcher.exe was installed.</pre>
       <button id="registerBtn" style="font-weight: 900;">📝Register Accounts</button>
       <br />
       <br />
-      <select id="accountSelect">
-        <option value="" style="font-weight: 900;">👉Select account</option>
-      </select>
+      <div class="account-picker-wrap">
+        <button id="accountPickerBtn" type="button" class="account-picker-btn" aria-haspopup="dialog"
+          aria-controls="accountPickerModal" aria-expanded="false">
+          <span id="accountPickerLabel" class="account-picker-label">Select an Account</span>
+          <span class="account-picker-arrow">👇</span>
+        </button>
+        <select id="accountSelect" aria-hidden="true" tabindex="-1">
+          <option value="" style="font-weight: 900;">Select account</option>
+        </select>
+      </div>
       <button id="runBtn" style="font-weight: 900;">🚀Proceed auto login</button>
       <br />
       <button id="removeBtn" style="font-weight: 900;">🚫Remove account</button>
@@ -1383,13 +1715,41 @@ Select where nikke_launcher.exe was installed.</pre>
     <div id="myModalOpenRouter" class="modal" style="display: none">
       <div class="modal-content">
         <span class="close">&times;</span>
-        <h3 style="margin-top: 0;">OpenRouter API Key</h3>
-        <input id="openrouterApiKey" class="openrouter-field" type="password" placeholder="sk-or-v1-..." autocomplete="off" />
-        <h3 style="margin-top: 4px; margin-bottom: 6px;">Model</h3>
+        <div class="openrouter-panel">
+          <strong>⁉️ How this works:</strong><br />
+          1. Get your OpenRouter API key<br />
+          2. Pick a vision-capable model<br />
+          3. Click Save configuration.<br />
+          4. Head over to opening battlefield (vs boss) nikke screen<br />
+          5. Press esc to pause nikke, then can listen 'F8' key to trigger damage dealt reasoning.<br />
+          6. Wait until completed, and go to your windows notification by pressing 'Windows + N'<br />
+          <br /><strong>📝 Note:</strong><br />
+          Could work in every nikke battlefield screen, but more designed for Union Raid (HardMode)<br />
+          with high HP raptures fights, since NIKKE did not show the exact value also.
+        </div>
+        <h3 class="openrouter-label">🔑 OpenRouter API Key</h3>
+        <div class="openrouter-key-row">
+          <input id="openrouterApiKey" class="openrouter-field" type="password"
+            placeholder="Paste your key (example: sk-or-v1-...)" autocomplete="off" />
+          <button id="openrouterApiKeyToggle" type="button" class="openrouter-visibility-btn"
+            aria-label="Show API key" aria-pressed="false">Show</button>
+        </div>
+        <h3 class="openrouter-label">📦 Model for Image Reasoning</h3>
         <select id="openrouterModel" class="openrouter-field">
           ${openrouterModelOptionsHtml}
         </select>
-        <button id="saveOpenrouterKeyBtn" class="openrouter-save-btn">Save API Key</button>
+        <button id="saveOpenrouterKeyBtn" class="openrouter-save-btn">Save configuration</button>
+      </div>
+    </div>
+    <div id="accountPickerModal" class="account-picker-modal" style="display: none;">
+      <div class="account-picker-modal-card" role="dialog" aria-modal="true" aria-label="Select an Account">
+        <div class="account-picker-head">
+          <span>Select an Account</span>
+          <button type="button" id="accountPickerClose" class="account-picker-close" aria-label="Close account picker">&times;</button>
+        </div>
+        <div id="accountPickerList" class="account-picker-list">
+          <button type="button" class="account-picker-option-empty" disabled>No accounts available yet.</button>
+        </div>
       </div>
     </div>
   </div>
@@ -1398,13 +1758,13 @@ Select where nikke_launcher.exe was installed.</pre>
 
   </p>
   <span class="tia" id="myBtnOpenRouter" style="bottom: 140px;">
-    <img src="/static/rpc_icon.png" alt="key" style="width: 30px; height: 30px" />
+    <img src="/static/rpc_llm.png" alt="key" style="width: 40px; height: 40px" />
   </span>
   <span class="berdetak" id="myBtnWortel">
     <img src="/static/rpc_testing.png" alt="sun" style="width: 30px; height: 30px" />
   </span>
   <span class="tia" id="themeToggle">
-    <img src="/static/rpc_idle.png" alt="sun" style="width: 30px; height: 30px" />
+    <img src="/static/rpc_idle.png" alt="sun" style="width: 40px; height: 40px" />
   </span>
   <script src="js/neutralino.js"></script>
   <script src="js/app.js"></script>
