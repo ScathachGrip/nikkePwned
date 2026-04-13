@@ -1,4 +1,4 @@
-name: Release
+﻿name: Release
 
 on:
   push:
@@ -30,6 +30,11 @@ jobs:
 
       - name: Build
         run: npm run build:fresh
+
+      - name: Verify RPC bridge binary
+        run: |
+          test -f rpc-bridge.exe
+          test -f dist/nikkepwned/rpc-bridge.exe
 
       - name: Read version
         id: pkg
