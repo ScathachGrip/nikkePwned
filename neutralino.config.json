@@ -42,7 +42,7 @@
     "window": {
       "processArgs": [
         "start",
-        "./discord-rpc.exe"
+        "./rpc-bridge.exe"
       ],
       "title": "NIKKEPwned",
       "width": 950,

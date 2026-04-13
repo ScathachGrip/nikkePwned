@@ -2,6 +2,12 @@ const staging = true;
 const externalLoading = true;
 let ws: WebSocket | null = null;
 let globalUser: string;
+const RPC_BRIDGE_BINARY = "rpc-bridge.exe";
+const OPENROUTER_API_KEY_STORAGE_KEY = "openrouter_api_key";
+const OPENROUTER_MODEL_STORAGE_KEY = "openrouter_model";
+const DEFAULT_OPENROUTER_MODEL = "nvidia/nemotron-nano-12b-v2-vl:free";
+let openRouterApiKey = "";
+let openRouterModel = DEFAULT_OPENROUTER_MODEL;
 
 type PwnedType =
   | "Account Login"
@@ -30,7 +36,6 @@ enum ActivityAssets {
   Logo = "https://raw.githubusercontent.com/ScathachGrip/nikkePwned/refs/heads/master/resources/static/rpc_icon.png",
   Idle = "https://raw.githubusercontent.com/ScathachGrip/nikkePwned/refs/heads/master/resources/static/rpc_idle.png",
   Maintaining = "https://raw.githubusercontent.com/ScathachGrip/nikkePwned/refs/heads/master/resources/static/rpc_maintain.png",
-  Registering = "https://raw.githubusercontent.com/ScathachGrip/nikkePwned/refs/heads/master/resources/static/rpc_register.png",
   Testing = "https://raw.githubusercontent.com/ScathachGrip/nikkePwned/refs/heads/master/resources/static/rpc_testing.png",
 }
 
@@ -118,6 +123,9 @@ async function enforceAdminPrivileges(): Promise<void> {
     const berdetak = document.getElementById("myBtnWortel");
     if (berdetak) berdetak.remove();
 
+    const btnOpenRouter = document.getElementById("myBtnOpenRouter");
+    if (btnOpenRouter) btnOpenRouter.remove();
+
     const themeToggle = document.getElementById("themeToggle");
     if (themeToggle) themeToggle.remove();
 
@@ -176,13 +184,13 @@ async function getSystemInfo(): Promise<void> {
 if (!staging) getSystemInfo();
 
 /**
- * Checks if `discord-rpc.exe` is currently running.
+ * Checks if the RPC bridge process is currently running.
  * This function executes the `tasklist` command and searches for the process name.
  * @returns {Promise<boolean>} - Returns `true` if the process is found, otherwise `false`.
  */
 async function isRPCRunning(): Promise<boolean> {
   const result = await Neutralino.os.execCommand("tasklist");
-  const isRunning = result.stdOut.includes("discord-rpc.exe");
+  const isRunning = result.stdOut.includes(RPC_BRIDGE_BINARY);
   console.log("RPC Running:", isRunning);
   return isRunning;
 }
@@ -233,7 +241,7 @@ async function updateCapsLock(): Promise<void> {
 
 
 /**
- * Ensures discord-rpc.exe is running (same directory) and connects to the WebSocket server.
+ * Ensures the RPC bridge executable is running (same directory) and connects to the WebSocket server.
  */
 async function ensureRPCRunning(): Promise<boolean> {
   const alreadyRunning = await isRPCRunning();
@@ -241,21 +249,21 @@ async function ensureRPCRunning(): Promise<boolean> {
 
   try {
     await Neutralino.os.execCommand(
-      "powershell -ExecutionPolicy Bypass -Command \"Start-Process -WindowStyle Hidden -FilePath \\\"$PWD\\discord-rpc.exe\\\"\"",
+      `powershell -ExecutionPolicy Bypass -Command "Start-Process -WindowStyle Hidden -FilePath \\"$PWD\\${RPC_BRIDGE_BINARY}\\""`,
     );
     await new Promise((r) => setTimeout(r, 1000));
     return await isRPCRunning();
   } catch (err) {
-    console.error("Failed to start discord-rpc.exe:", err);
+    console.error(`Failed to start ${RPC_BRIDGE_BINARY}:`, err);
     return false;
   }
 }
 
 async function stopRPCProcess(): Promise<void> {
   try {
-    await Neutralino.os.execCommand("taskkill /F /IM discord-rpc.exe");
+    await Neutralino.os.execCommand(`taskkill /F /IM ${RPC_BRIDGE_BINARY}`);
   } catch (err) {
-    console.warn("Failed to stop discord-rpc.exe:", err);
+    console.warn(`Failed to stop ${RPC_BRIDGE_BINARY}:`, err);
   }
 }
 
@@ -264,10 +272,44 @@ async function exitApp(): Promise<void> {
   Neutralino.app.exit();
 }
 
+function sendOpenRouterApiKeyToBridge(): void {
+  if (!ws || ws.readyState !== WebSocket.OPEN) return;
+  ws.send(
+    JSON.stringify({
+      event: "set_openrouter_key",
+      apiKey: openRouterApiKey,
+      model: openRouterModel,
+    }),
+  );
+}
+
 ensureRPCRunning().then((running) => {
   if (running) {
     ws = new WebSocket("ws://localhost:6464");
-    ws.onopen = () => console.log("🟢 Connected to RPC WebSocket");
+    ws.onopen = () => {
+      console.log("🟢 Connected to RPC WebSocket");
+      sendOpenRouterApiKeyToBridge();
+    };
+    ws.onmessage = (event) => {
+      try {
+        const payload = JSON.parse(event.data as string) as {
+          event?: string;
+          title?: string;
+          message?: string;
+          icon?: "INFO" | "WARNING" | "ERROR" | "QUESTION";
+        };
+
+        if (payload.event === "system_notification") {
+          void Neutralino.os.showNotification(
+            payload.title || "NIKKEPwned",
+            payload.message || "",
+            payload.icon || "INFO",
+          );
+        }
+      } catch (error) {
+        console.warn("Invalid WS message from rpc-bridge:", error);
+      }
+    };
     ws.onerror = (err) => console.warn("⚠️ WebSocket error:", err);
   } else {
     console.warn("RPC not running. WebSocket not connected.");
@@ -411,7 +453,7 @@ class PwnedManager {
 
   /**
    * Updates the Discord Rich Presence (RPC) with new details.
-   * This function sends updated information to `discord-rpc.exe` through WebSocket.
+   * This function sends updated information to `rpc-bridge.exe` through WebSocket.
    * @param {string} details - The main text displayed in the Discord activity.
    * @param {string} state - The secondary text displayed below `details`.
    * @param {string} [smallImageKey] - The key for a small image asset.
@@ -1095,6 +1137,12 @@ Neutralino.events.on("ready", async () => {
             .catch(console.error),
           Neutralino.storage.setData("delay_switch", "").catch(console.error),
           Neutralino.storage.setData("delay_login", "").catch(console.error),
+          Neutralino.storage
+            .setData(OPENROUTER_API_KEY_STORAGE_KEY, "")
+            .catch(console.error),
+          Neutralino.storage
+            .setData(OPENROUTER_MODEL_STORAGE_KEY, "")
+            .catch(console.error),
         ]).then(() => console.log("Data purged successfully."));
         await Neutralino.os.showMessageBox(
           "Deleted",
@@ -1132,8 +1180,34 @@ document.addEventListener("DOMContentLoaded", async () => {
   const myModalWortel = document.getElementById("myModalWortel") as HTMLElement;
   const btnWortel = document.getElementById("myBtnWortel") as HTMLButtonElement;
   const spanWortel = myModalWortel.querySelector(".close") as HTMLElement;
+  const myModalOpenRouter = document.getElementById("myModalOpenRouter") as HTMLElement;
+  const btnOpenRouter = document.getElementById("myBtnOpenRouter") as HTMLButtonElement;
+  const spanOpenRouter = myModalOpenRouter.querySelector(".close") as HTMLElement;
+  const openRouterApiKeyInput = document.getElementById(
+    "openrouterApiKey",
+  ) as HTMLInputElement;
+  const openRouterModelSelect = document.getElementById(
+    "openrouterModel",
+  ) as HTMLSelectElement;
+  const saveOpenrouterKeyBtn = document.getElementById(
+    "saveOpenrouterKeyBtn",
+  ) as HTMLButtonElement;
 
-  if (!modal || !btn || !span || !tbody || !myModalWortel || !btnWortel || !spanWortel) {
+  if (
+    !modal ||
+    !btn ||
+    !span ||
+    !tbody ||
+    !myModalWortel ||
+    !btnWortel ||
+    !spanWortel ||
+    !myModalOpenRouter ||
+    !btnOpenRouter ||
+    !spanOpenRouter ||
+    !openRouterApiKeyInput ||
+    !openRouterModelSelect ||
+    !saveOpenrouterKeyBtn
+  ) {
     console.error("❌ Modal elements not found.");
     return;
   }
@@ -1181,6 +1255,79 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   });
 
+  btnOpenRouter.addEventListener("click", () => {
+    myModalOpenRouter.style.display = "flex";
+  });
+
+  spanOpenRouter.addEventListener("click", () => {
+    myModalOpenRouter.style.display = "none";
+  });
+
+  myModalOpenRouter.addEventListener("click", (event) => {
+    if (event.target === myModalOpenRouter) {
+      myModalOpenRouter.style.display = "none";
+    }
+  });
+
+  try {
+    let storedApiKey = "";
+    let storedModel = DEFAULT_OPENROUTER_MODEL;
+    try {
+      storedApiKey = await Neutralino.storage.getData(
+        OPENROUTER_API_KEY_STORAGE_KEY,
+      );
+    } catch (error) {
+      if ((error as { code: string }).code !== "NE_ST_NOSTKEX") {
+        throw error;
+      }
+      await Neutralino.storage.setData(OPENROUTER_API_KEY_STORAGE_KEY, "");
+    }
+
+    try {
+      storedModel = await Neutralino.storage.getData(
+        OPENROUTER_MODEL_STORAGE_KEY,
+      );
+    } catch (error) {
+      if ((error as { code: string }).code !== "NE_ST_NOSTKEX") {
+        throw error;
+      }
+      await Neutralino.storage.setData(
+        OPENROUTER_MODEL_STORAGE_KEY,
+        DEFAULT_OPENROUTER_MODEL,
+      );
+    }
+
+    openRouterApiKey = (storedApiKey || "").trim();
+    openRouterModel = (storedModel || DEFAULT_OPENROUTER_MODEL).trim();
+    openRouterApiKeyInput.value = openRouterApiKey;
+    openRouterModelSelect.value = openRouterModel;
+    sendOpenRouterApiKeyToBridge();
+  } catch (error) {
+    console.error("Failed to load OpenRouter API key:", error);
+  }
+
+  saveOpenrouterKeyBtn.addEventListener("click", async () => {
+    openRouterApiKey = openRouterApiKeyInput.value.trim();
+    openRouterModel = openRouterModelSelect.value.trim() || DEFAULT_OPENROUTER_MODEL;
+    try {
+      await Promise.all([
+        Neutralino.storage.setData(
+          OPENROUTER_API_KEY_STORAGE_KEY,
+          openRouterApiKey,
+        ),
+        Neutralino.storage.setData(
+          OPENROUTER_MODEL_STORAGE_KEY,
+          openRouterModel,
+        ),
+      ]);
+      sendOpenRouterApiKeyToBridge();
+      accountManager.showAlert("OpenRouter settings saved.", "success");
+      myModalOpenRouter.style.display = "none";
+    } catch (error) {
+      console.error("Failed to save OpenRouter settings:", error);
+      accountManager.showAlert("Failed to save OpenRouter settings.", "fail");
+    }
+  });
   // Handling delay SWITCH input field
   const delayInput = document.getElementById("delayBtn") as HTMLInputElement;
   if (!delayInput) {

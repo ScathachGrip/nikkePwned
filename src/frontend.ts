@@ -25,6 +25,37 @@
 declare const require: any;
 const fs = require("fs");
 
+const OPENROUTER_MODELS = [
+  "nvidia/nemotron-nano-12b-v2-vl:free",
+  "google/gemma-4-26b-a4b-it:free",
+  "google/gemma-4-31b-it:free",
+  "nvidia/nemotron-3-super-120b-a12b:free",
+  "minimax/minimax-m2.5:free",
+  "arcee-ai/trinity-large-preview:free",
+  "liquid/lfm-2.5-1.2b-thinking:free",
+  "liquid/lfm-2.5-1.2b-instruct:free",
+  "nvidia/nemotron-3-nano-30b-a3b:free",
+  "qwen/qwen3-next-80b-a3b-instruct:free",
+  "nvidia/nemotron-nano-9b-v2:free",
+  "openai/gpt-oss-120b:free",
+  "openai/gpt-oss-20b:free",
+  "z-ai/glm-4.5-air:free",
+  "qwen/qwen3-coder:free",
+  "cognitivecomputations/dolphin-mistral-24b-venice-edition:free",
+  "google/gemma-3n-e2b-it:free",
+  "google/gemma-3n-e4b-it:free",
+  "google/gemma-3-4b-it:free",
+  "google/gemma-3-12b-it:free",
+  "google/gemma-3-27b-it:free",
+  "meta-llama/llama-3.3-70b-instruct:free",
+  "meta-llama/llama-3.2-3b-instruct:free",
+  "nousresearch/hermes-3-llama-3.1-405b:free",
+];
+
+const openrouterModelOptionsHtml = OPENROUTER_MODELS.map(
+  (model) => `<option value="${model}">${model}</option>`,
+).join("\n");
+
 const htmlContent = `
 <html lang="en">
 
@@ -617,6 +648,38 @@ const htmlContent = `
     .light-mode .modal-content::-webkit-scrollbar-thumb:hover {
       background: #999;
 
+    }
+
+    .openrouter-field {
+      width: 100%;
+      background: #1d1d25ff;
+      color: white;
+      border: 1px solid #3a3a4d;
+      border-radius: 6px;
+      padding: 10px 12px;
+      font-size: 12px;
+      margin-bottom: 10px;
+    }
+
+    .light-mode .openrouter-field {
+      background: #f5f5f5;
+      color: #000;
+      border: 1px solid #c8c8c8;
+    }
+
+    .openrouter-save-btn {
+      width: 100%;
+      background: #2f7de1;
+      color: white;
+      border-radius: 6px;
+      padding: 10px;
+      border: none;
+      cursor: pointer;
+    }
+
+    .light-mode .openrouter-save-btn {
+      background: #1f5fb0;
+      color: white;
     }
 
     .close {
@@ -1317,11 +1380,26 @@ Select where nikke_launcher.exe was installed.</pre>
         </div>
       </div>
     </div>
+    <div id="myModalOpenRouter" class="modal" style="display: none">
+      <div class="modal-content">
+        <span class="close">&times;</span>
+        <h3 style="margin-top: 0;">OpenRouter API Key</h3>
+        <input id="openrouterApiKey" class="openrouter-field" type="password" placeholder="sk-or-v1-..." autocomplete="off" />
+        <h3 style="margin-top: 4px; margin-bottom: 6px;">Model</h3>
+        <select id="openrouterModel" class="openrouter-field">
+          ${openrouterModelOptionsHtml}
+        </select>
+        <button id="saveOpenrouterKeyBtn" class="openrouter-save-btn">Save API Key</button>
+      </div>
+    </div>
   </div>
   <p class="pwned-version" style="text-align:center; margin-top:12px">Password Manager for NIKKE v<span
       id="appVersion">Loading...</span>
 
   </p>
+  <span class="tia" id="myBtnOpenRouter" style="bottom: 140px;">
+    <img src="/static/rpc_icon.png" alt="key" style="width: 30px; height: 30px" />
+  </span>
   <span class="berdetak" id="myBtnWortel">
     <img src="/static/rpc_testing.png" alt="sun" style="width: 30px; height: 30px" />
   </span>
