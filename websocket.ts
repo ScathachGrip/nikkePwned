@@ -90,6 +90,62 @@ type DamageResult = {
 };
 
 /**
+ * Parses a numeric value from model output, accepting both comma and dot
+ * separators used as either thousands or decimal marks.
+ *
+ * @param {unknown} value - Raw value from model output.
+ *
+ * @returns {number} Parsed finite number, or NaN when parsing fails.
+ */
+function parseFlexibleDamageNumber(value: unknown): number {
+  if (typeof value === "number") {
+    return Number.isFinite(value) ? value : Number.NaN;
+  }
+
+  if (typeof value !== "string") {
+    return Number.NaN;
+  }
+
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return Number.NaN;
+  }
+
+  const sanitized = trimmed.replace(/\s+/g, "").replace(/[^\d,.-]/g, "");
+  if (!sanitized) {
+    return Number.NaN;
+  }
+
+  const hasComma = sanitized.includes(",");
+  const hasDot = sanitized.includes(".");
+  let normalized = sanitized;
+
+  if (hasComma && hasDot) {
+    const lastComma = sanitized.lastIndexOf(",");
+    const lastDot = sanitized.lastIndexOf(".");
+    const decimalSeparator = lastComma > lastDot ? "," : ".";
+    const thousandsSeparator = decimalSeparator === "," ? "." : ",";
+    normalized = sanitized
+      .replace(new RegExp(`\\${thousandsSeparator}`, "g"), "")
+      .replace(decimalSeparator, ".");
+  } else if (hasComma || hasDot) {
+    const separator = hasComma ? "," : ".";
+    const parts = sanitized.split(separator);
+
+    if (parts.length > 2) {
+      normalized = sanitized.replace(new RegExp(`\\${separator}`, "g"), "");
+    } else if (parts.length === 2 && parts[1].length === 3 && parts[0].length >= 1) {
+      normalized = sanitized.replace(separator, "");
+    } else {
+      normalized = sanitized.replace(separator, ".");
+    }
+  }
+
+  const parsed = Number(normalized);
+  return Number.isFinite(parsed) ? parsed : Number.NaN;
+}
+
+/**
  * Normalizes model damage output by coercing values to non-negative finite numbers
  * and recalculating the total from the normalized damage list.
  *
@@ -100,7 +156,7 @@ type DamageResult = {
 function normalizeDamageResult(raw: DamageResult): DamageResult {
   const damages = Array.isArray(raw.damages)
     ? raw.damages
-      .map((value) => Number(value))
+      .map((value) => parseFlexibleDamageNumber(value))
       .filter((value) => Number.isFinite(value) && value >= 0)
     : [];
   const total = damages.reduce((sum, value) => sum + value, 0);
@@ -137,6 +193,34 @@ function extractJsonObject(text: string): string {
 function formatDamageNotification(result: DamageResult, elapsedMs: number): string {
   const damages = result.damages.slice(0, 5).join(", ");
   return `DMG [${damages}] | ${elapsedMs}ms`;
+}
+
+/**
+ * Formats total damage into compact B/M notation for notification title.
+ * Uses comma as decimal separator in compact output (e.g. 15,649 B).
+ *
+ * @param {number} total - Full numeric total damage value.
+ *
+ * @returns {string} Formatted compact total with unit suffix.
+ */
+function formatDamageCompact(total: number): string {
+  if (!Number.isFinite(total)) {
+    return "N/A";
+  }
+
+  const formatWithCommaDecimal = (value: number): string =>
+    value.toFixed(3).replace(/\.?0+$/, "").replace(".", ",");
+
+  const absTotal = Math.abs(total);
+  if (absTotal >= 1_000_000_000) {
+    return `${formatWithCommaDecimal(total / 1_000_000_000)} B`;
+  }
+
+  if (absTotal >= 1_000_000) {
+    return `${formatWithCommaDecimal(total / 1_000_000)} M`;
+  }
+
+  return Math.round(total).toLocaleString();
 }
 
 /**
@@ -254,7 +338,11 @@ async function handleScreenshotSaved(fileName: string, filePath: string): Promis
   try {
     const { result, elapsedMs } = await analyzeScreenshotDamage(filePath);
     const titleTotal = Number.isFinite(result.total) ? result.total.toLocaleString() : "N/A";
-    showNotification(formatDamageNotification(result, elapsedMs), `Damage: ${titleTotal}`);
+    const compactTotal = formatDamageCompact(result.total);
+    showNotification(
+      formatDamageNotification(result, elapsedMs),
+      `Damage (${compactTotal}): ${titleTotal}`,
+    );
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     showNotification(`Analyze failed: ${message}`, "Damage Result");
