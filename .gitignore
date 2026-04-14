@@ -34,6 +34,8 @@ opendir.bat
 discord-rpc.dll
 discord-rpc.lib
 discord-rpc.exe
+rpc-bridge.exe
+build-rpc/
 discord-rpc.mjs
 tested.json
 tested-1.json

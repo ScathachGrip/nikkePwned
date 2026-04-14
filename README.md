@@ -8,7 +8,7 @@
 </p>
 
 NIKKEPwned is a Password Manager for NIKKE, it uses localStorage and simulating nikke_launcher  
-The motivation of this project is simplified login process, allowing users interacts each accounts **quickly and effortlessly**.
+The motivation of this project is simplified login process, allowing users interacts each accounts **quickly and effortlessly**. Thanks to [@neutralinojs/neutralinojs](https://github.com/neutralinojs/neutralinojs) for its streamlined JS/TS bindings.
 
 <a href="#installation">Installation</a> •
 <a href="https://github.com/ScathachGrip/nikkePwned/blob/master/CONTRIBUTING.md">Contributing</a> •
@@ -23,10 +23,18 @@ The motivation of this project is simplified login process, allowing users inter
   - [Prerequisites](#prerequisites)
     - [Installation](#installation)
       - [How to interacts](#how-to-interacts)
+        - [Core operations](#core-operations)
+        - [Management & diagnostics](#management--diagnostics)
       - [Inputing data](#inputting-data)
       - [Discord RPC support](#discord-rpc-supports)
+  - [Image reasoning for damageDealt check](#image-reasoning)
+    - [Setup](#setup)
+    - [Compatible vision models](#compatible-vision-models)
+      - [PreCapture](#precapture)
+      - [PausedState & AssignedResults](#pausedstate--assignedresults)
+      - [ActualResult & Less hallucination](#actualresult--less-hallucination)
+  - [Running tests](#running-tests)
     - [Manual build](#manual-build)
-    - [Running tests](#running-tests)
   - [Limitations](#Limitations)
     - [Prevent antivirus things](./LIMITATIONS.md#prevent-windows-defender-from-flagging-the-tool)
     - [Tool flagged as potential malware](./LIMITATIONS.md#this-tool-flagged-as-potential-malware)
@@ -39,13 +47,12 @@ The motivation of this project is simplified login process, allowing users inter
 Managing multiple accounts can be frustrating and inefficient, especially when you need to **log in manually one by one**. For users who frequently switch between multiple accounts, constantly entering login information can be a repetitive and tiresome task.  
 
 # The Solution  
-![Cute cat](./resources/static/flow.png)  
-This extension was designed to simplified login process, **automate the login process**, allowing users to log in to their accounts **quickly and effortlessly**. Instead copying pasting or manually typing credentials every time, this tool handles the process for you, **saving time and reducing errors**. By streamlining account management, this tool makes switching between accounts **seamless and efficient**, eliminating the hassle of repetitive logins. Whether you're managing a handful of accounts or dozens, this tool ensures a smoother, faster, and more convenient login experience. 
-
+![Cute cat](./resources/project/flow.png)  
+This extension was designed to simplified login process, **automate the login process**, allowing users to log in to their accounts **quickly and effortlessly**. Instead copying pasting or manually typing credentials every time, this tool handles the process for you, **saving time and reducing errors**. By streamlining account management, this tool makes switching between accounts **seamless and efficient**, eliminating the hassle of repetitive logins. Whether you're managing a handful of accounts or dozens, this tool ensures a smoother, faster, and more convenient login experience.  
 
 ## Prerequisites
-- Windows 11 & Windows 10 64bit
-  - any other tests are welcome
+- `64-bit editions of Microsoft Windows 11 or Microsoft Windows 10`
+  - `Other environments have not been tested; additional testing and feedback are welcome.`
 - You should turn-off antivirus
   - You should do some exception things or exclusion 
     - (if your antivirus scanning this tool however)
@@ -69,47 +76,31 @@ This extension was designed to simplified login process, **automate the login pr
 </table>
 
 ## Discord RPC supports
-**Started from `3.0.1-indev`**: this tools has automated created websocket connection to [Discord Rich Presence](https://docs.discord.com/developers/platform/rich-presence).  
-*If you willing to disable it check your task manager and kill it manual*
+Started from `4.0.1-indev`: this tools has automated created websocket connection to [Discord Rich Presence](https://docs.discord.com/developers/platform/rich-presence). If you willing to disable it check your task manager and kill it manual.
 
 <img width="950" src="resources/icons/rpc_dd.png" alt="nikkepwned"></a>
 
-## Essential Features
+## Core Operations
 
-- **Edit PATH**: 
-   - This tells the tool where your `nikke_launcher.exe` is located.
+| Feature | Description |
+|--------|-------------|
+| `NIKKE LauncherPath` | Specifies the location of `nikke_launcher.exe` required for the tool to operate. |
+| `JSON Input` | Allows entry of account credentials in JSON format. Refer to *Inputting Data* for details. |
+| `Account Selection` | Provides a dropdown list of registered accounts for selection. |
+| `Login Execution` | Initiates an automated login process by simulating `nikke_launcher` without requiring user interaction. |
 
-- **Input as JSON**: 
-   - Enter your account details. See [#Inputting data](#Inputting-data).
+---
 
-- **Select an Account**:  
-   - A dropdown list of registered accounts to choose from.
+## Management & Diagnostics
 
-- **Proceed login**:  
-   - This tool will starting to simulate `nikke_launcher`, you need no actions.
-
-## Utility Features
-
-- **Remove Account**:
-  - Deletes corresponding account from this tool.
-
-- **Delay (Switch)**:
-  - Time delay between account switches.  
-  - Default: `5` (Range: `1-8` seconds).
-
-- **Delay (Login)**:
-  - Time delay before login to prevent abuse.  
-  - Default: `5` (Range: `1-8` seconds).
-
-- **Logs**:
-  - Displays activity logs, including login attempts, path adjustments, and delay settings.
-
-- **Purge Data**:
-  - Erases all stored data from this tool.
-
-- **Rapidfire click tests**:
-  - Rapidfire / double click mouse (macro tests)
-
+| Feature | Description |
+|--------|-------------|
+| `Account Removal` | Removes the selected account from the tool. |
+| `Switch Delay` | Defines the delay between account switches. Default: `5` seconds (Range: `1–8` seconds). |
+| `Login Delay` | Sets a delay before login attempts to prevent excessive requests. Default: `5` seconds (Range: `1–8` seconds). |
+| `Activity Logs` | Displays operational logs, including login attempts, path updates, and delay configurations. |
+| `Data Purge` | Permanently deletes all stored data within the tool. |
+| `Rapidfire test` | Performs rapid or double-click mouse input tests (macro validation). |
 
 ## Inputting data
 This tool uses JSON and supports **two types of input** here's the example:
@@ -149,6 +140,80 @@ If there's an errors watch your step again then..
 - You should not change or rename the PROPERTY `nickname`, `email`, and `password`  
 - You only supposed to change its VALUE
 
+
+# Image Reasoning
+
+Started from `4.0.1-indev`: this tool has image reasoning and consuming some LLMs.  
+
+You probably don't wanna calculate it manually, and there's always inconsistency between mock battles and real battles (damage values differ — blame NIKKE though), especially in UnionRaid Hard mode which is tons of HP and where exact damage dealt values aren't displayed. NIKKEPwned handle it and check the total damage using image reasoning. It's quite simple: when the battle is about to end at 00:00 or 00:01, press `ESC` to pause and then assign `F8` before registering real damage to ensure accurate results.  
+
+### PreCapture  
+Battlefield screen at `00:01` or `00:00` before registering actual damage.
+
+![PreCapture](./resources/project/Screenshot_before_1s.png)
+
+
+### PausedState & AssignedResults  
+Press `ESC` to pause, then assign `F8` to perform image-reasoning and extract damage data. When assigned, You can make notification keep visible by pressing `Win + N`.
+
+![PausedState & AssignedResults ](./resources/project/Screenshot_assigned.png)
+
+### ActualResult & Less Hallucination 
+`nvidia/nemotron-nano-12b-v2-vl:free` is recommended based on internal tests. It demonstrates faster response times and more consistent accuracy. If everything working as expected you can continue to nikke and registering actual damage otherwise keep retry or regroup.  
+
+
+![ActualResult & Less Hallucination](./resources/project/Screenshot_actual_result.png)
+
+
+---
+
+## Setup
+
+| Step | Description |
+|------|-------------|
+| `API Key` | Enter your OpenRouter API key to enable access to available models. |
+| `Vision Models` | Default `nvidia/nemotron-nano-12b-v2-vl:free`. |
+| `Save Configuration` | Save and apply the current configuration. |
+| `Battlefield NIKKE` | Open a battlefield (vs-boss) NIKKE combat screen. |
+| `Trigger Analysis` | Press `ESC` to pause, then press `F8` to initiate damage extraction. |
+| `View Results` | Upon completion, access the results via Windows notifications (`Win + N`). |
+
+## Compatible Vision Models
+
+```js
+const OPENROUTER_MODEL_POOL = [
+  "nvidia/nemotron-nano-12b-v2-vl:free",
+  "google/gemma-4-26b-a4b-it:free",
+  "google/gemma-4-31b-it:free",
+  "nvidia/nemotron-3-super-120b-a12b:free",
+  "minimax/minimax-m2.5:free",
+  "arcee-ai/trinity-large-preview:free",
+  "liquid/lfm-2.5-1.2b-thinking:free",
+  "liquid/lfm-2.5-1.2b-instruct:free",
+  "nvidia/nemotron-3-nano-30b-a3b:free",
+  "qwen/qwen3-next-80b-a3b-instruct:free",
+  "nvidia/nemotron-nano-9b-v2:free",
+  "openai/gpt-oss-120b:free",
+  "openai/gpt-oss-20b:free",
+  "z-ai/glm-4.5-air:free",
+  "qwen/qwen3-coder:free",
+  "cognitivecomputations/dolphin-mistral-24b-venice-edition:free",
+  "google/gemma-3n-e2b-it:free",
+  "google/gemma-3n-e4b-it:free",
+  "google/gemma-3-4b-it:free",
+  "google/gemma-3-12b-it:free",
+  "google/gemma-3-27b-it:free",
+  "meta-llama/llama-3.3-70b-instruct:free",
+  "meta-llama/llama-3.2-3b-instruct:free",
+  "nousresearch/hermes-3-llama-3.1-405b:free",
+];
+```
+
+While multiple models are supported `nvidia/nemotron-nano-12b-v2-vl:free` is recommended based on internal testing. It demonstrates faster response times and more consistent accuracy, with reduced hallucination in image-based reasoning tasks.
+
+## Running tests
+> Check workflows and the whole build script on  `package.json`
+
 ## Manual build
 <table>
 	<td><b>NOTE:</b> NodeJS 20.x or higher</td>
@@ -161,9 +226,6 @@ git clone https://github.com/ScathachGrip/nikkePwned.git
 cd nikkePwned
 ```
 You can check build script on `package.json` for the step by step.
-
-## Running tests
-> Check workflows and the whole build script on  `package.json`
 
 ## Limitations
 This tool must be `run as Administrator` to function correctly because:
@@ -184,10 +246,10 @@ This tool must be `run as Administrator` to function correctly because:
 - **[MetaDefender Report](https://metadefender.com/results/file/bzI1MDkxOW5hbmtUNjA5NW5Id2hTWm9jZHNK_mdaas)**  
 
 **Q: Is this safe?**  
-> Yes, my code is fully transparent, I even write it with sweet and readable COMMENTS to make more casual or entry level can understand. You can check the source yourself—take a look at [app.ts](./src/app.ts) and [discord-rpc.cjs](./discord-rpc.cjs). There are no hidden scripts or anything suspicious.
+> Yes, my code is fully transparent, I even write it with sweet and readable COMMENTS to make more casual or entry level can understand. You can check the source yourself—take a look at [app.ts](./src/app.ts) and [websocket.ts](./websocket.ts). There are no hidden scripts or anything suspicious.
 
-**Q: I’m still unsure. Do I have to use it?**   
-> I completely understand your concern. Here’s a simple way to decide:
+**Q: I'm still unsure. Do I have to use it?**   
+> I completely understand your concern. Here's a simple way to decide:
 - **You can** if you value simplicity and convenience.
 - **Avoid it** ~~If you FOMO~~ if you security concerns outweigh your need for ease of use.
 
