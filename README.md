@@ -84,10 +84,10 @@ Started from `4.0.1-indev`: this tools has automated created websocket connectio
 
 | Feature | Description |
 |--------|-------------|
-| **Path Configuration** | Specifies the location of `nikke_launcher.exe` required for the tool to operate. |
-| **JSON Input** | Allows entry of account credentials in JSON format. Refer to *Inputting Data* for details. |
-| **Account Selection** | Provides a dropdown list of registered accounts for selection. |
-| **Login Execution** | Initiates an automated login process by simulating `nikke_launcher` without requiring user interaction. |
+| `NIKKE LauncherPath` | Specifies the location of `nikke_launcher.exe` required for the tool to operate. |
+| `JSON Input` | Allows entry of account credentials in JSON format. Refer to *Inputting Data* for details. |
+| `Account Selection` | Provides a dropdown list of registered accounts for selection. |
+| `Login Execution` | Initiates an automated login process by simulating `nikke_launcher` without requiring user interaction. |
 
 ---
 
@@ -95,12 +95,12 @@ Started from `4.0.1-indev`: this tools has automated created websocket connectio
 
 | Feature | Description |
 |--------|-------------|
-| **Account Removal** | Removes the selected account from the tool. |
-| **Switch Delay** | Defines the delay between account switches. Default: `5` seconds (Range: `1–8` seconds). |
-| **Login Delay** | Sets a delay before login attempts to prevent excessive requests. Default: `5` seconds (Range: `1–8` seconds). |
-| **Activity Logs** | Displays operational logs, including login attempts, path updates, and delay configurations. |
-| **Data Purge** | Permanently deletes all stored data within the tool. |
-| **Click Test (Rapidfire)** | Performs rapid or double-click mouse input tests (macro validation). |
+| `Account Removal` | Removes the selected account from the tool. |
+| `Switch Delay` | Defines the delay between account switches. Default: `5` seconds (Range: `1–8` seconds). |
+| `Login Delay` | Sets a delay before login attempts to prevent excessive requests. Default: `5` seconds (Range: `1–8` seconds). |
+| `Activity Logs` | Displays operational logs, including login attempts, path updates, and delay configurations. |
+| `Data Purge` | Permanently deletes all stored data within the tool. |
+| `Rapidfire test` | Performs rapid or double-click mouse input tests (macro validation). |
 
 ## Inputting data
 This tool uses JSON and supports **two types of input** here's the example:
@@ -248,8 +248,8 @@ This tool must be `run as Administrator` to function correctly because:
 **Q: Is this safe?**  
 > Yes, my code is fully transparent, I even write it with sweet and readable COMMENTS to make more casual or entry level can understand. You can check the source yourself—take a look at [app.ts](./src/app.ts) and [websocket.ts](./websocket.ts). There are no hidden scripts or anything suspicious.
 
-**Q: I’m still unsure. Do I have to use it?**   
-> I completely understand your concern. Here’s a simple way to decide:
+**Q: I'm still unsure. Do I have to use it?**   
+> I completely understand your concern. Here's a simple way to decide:
 - **You can** if you value simplicity and convenience.
 - **Avoid it** ~~If you FOMO~~ if you security concerns outweigh your need for ease of use.
 
