@@ -6,6 +6,10 @@ const RPC_BRIDGE_BINARY = "rpc-bridge.exe";
 const OPENROUTER_API_KEY_STORAGE_KEY = "openrouter_api_key";
 const OPENROUTER_MODEL_STORAGE_KEY = "openrouter_model";
 const DEFAULT_MODEL_ID = "nvidia/nemotron-nano-12b-v2-vl:free";
+const DELAY_MIN = 1;
+const DELAY_MAX = 10;
+const DEFAULT_DELAY_SWITCH = 3;
+const DEFAULT_DELAY_LOGIN = 3;
 let openRouterApiKey = "";
 let openRouterModel = DEFAULT_MODEL_ID;
 
@@ -270,6 +274,17 @@ async function stopRPCProcess(): Promise<void> {
 async function exitApp(): Promise<void> {
   await stopRPCProcess();
   Neutralino.app.exit();
+}
+
+function parseDelayValue(
+  rawValue: string | null | undefined,
+  fallback: number,
+): number {
+  const numeric = Number(rawValue);
+  if (!Number.isFinite(numeric)) return fallback;
+  const parsed = Math.trunc(numeric);
+  if (parsed < DELAY_MIN || parsed > DELAY_MAX) return fallback;
+  return parsed;
 }
 
 function sendOpenRouterApiKeyToBridge(): void {
@@ -1009,12 +1024,16 @@ Neutralino.events.on("ready", async () => {
       console.log(
         `DailyDelay: todayKey=${todayKey}, lastRunDate=${lastRunDate}, firstRunToday=${isFirstRunToday}`,
       );
-      const storedDelaySwitch =
-        (await Neutralino.storage.getData("delay_switch")) || "5";
-      const storedDelayLogin =
-        (await Neutralino.storage.getData("delay_login")) || "5";
-      const getDelay = isFirstRunToday ? "5" : storedDelaySwitch;
-      const getDelayLogin = isFirstRunToday ? "5" : storedDelayLogin;
+      const storedDelaySwitch = parseDelayValue(
+        await Neutralino.storage.getData("delay_switch").catch(() => ""),
+        DEFAULT_DELAY_SWITCH,
+      );
+      const storedDelayLogin = parseDelayValue(
+        await Neutralino.storage.getData("delay_login").catch(() => ""),
+        DEFAULT_DELAY_LOGIN,
+      );
+      const getDelay = isFirstRunToday ? 5 : storedDelaySwitch;
+      const getDelayLogin = isFirstRunToday ? 5 : storedDelayLogin;
 
       console.log(`Using delay: ${getDelay}s (switch), ${getDelayLogin}s (login)`);
 
@@ -1080,7 +1099,7 @@ Neutralino.events.on("ready", async () => {
         await Neutralino.os.execCommand(
           `powershell -ExecutionPolicy Bypass -Command "Start-Process '${launcherPath}' -Verb RunAs"`,
         );
-        await new Promise((resolve) => setTimeout(resolve, Number(getDelay)));
+        await new Promise((resolve) => setTimeout(resolve, Number(getDelay) * 1000));
         await Neutralino.os.execCommand(
           `powershell -ExecutionPolicy Bypass -Command "Add-Type -AssemblyName System.Windows.Forms; Start-Sleep -Seconds ${Number(getDelayLogin)}; [System.Windows.Forms.SendKeys]::SendWait(\\"{TAB}${emailFixed}{TAB}${passwordFixed}{ENTER}\\")"`,
         );
@@ -1475,26 +1494,17 @@ document.addEventListener("DOMContentLoaded", async () => {
     console.error("❌ Delay switch input field not found.");
     return;
   }
+  const switchDelayDefault = parseDelayValue(
+    delayInput.defaultValue || delayInput.value,
+    DEFAULT_DELAY_SWITCH,
+  );
 
   try {
-    let storedDelay: string | null = null;
-
-    try {
-      storedDelay = await Neutralino.storage.getData("delay_switch");
-    } catch (error) {
-      if ((error as { code: string }).code === "NE_ST_NOSTKEX") {
-        await Neutralino.storage.setData("delay_switch", "5");
-        console.warn("⚠️ No existing delay switch found, setting default (5).");
-      } else {
-        throw error;
-      }
-    }
-
-    let delayValue = storedDelay ? Number(storedDelay) : 3;
-    if (isNaN(delayValue) || delayValue < 1 || delayValue > 5) {
-      delayValue = 3;
-      await Neutralino.storage.setData("delay_switch", String(delayValue));
-    }
+    const storedDelay = await Neutralino.storage
+      .getData("delay_switch")
+      .catch(() => "");
+    const delayValue = parseDelayValue(storedDelay, switchDelayDefault);
+    await Neutralino.storage.setData("delay_switch", String(delayValue));
     delayInput.value = String(delayValue);
     console.log(`🕒 Current delay switch loaded: ${delayValue}`);
   } catch (error) {
@@ -1503,9 +1513,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // Listen for value changes
   delayInput.addEventListener("input", async () => {
+    if (delayInput.value.trim() === "") return;
     const newDelay = Number(delayInput.value);
 
-    if (!isNaN(newDelay) && newDelay >= 1 && newDelay <= 8) {
+    if (!isNaN(newDelay) && newDelay >= DELAY_MIN && newDelay <= DELAY_MAX) {
       await Neutralino.storage.setData("delay_switch", String(newDelay));
       console.log(`✅ New delay switch saved: ${newDelay}`);
       accountManager.showAlert(
@@ -1519,10 +1530,13 @@ document.addEventListener("DOMContentLoaded", async () => {
         Date.now(),
       );
     } else {
-      await Neutralino.storage.setData("delay_switch", "5");
-      console.warn("⚠️ Delay value switch out of range (1-8).");
+      await Neutralino.storage.setData("delay_switch", String(switchDelayDefault));
+      delayInput.value = String(switchDelayDefault);
+      console.warn(
+        `⚠️ Delay value switch out of range (${DELAY_MIN}-${DELAY_MAX}).`,
+      );
       accountManager.showAlert(
-        "Delay value switch out of range: Expected (1-8) seconds.",
+        `Delay value switch out of range: Expected (${DELAY_MIN}-${DELAY_MAX}) seconds.`,
         "fail",
       );
     }
@@ -1536,26 +1550,17 @@ document.addEventListener("DOMContentLoaded", async () => {
     console.error("❌ Delay input login field not found.");
     return;
   }
+  const loginDelayDefault = parseDelayValue(
+    delayInputLogin.defaultValue || delayInputLogin.value,
+    DEFAULT_DELAY_LOGIN,
+  );
 
   try {
-    let storedDelay: string | null = null;
-
-    try {
-      storedDelay = await Neutralino.storage.getData("delay_login");
-    } catch (error) {
-      if ((error as { code: string }).code === "NE_ST_NOSTKEX") {
-        await Neutralino.storage.setData("delay_login", "5");
-        console.warn("⚠️ No existing delay login found, setting default (5).");
-      } else {
-        throw error;
-      }
-    }
-
-    let delayValue = storedDelay ? Number(storedDelay) : 3;
-    if (isNaN(delayValue) || delayValue < 1 || delayValue > 5) {
-      delayValue = 3;
-      await Neutralino.storage.setData("delay_login", String(delayValue));
-    }
+    const storedDelay = await Neutralino.storage
+      .getData("delay_login")
+      .catch(() => "");
+    const delayValue = parseDelayValue(storedDelay, loginDelayDefault);
+    await Neutralino.storage.setData("delay_login", String(delayValue));
     delayInputLogin.value = String(delayValue);
     console.log(`🕒 Current delay login loaded: ${delayValue}`);
   } catch (error) {
@@ -1564,9 +1569,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // Listen for value changes
   delayInputLogin.addEventListener("input", async () => {
+    if (delayInputLogin.value.trim() === "") return;
     const newDelay = Number(delayInputLogin.value);
 
-    if (!isNaN(newDelay) && newDelay >= 1 && newDelay <= 8) {
+    if (!isNaN(newDelay) && newDelay >= DELAY_MIN && newDelay <= DELAY_MAX) {
       await Neutralino.storage.setData("delay_login", String(newDelay));
       console.log(`✅ New delay login saved: ${newDelay}`);
       accountManager.showAlert(
@@ -1580,10 +1586,13 @@ document.addEventListener("DOMContentLoaded", async () => {
         Date.now(),
       );
     } else {
-      await Neutralino.storage.setData("delay_login", "5");
-      console.warn("⚠️ Delay value login out of range (1-8).");
+      await Neutralino.storage.setData("delay_login", String(loginDelayDefault));
+      delayInputLogin.value = String(loginDelayDefault);
+      console.warn(
+        `⚠️ Delay value login out of range (${DELAY_MIN}-${DELAY_MAX}).`,
+      );
       accountManager.showAlert(
-        "Delay value login out of range: Expected (1-8) seconds.",
+        `Delay value login out of range: Expected (${DELAY_MIN}-${DELAY_MAX}) seconds.`,
         "fail",
       );
     }

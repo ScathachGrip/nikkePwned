@@ -1655,10 +1655,10 @@ Select where nikke_launcher.exe was installed.</pre>
           height: 32px;
         ">
         <label for="delayBtn" style="white-space: nowrap; line-height: 1; font-size: 12px;">Delay (switch):</label>
-        <input type="number" id="delayBtn" name="delayswitch" min="1" max="5" step="1" value="3"
+        <input type="number" id="delayBtn" name="delayswitch" min="1" max="10" step="1" value="3"
           style="font-size: 12px;" />
         <label for="delayBtnLogin" style="white-space: nowrap; line-height: 1; font-size: 12px;">Delay (login):</label>
-        <input type="number" id="delayBtnLogin" name="delaylogin" min="1" max="5" step="1" value="3"
+        <input type="number" id="delayBtnLogin" name="delaylogin" min="1" max="10" step="1" value="3"
           style="font-size: 12px;" />
         <button id="myBtn">🔍Logs</button>
         <button id="purgeBtn">⛔Purge Data</button>
