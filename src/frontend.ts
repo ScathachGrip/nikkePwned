@@ -215,7 +215,11 @@ const htmlContent = `
       width: 18px;
       height: 18px;
       border-radius: 3px;
-      background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02));
+      background-color: #141414;
+      background-image: url('/icons/appIcon.png');
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: cover;
       border: 1px solid rgba(255, 255, 255, 0.04);
       box-shadow: 0 0 0 2px rgba(255, 138, 0, 0.04) inset;
     }
@@ -354,9 +358,22 @@ const htmlContent = `
       background-color: #f0f0f0;
     }
 
+    .account-action-row {
+      display: flex;
+      align-items: stretch;
+      gap: 6px;
+      margin-top: 10px;
+    }
+
     .account-picker-wrap {
       position: relative;
       margin-top: 10px;
+    }
+
+    .account-action-row .account-picker-wrap {
+      flex: 1;
+      margin-top: 0;
+      min-width: 0;
     }
 
     #accountSelect {
@@ -374,7 +391,7 @@ const htmlContent = `
     .account-picker-btn {
       width: 100%;
       margin-top: 0;
-      padding: 8px 14px;
+      padding: 7px 12px;
       border: none;
       border-radius: 7px;
       background: #1d1d25ff;
@@ -385,7 +402,7 @@ const htmlContent = `
       font-weight: 700;
       font-size: 14px;
       line-height: 1.1;
-      min-height: 36px;
+      min-height: 34px;
       cursor: pointer;
       transition: border-color 0.2s ease, transform 0.2s ease;
     }
@@ -600,9 +617,19 @@ const htmlContent = `
     }
 
     #runBtn {
-      border-radius: 5px;
-      background: #28a745;
+      width: 36px;
+      height: 36px;
+      min-width: 36px;
+      margin-top: 0;
+      padding: 0;
+      border-radius: 50%;
+      background: #25a142;
       color: white;
+      font-size: 18px;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     #runBtn:hover {
@@ -610,9 +637,19 @@ const htmlContent = `
     }
 
     #removeBtn {
-      border-radius: 5px;
+      width: 36px;
+      height: 36px;
+      min-width: 36px;
+      margin-top: 0;
+      padding: 0;
+      border-radius: 50%;
       background: #a20a0a;
       color: white;
+      font-size: 18px;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     #removeBtn:hover {
@@ -676,7 +713,7 @@ const htmlContent = `
     }
 
     #selectedPath {
-      font-family: monospace;
+      font-family: inherit;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -1625,28 +1662,28 @@ const htmlContent = `
         <div id="capsWarning">⚠️ Caps Lock is ON</div>
       </div>
       <div id="pathContainer" style="display: flex; align-items: center">
-        🧩
+        🐛
         <pre id="selectedPath" style="color: #298fd8ff;">
 Select where nikke_launcher.exe was installed.</pre>
-        <button id="selectPathBtn" style="font-weight: 900;">✏️Edit</button>
+        <button id="selectPathBtn" style="font-weight: 900;">Edit</button>
       </div>
       <textarea id="jsonInput" placeholder="Enter account JSON here..."></textarea>
       <button id="registerBtn" style="font-weight: 900;">📝Register Accounts</button>
       <br />
-      <br />
-      <div class="account-picker-wrap">
-        <button id="accountPickerBtn" type="button" class="account-picker-btn" aria-haspopup="dialog"
-          aria-controls="accountPickerModal" aria-expanded="false">
-          <span id="accountPickerLabel" class="account-picker-label">Select an Account</span>
-          <span class="account-picker-arrow">👇</span>
-        </button>
-        <select id="accountSelect" aria-hidden="true" tabindex="-1">
-          <option value="" style="font-weight: 900;">Select account</option>
-        </select>
+      <div class="account-action-row">
+        <div class="account-picker-wrap">
+          <button id="accountPickerBtn" type="button" class="account-picker-btn" aria-haspopup="dialog"
+            aria-controls="accountPickerModal" aria-expanded="false">
+            <span id="accountPickerLabel" class="account-picker-label">Select an Account</span>
+            <span class="account-picker-arrow"> >> </span>
+          </button>
+          <select id="accountSelect" aria-hidden="true" tabindex="-1">
+            <option value="" style="font-weight: 900;">Select account</option>
+          </select>
+        </div>
+        <button id="runBtn" type="button" title="Proceed auto login" aria-label="Proceed auto login">🚀</button>
+        <button id="removeBtn" type="button" title="Remove account" aria-label="Remove account">🚫</button>
       </div>
-      <button id="runBtn" style="font-weight: 900;">🚀Proceed auto login</button>
-      <br />
-      <button id="removeBtn" style="font-weight: 900;">🚫Remove account</button>
       <div style="
           display: flex;
           align-items: center;

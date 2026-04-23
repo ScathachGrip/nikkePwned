@@ -1756,11 +1756,23 @@ window.addEventListener("DOMContentLoaded", () => {
   });
 });
 
-const placeholderText: string = `{
-    "nickname": "FUFUFAFA",
-    "email": "hey@scathach.id",
+const placeholderText: string = `[
+  {
+    "nickname": "JEANNE",
+    "email": "hey123@scathach.id",
     "password": "ReDaCtEd123"
-}`;
+  },
+  {
+    "nickname": "FUFUFAFA",
+    "email": "foobar2@gmail.com",
+    "password": "ReDaCtEd123"
+  },
+  {
+    "nickname": "WHATEVER",
+    "email": "foobar3+2@gmail.com",
+    "password": "asuasu123"
+  }
+]`;
 
 const accountTextArea = document.getElementById("jsonInput") as HTMLTextAreaElement;
 let i = 0;
@@ -1769,7 +1781,7 @@ function typePlaceholder(): void {
   if (i <= placeholderText.length) {
     accountTextArea.setAttribute("placeholder", placeholderText.slice(0, i));
     i++;
-    setTimeout(typePlaceholder, 40); 
+    setTimeout(typePlaceholder, 15); 
   } else {
     return; 
   }
