@@ -6,6 +6,10 @@ const RPC_BRIDGE_BINARY = "rpc-bridge.exe";
 const OPENROUTER_API_KEY_STORAGE_KEY = "openrouter_api_key";
 const OPENROUTER_MODEL_STORAGE_KEY = "openrouter_model";
 const DEFAULT_MODEL_ID = "nvidia/nemotron-nano-12b-v2-vl:free";
+const DELAY_MIN = 1;
+const DELAY_MAX = 10;
+const DEFAULT_DELAY_SWITCH = 3;
+const DEFAULT_DELAY_LOGIN = 3;
 let openRouterApiKey = "";
 let openRouterModel = DEFAULT_MODEL_ID;
 
@@ -270,6 +274,17 @@ async function stopRPCProcess(): Promise<void> {
 async function exitApp(): Promise<void> {
   await stopRPCProcess();
   Neutralino.app.exit();
+}
+
+function parseDelayValue(
+  rawValue: string | null | undefined,
+  fallback: number,
+): number {
+  const numeric = Number(rawValue);
+  if (!Number.isFinite(numeric)) return fallback;
+  const parsed = Math.trunc(numeric);
+  if (parsed < DELAY_MIN || parsed > DELAY_MAX) return fallback;
+  return parsed;
 }
 
 function sendOpenRouterApiKeyToBridge(): void {
@@ -797,6 +812,8 @@ Neutralino.events.on("ready", async () => {
 
   const pathDisplay = document.getElementById("selectedPath") as HTMLElement;
   const runBtn = document.getElementById("runBtn") as HTMLButtonElement;
+  const selectPathBtn = document.getElementById("selectPathBtn") as HTMLButtonElement | null;
+  const selectPathIconBtn = document.getElementById("selectPathIconBtn") as HTMLButtonElement | null;
 
   const storedPath = await Neutralino.storage
     .getData("nikkeLauncherPath")
@@ -855,9 +872,7 @@ Neutralino.events.on("ready", async () => {
    * @returns {Promise<void>} Resolves when the file is selected and stored or an error occurs.
    * @throws {Error} If there is an issue selecting the file or storing the path.
    */
-  (
-    document.getElementById("selectPathBtn") as HTMLButtonElement
-  ).addEventListener("click", async () => {
+  const handleSelectPath = async (): Promise<void> => {
     try {
       const file = await Neutralino.os.showOpenDialog("Open a nikke", {
         filters: [{ name: "Executables", extensions: ["exe"] }],
@@ -899,33 +914,88 @@ Neutralino.events.on("ready", async () => {
       );
       accountManager.showAlert("Failed to select file.", "fail");
     }
+  };
+
+  selectPathBtn?.addEventListener("click", () => {
+    void handleSelectPath();
   });
 
+  selectPathIconBtn?.addEventListener("click", () => {
+    void handleSelectPath();
+  });
+
+  const jsonInput = document.getElementById("jsonInput") as HTMLTextAreaElement | null;
+  const modeMultipleBtn = document.getElementById("modeMultipleBtn") as HTMLButtonElement | null;
+  const modeSingleBtn = document.getElementById("modeSingleBtn") as HTMLButtonElement | null;
+  const singleAccountForm = document.getElementById("singleAccountForm") as HTMLElement | null;
+  const singleNicknameInput = document.getElementById("singleNickname") as HTMLInputElement | null;
+  const singleEmailInput = document.getElementById("singleEmail") as HTMLInputElement | null;
+  const singlePasswordInput = document.getElementById("singlePassword") as HTMLInputElement | null;
+
+  let registerInputMode: "multiple" | "single" = "single";
+
+  const applyRegisterInputMode = (mode: "multiple" | "single"): void => {
+    registerInputMode = mode;
+    modeMultipleBtn?.classList.toggle("is-active", mode === "multiple");
+    modeSingleBtn?.classList.toggle("is-active", mode === "single");
+
+    if (jsonInput) {
+      jsonInput.style.display = mode === "multiple" ? "block" : "none";
+    }
+    if (singleAccountForm) {
+      singleAccountForm.style.display = mode === "single" ? "flex" : "none";
+    }
+  };
+
+  modeMultipleBtn?.addEventListener("click", () => applyRegisterInputMode("multiple"));
+  modeSingleBtn?.addEventListener("click", () => applyRegisterInputMode("single"));
+  applyRegisterInputMode("single");
+
   /**
-   * Handles the "Register" button click event to register new accounts from JSON input.
+   * Handles the "Register" button click event to register new accounts from current input mode.
    *
-   * - Parses user-provided JSON input to extract account data.
-   * - Ensures the data is properly structured (each account must have `nickname`, `email`, and `password`).
+   * - Multiple mode: parses JSON input (`jsonInput`).
+   * - Single mode: reads `nickname`, `email`, and `password` fields directly.
+   * - Ensures data is properly structured (each account must have `nickname`, `email`, and `password`).
    * - Retrieves existing accounts from Neutralino storage.
    * - Merges new accounts with existing ones, avoiding duplicate emails.
    * - Saves the updated account list back to storage.
    * - Refreshes the account dropdown and displays a success notification.
-   * - Shows an error notification if the JSON format is invalid.
+   * - Shows an error notification if input format/data is invalid.
    *
    * @returns {Promise<void>} Resolves when accounts are successfully registered or an error occurs.
-   * @throws {Error} If there is an issue JSON input or saving the accounts.
+   * @throws {Error} If there is an issue with input parsing/validation or saving accounts.
    */
   (
     document.getElementById("registerBtn") as HTMLButtonElement
   ).addEventListener("click", async () => {
-    const input = (document.getElementById("jsonInput") as HTMLTextAreaElement)
-      .value;
-
-    console.log("Input received:", JSON.stringify(input));
-
     try {
-      const parsedData = JSON.parse(input);
-      const newAccounts = Array.isArray(parsedData) ? parsedData : [parsedData];
+      let parsedSource: Account | Account[];
+      let newAccounts: Account[] = [];
+
+      if (registerInputMode === "multiple") {
+        const input = jsonInput?.value?.trim() || "";
+        if (!input) {
+          throw new Error("JSON input is empty.");
+        }
+        parsedSource = JSON.parse(input);
+        newAccounts = Array.isArray(parsedSource) ? parsedSource : [parsedSource];
+      } else {
+        const nickname = singleNicknameInput?.value?.trim() || "";
+        const email = singleEmailInput?.value?.trim() || "";
+        const password = singlePasswordInput?.value || "";
+
+        if (!nickname || !email || !password) {
+          throw new Error("Please fill nickname, email, and password.");
+        }
+
+        parsedSource = {
+          nickname,
+          email,
+          password,
+        };
+        newAccounts = [parsedSource];
+      }
 
       let existingAccounts: Account[] = [];
       try {
@@ -941,12 +1011,19 @@ Neutralino.events.on("ready", async () => {
       );
 
       newAccounts.forEach((acc: Account) => {
-        if (!acc.email || !acc.password || !acc.nickname) {
+        const normalized: Account = {
+          nickname: String(acc.nickname || "").trim(),
+          email: String(acc.email || "").trim(),
+          password: String(acc.password || ""),
+        };
+
+        if (!normalized.email || !normalized.password || !normalized.nickname) {
           throw new Error(
             "Each account must have nickname, email, and password",
           );
         }
-        accountMap.set(acc.email, acc);
+
+        accountMap.set(normalized.email, normalized);
       });
 
       const updatedAccounts = Array.from(accountMap.values());
@@ -957,11 +1034,17 @@ Neutralino.events.on("ready", async () => {
       accountManager.showAlert("Accounts Registered!", "success");
       await accountManager.loadAccounts();
       await accountManager.createLog(
-        accountManager.extractNicknames(JSON.parse(input)),
+        accountManager.extractNicknames(parsedSource),
         "Account Added",
         "True",
         Date.now(),
       );
+
+      if (registerInputMode === "single") {
+        if (singleNicknameInput) singleNicknameInput.value = "";
+        if (singleEmailInput) singleEmailInput.value = "";
+        if (singlePasswordInput) singlePasswordInput.value = "";
+      }
     } catch (e) {
       let message = "Unknown error";
 
@@ -970,13 +1053,17 @@ Neutralino.events.on("ready", async () => {
       }
 
       console.error(`Error: ${message}`);
+      const isJsonMode = registerInputMode === "multiple";
+      const userMessage = isJsonMode && message.toLowerCase().includes("json")
+        ? "Invalid JSON format! Please correct it."
+        : message;
       await Neutralino.os.showNotification(
         "Oops :/",
-        "Invalid JSON format! Please correct it.",
+        userMessage,
         "ERROR",
       );
       accountManager.showAlert(
-        "Invalid JSON format! Please correct it.",
+        userMessage,
         "fail",
       );
     }
@@ -1009,12 +1096,16 @@ Neutralino.events.on("ready", async () => {
       console.log(
         `DailyDelay: todayKey=${todayKey}, lastRunDate=${lastRunDate}, firstRunToday=${isFirstRunToday}`,
       );
-      const storedDelaySwitch =
-        (await Neutralino.storage.getData("delay_switch")) || "5";
-      const storedDelayLogin =
-        (await Neutralino.storage.getData("delay_login")) || "5";
-      const getDelay = isFirstRunToday ? "5" : storedDelaySwitch;
-      const getDelayLogin = isFirstRunToday ? "5" : storedDelayLogin;
+      const storedDelaySwitch = parseDelayValue(
+        await Neutralino.storage.getData("delay_switch").catch(() => ""),
+        DEFAULT_DELAY_SWITCH,
+      );
+      const storedDelayLogin = parseDelayValue(
+        await Neutralino.storage.getData("delay_login").catch(() => ""),
+        DEFAULT_DELAY_LOGIN,
+      );
+      const getDelay = isFirstRunToday ? 5 : storedDelaySwitch;
+      const getDelayLogin = isFirstRunToday ? 5 : storedDelayLogin;
 
       console.log(`Using delay: ${getDelay}s (switch), ${getDelayLogin}s (login)`);
 
@@ -1080,7 +1171,7 @@ Neutralino.events.on("ready", async () => {
         await Neutralino.os.execCommand(
           `powershell -ExecutionPolicy Bypass -Command "Start-Process '${launcherPath}' -Verb RunAs"`,
         );
-        await new Promise((resolve) => setTimeout(resolve, Number(getDelay)));
+        await new Promise((resolve) => setTimeout(resolve, Number(getDelay) * 1000));
         await Neutralino.os.execCommand(
           `powershell -ExecutionPolicy Bypass -Command "Add-Type -AssemblyName System.Windows.Forms; Start-Sleep -Seconds ${Number(getDelayLogin)}; [System.Windows.Forms.SendKeys]::SendWait(\\"{TAB}${emailFixed}{TAB}${passwordFixed}{ENTER}\\")"`,
         );
@@ -1176,6 +1267,17 @@ Neutralino.events.on("ready", async () => {
       }
 
       const deletedNickname = accounts[selectedIndex].nickname;
+      const confirmation = await Neutralino.os.showMessageBox(
+        "Remove Account",
+        `You are about to remove "${deletedNickname}".\n\nThis action cannot be undone.\nDo you want to continue?`,
+        "YES_NO",
+        "QUESTION",
+      );
+
+      if (confirmation !== "YES") {
+        accountManager.showAlert("Account removal cancelled.", "fail");
+        return;
+      }
 
       accounts.splice(selectedIndex, 1);
       console.log("After deletion:", accounts);
@@ -1475,26 +1577,17 @@ document.addEventListener("DOMContentLoaded", async () => {
     console.error("❌ Delay switch input field not found.");
     return;
   }
+  const switchDelayDefault = parseDelayValue(
+    delayInput.defaultValue || delayInput.value,
+    DEFAULT_DELAY_SWITCH,
+  );
 
   try {
-    let storedDelay: string | null = null;
-
-    try {
-      storedDelay = await Neutralino.storage.getData("delay_switch");
-    } catch (error) {
-      if ((error as { code: string }).code === "NE_ST_NOSTKEX") {
-        await Neutralino.storage.setData("delay_switch", "5");
-        console.warn("⚠️ No existing delay switch found, setting default (5).");
-      } else {
-        throw error;
-      }
-    }
-
-    let delayValue = storedDelay ? Number(storedDelay) : 3;
-    if (isNaN(delayValue) || delayValue < 1 || delayValue > 5) {
-      delayValue = 3;
-      await Neutralino.storage.setData("delay_switch", String(delayValue));
-    }
+    const storedDelay = await Neutralino.storage
+      .getData("delay_switch")
+      .catch(() => "");
+    const delayValue = parseDelayValue(storedDelay, switchDelayDefault);
+    await Neutralino.storage.setData("delay_switch", String(delayValue));
     delayInput.value = String(delayValue);
     console.log(`🕒 Current delay switch loaded: ${delayValue}`);
   } catch (error) {
@@ -1503,9 +1596,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // Listen for value changes
   delayInput.addEventListener("input", async () => {
+    if (delayInput.value.trim() === "") return;
     const newDelay = Number(delayInput.value);
 
-    if (!isNaN(newDelay) && newDelay >= 1 && newDelay <= 8) {
+    if (!isNaN(newDelay) && newDelay >= DELAY_MIN && newDelay <= DELAY_MAX) {
       await Neutralino.storage.setData("delay_switch", String(newDelay));
       console.log(`✅ New delay switch saved: ${newDelay}`);
       accountManager.showAlert(
@@ -1519,10 +1613,13 @@ document.addEventListener("DOMContentLoaded", async () => {
         Date.now(),
       );
     } else {
-      await Neutralino.storage.setData("delay_switch", "5");
-      console.warn("⚠️ Delay value switch out of range (1-8).");
+      await Neutralino.storage.setData("delay_switch", String(switchDelayDefault));
+      delayInput.value = String(switchDelayDefault);
+      console.warn(
+        `⚠️ Delay value switch out of range (${DELAY_MIN}-${DELAY_MAX}).`,
+      );
       accountManager.showAlert(
-        "Delay value switch out of range: Expected (1-8) seconds.",
+        `Delay value switch out of range: Expected (${DELAY_MIN}-${DELAY_MAX}) seconds.`,
         "fail",
       );
     }
@@ -1536,26 +1633,17 @@ document.addEventListener("DOMContentLoaded", async () => {
     console.error("❌ Delay input login field not found.");
     return;
   }
+  const loginDelayDefault = parseDelayValue(
+    delayInputLogin.defaultValue || delayInputLogin.value,
+    DEFAULT_DELAY_LOGIN,
+  );
 
   try {
-    let storedDelay: string | null = null;
-
-    try {
-      storedDelay = await Neutralino.storage.getData("delay_login");
-    } catch (error) {
-      if ((error as { code: string }).code === "NE_ST_NOSTKEX") {
-        await Neutralino.storage.setData("delay_login", "5");
-        console.warn("⚠️ No existing delay login found, setting default (5).");
-      } else {
-        throw error;
-      }
-    }
-
-    let delayValue = storedDelay ? Number(storedDelay) : 3;
-    if (isNaN(delayValue) || delayValue < 1 || delayValue > 5) {
-      delayValue = 3;
-      await Neutralino.storage.setData("delay_login", String(delayValue));
-    }
+    const storedDelay = await Neutralino.storage
+      .getData("delay_login")
+      .catch(() => "");
+    const delayValue = parseDelayValue(storedDelay, loginDelayDefault);
+    await Neutralino.storage.setData("delay_login", String(delayValue));
     delayInputLogin.value = String(delayValue);
     console.log(`🕒 Current delay login loaded: ${delayValue}`);
   } catch (error) {
@@ -1564,9 +1652,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // Listen for value changes
   delayInputLogin.addEventListener("input", async () => {
+    if (delayInputLogin.value.trim() === "") return;
     const newDelay = Number(delayInputLogin.value);
 
-    if (!isNaN(newDelay) && newDelay >= 1 && newDelay <= 8) {
+    if (!isNaN(newDelay) && newDelay >= DELAY_MIN && newDelay <= DELAY_MAX) {
       await Neutralino.storage.setData("delay_login", String(newDelay));
       console.log(`✅ New delay login saved: ${newDelay}`);
       accountManager.showAlert(
@@ -1580,10 +1669,13 @@ document.addEventListener("DOMContentLoaded", async () => {
         Date.now(),
       );
     } else {
-      await Neutralino.storage.setData("delay_login", "5");
-      console.warn("⚠️ Delay value login out of range (1-8).");
+      await Neutralino.storage.setData("delay_login", String(loginDelayDefault));
+      delayInputLogin.value = String(loginDelayDefault);
+      console.warn(
+        `⚠️ Delay value login out of range (${DELAY_MIN}-${DELAY_MAX}).`,
+      );
       accountManager.showAlert(
-        "Delay value login out of range: Expected (1-8) seconds.",
+        `Delay value login out of range: Expected (${DELAY_MIN}-${DELAY_MAX}) seconds.`,
         "fail",
       );
     }
@@ -1747,11 +1839,23 @@ window.addEventListener("DOMContentLoaded", () => {
   });
 });
 
-const placeholderText: string = `{
-    "nickname": "FUFUFAFA",
-    "email": "hey@scathach.id",
+const placeholderText: string = `[
+  {
+    "nickname": "JEANNE",
+    "email": "hey123@scathach.id",
     "password": "ReDaCtEd123"
-}`;
+  },
+  {
+    "nickname": "FUFUFAFA",
+    "email": "foobar2@gmail.com",
+    "password": "ReDaCtEd123"
+  },
+  {
+    "nickname": "WHATEVER",
+    "email": "foobar3+2@gmail.com",
+    "password": "asuasu123"
+  }
+]`;
 
 const accountTextArea = document.getElementById("jsonInput") as HTMLTextAreaElement;
 let i = 0;
@@ -1760,7 +1864,7 @@ function typePlaceholder(): void {
   if (i <= placeholderText.length) {
     accountTextArea.setAttribute("placeholder", placeholderText.slice(0, i));
     i++;
-    setTimeout(typePlaceholder, 40); 
+    setTimeout(typePlaceholder, 15); 
   } else {
     return; 
   }

@@ -8,7 +8,7 @@ on:
 
 jobs:
   build-release:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
 
     permissions:
       contents: write
@@ -33,24 +33,25 @@ jobs:
 
       - name: Verify RPC bridge binary
         run: |
-          test -f rpc-bridge.exe
-          test -f dist/nikkepwned/rpc-bridge.exe
+          if (!(Test-Path "rpc-bridge.exe")) { throw "rpc-bridge.exe not found" }
+          if (!(Test-Path "dist/nikkepwned/rpc-bridge.exe")) { throw "dist/nikkepwned/rpc-bridge.exe not found" }
 
       - name: Read version
         id: pkg
         run: |
-          VERSION=$(node -p "require('./package.json').version")
-          echo "version=v$VERSION" >> $GITHUB_OUTPUT
+          $version = node -p "require('./package.json').version"
+          "version=v$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
 
       - name: Create tag
         run: |
-          TAG=${{ steps.pkg.outputs.version }}
-          if git ls-remote --tags origin $TAG | grep $TAG; then
-            echo "Tag already exists"
-          else
-            git tag $TAG
-            git push origin $TAG
-          fi
+          $tag = "${{ steps.pkg.outputs.version }}"
+          $exists = git ls-remote --tags origin $tag
+          if ($exists) {
+            Write-Host "Tag already exists"
+          } else {
+            git tag $tag
+            git push origin $tag
+          }
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2

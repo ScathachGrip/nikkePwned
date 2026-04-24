@@ -215,7 +215,11 @@ const htmlContent = `
       width: 18px;
       height: 18px;
       border-radius: 3px;
-      background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02));
+      background-color: #141414;
+      background-image: url('/icons/appIcon.png');
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: cover;
       border: 1px solid rgba(255, 255, 255, 0.04);
       box-shadow: 0 0 0 2px rgba(255, 138, 0, 0.04) inset;
     }
@@ -313,6 +317,90 @@ const htmlContent = `
       scrollbar-width: thin;
     }
 
+    .register-input-mode {
+      display: flex;
+      gap: 6px;
+      margin-top: 0;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .entry-account-panel {
+      display: block;
+      margin-top: 8px;
+    }
+
+    .mode-toggle-btn {
+      flex: 0 0 auto;
+      width: auto;
+      margin-top: 0;
+      min-width: 0;
+      height: 28px;
+      padding: 0 8px;
+      font-size: 10px;
+      font-weight: 700;
+      line-height: 1;
+      border-radius: 14px;
+      border: 1px solid #4f4f60;
+      background: #1d1d25ff;
+      color: #f2f2f2;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      white-space: nowrap;
+      transition: background-color 0.2s ease, border-color 0.2s ease;
+    }
+
+    .mode-toggle-btn.is-active {
+      border-color: #28a745;
+      background: #24432cff;
+      color: #d8ffe3;
+    }
+
+    .light-mode .mode-toggle-btn {
+      border-color: #c8c8c8;
+      background: #f0f0f0;
+      color: #222;
+    }
+
+    .light-mode .mode-toggle-btn.is-active {
+      border-color: #1f5fb0;
+      background: #dfeaf8;
+      color: #153f77;
+    }
+
+    .single-account-form {
+      display: none;
+      margin-top: 8px;
+      gap: 6px;
+      flex-direction: column;
+    }
+
+    #jsonInput {
+      margin-top: 8px;
+    }
+
+    .single-account-form input {
+      width: 100%;
+      background: #333344;
+      color: white;
+      border: 1px solid #3b3b46;
+      padding: 8px 10px;
+      border-radius: 5px;
+      box-sizing: border-box;
+      font-size: 13px;
+      line-height: 1.2;
+    }
+
+    .light-mode .single-account-form input {
+      background: #f0f0f0;
+      color: #000000;
+      border: 1px solid #d4d4d4;
+      line-height: 1.2;
+    }
+
     select,
     button {
       width: 100%;
@@ -354,9 +442,22 @@ const htmlContent = `
       background-color: #f0f0f0;
     }
 
+    .account-action-row {
+      display: flex;
+      align-items: stretch;
+      gap: 6px;
+      margin-top: 10px;
+    }
+
     .account-picker-wrap {
       position: relative;
       margin-top: 10px;
+    }
+
+    .account-action-row .account-picker-wrap {
+      flex: 1;
+      margin-top: 0;
+      min-width: 0;
     }
 
     #accountSelect {
@@ -374,7 +475,7 @@ const htmlContent = `
     .account-picker-btn {
       width: 100%;
       margin-top: 0;
-      padding: 8px 14px;
+      padding: 7px 12px;
       border: none;
       border-radius: 7px;
       background: #1d1d25ff;
@@ -385,7 +486,7 @@ const htmlContent = `
       font-weight: 700;
       font-size: 14px;
       line-height: 1.1;
-      min-height: 36px;
+      min-height: 34px;
       cursor: pointer;
       transition: border-color 0.2s ease, transform 0.2s ease;
     }
@@ -581,7 +682,7 @@ const htmlContent = `
     }
 
     #registerBtn {
-      border-radius: 10px;
+      border-radius: 20px;
       background: #007bff;
       color: white;
     }
@@ -600,9 +701,19 @@ const htmlContent = `
     }
 
     #runBtn {
-      border-radius: 5px;
-      background: #28a745;
+      width: 36px;
+      height: 36px;
+      min-width: 36px;
+      margin-top: 0;
+      padding: 0;
+      border-radius: 50%;
+      background: #25a142;
       color: white;
+      font-size: 18px;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     #runBtn:hover {
@@ -610,9 +721,19 @@ const htmlContent = `
     }
 
     #removeBtn {
-      border-radius: 5px;
+      width: 36px;
+      height: 36px;
+      min-width: 36px;
+      margin-top: 0;
+      padding: 0;
+      border-radius: 50%;
       background: #a20a0a;
       color: white;
+      font-size: 18px;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     #removeBtn:hover {
@@ -636,6 +757,21 @@ const htmlContent = `
       margin: 0 auto;
     }
 
+    #logoContainer {
+      position: relative;
+      display: block !important;
+      width: 100%;
+      max-width: 400px;
+      margin: 0 auto;
+    }
+
+    #appLogo {
+      width: 100%;
+      max-width: 400px;
+      height: auto;
+      display: block;
+    }
+
     .responsive-img-small {
       width: 100%;
       height: auto;
@@ -646,6 +782,7 @@ const htmlContent = `
 
     #selectPathBtn {
       margin-left: 3px;
+      margin-top: 0;
       background-color: #b91515ff;
       color: white;
       font-size: 12px;
@@ -669,14 +806,74 @@ const htmlContent = `
       background-color: #529be8;
     }
 
+    #selectPathIconBtn {
+      width: 28px;
+      height: 28px;
+      min-width: 28px;
+      flex: 0 0 auto;
+      border: none;
+      border-radius: 50%;
+      padding: 0;
+      margin-top: 0;
+      background: rgb(0, 0, 0);
+      color: #fff;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    #selectPathIconBtn:hover {
+      background: #e03030ff;
+    }
+
+    #selectPathIconBtn img {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .light-mode #selectPathIconBtn {
+      background-color: #000000;
+      color: #fff;
+    }
+
+    .light-mode #selectPathIconBtn:hover {
+      background-color: #529be8;
+    }
+
     #pathContainer {
       display: flex;
       align-items: center;
       gap: 5px;
+      width: 100%;
+      margin: 0;
+      padding: 0;
+      min-height: 28px;
+    }
+
+    #pathContainer button {
+      width: auto;
+      margin-top: 0;
+      flex: 0 0 auto;
+    }
+
+    #pathContainer > * {
+      margin-top: 0;
+      margin-bottom: 0;
     }
 
     #selectedPath {
-      font-family: monospace;
+      font-family: inherit;
+      margin: 0;
+      flex: 1 1 auto;
+      min-width: 0;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      padding: 0;
+      line-height: 1.2;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -1365,6 +1562,7 @@ const htmlContent = `
     }
 
     #themeToggle {
+      bottom: 140px;
       animation: spin 2s linear infinite;
     }
 
@@ -1395,7 +1593,7 @@ const htmlContent = `
       border: 1px solid #ccc;
     }
 
-    input[type="text"] {
+    #myModalWortel input[type="text"] {
       background-color: #222;
       color: #eee;
       border: 1px solid #555;
@@ -1407,7 +1605,7 @@ const htmlContent = `
       vertical-align: middle;
     }
 
-    .light-mode input[type="text"] {
+    .light-mode #myModalWortel input[type="text"] {
       background-color: #f0f0f0;
       color: #000;
       border: 1px solid #ccc;
@@ -1624,29 +1822,42 @@ const htmlContent = `
         <img src="/icons/logo.png" id="appLogo" alt="Description" class="responsive-img" />
         <div id="capsWarning">⚠️ Caps Lock is ON</div>
       </div>
-      <div id="pathContainer" style="display: flex; align-items: center">
-        🧩
-        <pre id="selectedPath" style="color: #298fd8ff;">
-Select where nikke_launcher.exe was installed.</pre>
-        <button id="selectPathBtn" style="font-weight: 900;">✏️Edit</button>
-      </div>
-      <textarea id="jsonInput" placeholder="Enter account JSON here..."></textarea>
-      <button id="registerBtn" style="font-weight: 900;">📝Register Accounts</button>
-      <br />
-      <br />
-      <div class="account-picker-wrap">
-        <button id="accountPickerBtn" type="button" class="account-picker-btn" aria-haspopup="dialog"
-          aria-controls="accountPickerModal" aria-expanded="false">
-          <span id="accountPickerLabel" class="account-picker-label">Select an Account</span>
-          <span class="account-picker-arrow">👇</span>
+ 
+      <div id="pathContainer">        
+        <button id="selectPathIconBtn" type="button" title="Edit launcher path" aria-label="Edit launcher path">
+          <img src="/icons/nikke.png" alt="Edit path icon" />
         </button>
-        <select id="accountSelect" aria-hidden="true" tabindex="-1">
-          <option value="" style="font-weight: 900;">Select account</option>
-        </select>
+        <pre id="selectedPath" style="color: #298fd8ff;">where is nikke_launcher.exe</pre>
+        <button id="selectPathBtn" style="font-weight: 900;">Edit</button>
       </div>
-      <button id="runBtn" style="font-weight: 900;">🚀Proceed auto login</button>
+      <div id="entryAccountPanel" class="entry-account-panel">
+        <div class="register-input-mode" id="registerInputMode">
+          <button id="modeSingleBtn" class="mode-toggle-btn is-active" type="button">Manual Entry</button>
+          <button id="modeMultipleBtn" class="mode-toggle-btn" type="button">JSON Bulk Import</button>
+        </div>
+        <div id="singleAccountForm" class="single-account-form">
+          <input type="text" id="singleNickname" placeholder="Nickname" />
+          <input type="email" id="singleEmail" placeholder="Email" />
+          <input type="password" id="singlePassword" placeholder="Password" />
+        </div>
+        <textarea id="jsonInput" placeholder="Enter account JSON here..."></textarea>
+        <button id="registerBtn" style="font-weight: 900;">📝Register Accounts</button>
+      </div>
       <br />
-      <button id="removeBtn" style="font-weight: 900;">🚫Remove account</button>
+      <div class="account-action-row">
+        <div class="account-picker-wrap">
+          <button id="accountPickerBtn" type="button" class="account-picker-btn" aria-haspopup="dialog"
+            aria-controls="accountPickerModal" aria-expanded="false">
+            <span id="accountPickerLabel" class="account-picker-label">Select an Account</span>
+            <span class="account-picker-arrow"> >> </span>
+          </button>
+          <select id="accountSelect" aria-hidden="true" tabindex="-1">
+            <option value="" style="font-weight: 900;">Select account</option>
+          </select>
+        </div>
+        <button id="runBtn" type="button" title="Proceed auto login" aria-label="Proceed auto login">🚀</button>
+        <button id="removeBtn" type="button" title="Remove account" aria-label="Remove account">🚫</button>
+      </div>
       <div style="
           display: flex;
           align-items: center;
@@ -1655,10 +1866,10 @@ Select where nikke_launcher.exe was installed.</pre>
           height: 32px;
         ">
         <label for="delayBtn" style="white-space: nowrap; line-height: 1; font-size: 12px;">Delay (switch):</label>
-        <input type="number" id="delayBtn" name="delayswitch" min="1" max="5" step="1" value="3"
+        <input type="number" id="delayBtn" name="delayswitch" min="1" max="10" step="1" value="3"
           style="font-size: 12px;" />
         <label for="delayBtnLogin" style="white-space: nowrap; line-height: 1; font-size: 12px;">Delay (login):</label>
-        <input type="number" id="delayBtnLogin" name="delaylogin" min="1" max="5" step="1" value="3"
+        <input type="number" id="delayBtnLogin" name="delaylogin" min="1" max="10" step="1" value="3"
           style="font-size: 12px;" />
         <button id="myBtn">🔍Logs</button>
         <button id="purgeBtn">⛔Purge Data</button>
@@ -1757,14 +1968,14 @@ Select where nikke_launcher.exe was installed.</pre>
       id="appVersion">Loading...</span>
 
   </p>
-  <span class="tia" id="myBtnOpenRouter" style="bottom: 140px;">
+  <span class="tia" id="themeToggle">
+    <img src="/static/rpc_idle.png" alt="sun" style="width: 40px; height: 40px" />
+  </span>
+  <span class="tia" id="myBtnOpenRouter">
     <img src="/static/rpc_llm.png" alt="key" style="width: 40px; height: 40px" />
   </span>
   <span class="berdetak" id="myBtnWortel">
     <img src="/static/rpc_testing.png" alt="sun" style="width: 30px; height: 30px" />
-  </span>
-  <span class="tia" id="themeToggle">
-    <img src="/static/rpc_idle.png" alt="sun" style="width: 40px; height: 40px" />
   </span>
   <script src="js/neutralino.js"></script>
   <script src="js/app.js"></script>
