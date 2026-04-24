@@ -812,6 +812,8 @@ Neutralino.events.on("ready", async () => {
 
   const pathDisplay = document.getElementById("selectedPath") as HTMLElement;
   const runBtn = document.getElementById("runBtn") as HTMLButtonElement;
+  const selectPathBtn = document.getElementById("selectPathBtn") as HTMLButtonElement | null;
+  const selectPathIconBtn = document.getElementById("selectPathIconBtn") as HTMLButtonElement | null;
 
   const storedPath = await Neutralino.storage
     .getData("nikkeLauncherPath")
@@ -870,9 +872,7 @@ Neutralino.events.on("ready", async () => {
    * @returns {Promise<void>} Resolves when the file is selected and stored or an error occurs.
    * @throws {Error} If there is an issue selecting the file or storing the path.
    */
-  (
-    document.getElementById("selectPathBtn") as HTMLButtonElement
-  ).addEventListener("click", async () => {
+  const handleSelectPath = async (): Promise<void> => {
     try {
       const file = await Neutralino.os.showOpenDialog("Open a nikke", {
         filters: [{ name: "Executables", extensions: ["exe"] }],
@@ -914,33 +914,88 @@ Neutralino.events.on("ready", async () => {
       );
       accountManager.showAlert("Failed to select file.", "fail");
     }
+  };
+
+  selectPathBtn?.addEventListener("click", () => {
+    void handleSelectPath();
   });
 
+  selectPathIconBtn?.addEventListener("click", () => {
+    void handleSelectPath();
+  });
+
+  const jsonInput = document.getElementById("jsonInput") as HTMLTextAreaElement | null;
+  const modeMultipleBtn = document.getElementById("modeMultipleBtn") as HTMLButtonElement | null;
+  const modeSingleBtn = document.getElementById("modeSingleBtn") as HTMLButtonElement | null;
+  const singleAccountForm = document.getElementById("singleAccountForm") as HTMLElement | null;
+  const singleNicknameInput = document.getElementById("singleNickname") as HTMLInputElement | null;
+  const singleEmailInput = document.getElementById("singleEmail") as HTMLInputElement | null;
+  const singlePasswordInput = document.getElementById("singlePassword") as HTMLInputElement | null;
+
+  let registerInputMode: "multiple" | "single" = "single";
+
+  const applyRegisterInputMode = (mode: "multiple" | "single"): void => {
+    registerInputMode = mode;
+    modeMultipleBtn?.classList.toggle("is-active", mode === "multiple");
+    modeSingleBtn?.classList.toggle("is-active", mode === "single");
+
+    if (jsonInput) {
+      jsonInput.style.display = mode === "multiple" ? "block" : "none";
+    }
+    if (singleAccountForm) {
+      singleAccountForm.style.display = mode === "single" ? "flex" : "none";
+    }
+  };
+
+  modeMultipleBtn?.addEventListener("click", () => applyRegisterInputMode("multiple"));
+  modeSingleBtn?.addEventListener("click", () => applyRegisterInputMode("single"));
+  applyRegisterInputMode("single");
+
   /**
-   * Handles the "Register" button click event to register new accounts from JSON input.
+   * Handles the "Register" button click event to register new accounts from current input mode.
    *
-   * - Parses user-provided JSON input to extract account data.
-   * - Ensures the data is properly structured (each account must have `nickname`, `email`, and `password`).
+   * - Multiple mode: parses JSON input (`jsonInput`).
+   * - Single mode: reads `nickname`, `email`, and `password` fields directly.
+   * - Ensures data is properly structured (each account must have `nickname`, `email`, and `password`).
    * - Retrieves existing accounts from Neutralino storage.
    * - Merges new accounts with existing ones, avoiding duplicate emails.
    * - Saves the updated account list back to storage.
    * - Refreshes the account dropdown and displays a success notification.
-   * - Shows an error notification if the JSON format is invalid.
+   * - Shows an error notification if input format/data is invalid.
    *
    * @returns {Promise<void>} Resolves when accounts are successfully registered or an error occurs.
-   * @throws {Error} If there is an issue JSON input or saving the accounts.
+   * @throws {Error} If there is an issue with input parsing/validation or saving accounts.
    */
   (
     document.getElementById("registerBtn") as HTMLButtonElement
   ).addEventListener("click", async () => {
-    const input = (document.getElementById("jsonInput") as HTMLTextAreaElement)
-      .value;
-
-    console.log("Input received:", JSON.stringify(input));
-
     try {
-      const parsedData = JSON.parse(input);
-      const newAccounts = Array.isArray(parsedData) ? parsedData : [parsedData];
+      let parsedSource: Account | Account[];
+      let newAccounts: Account[] = [];
+
+      if (registerInputMode === "multiple") {
+        const input = jsonInput?.value?.trim() || "";
+        if (!input) {
+          throw new Error("JSON input is empty.");
+        }
+        parsedSource = JSON.parse(input);
+        newAccounts = Array.isArray(parsedSource) ? parsedSource : [parsedSource];
+      } else {
+        const nickname = singleNicknameInput?.value?.trim() || "";
+        const email = singleEmailInput?.value?.trim() || "";
+        const password = singlePasswordInput?.value || "";
+
+        if (!nickname || !email || !password) {
+          throw new Error("Please fill nickname, email, and password.");
+        }
+
+        parsedSource = {
+          nickname,
+          email,
+          password,
+        };
+        newAccounts = [parsedSource];
+      }
 
       let existingAccounts: Account[] = [];
       try {
@@ -956,12 +1011,19 @@ Neutralino.events.on("ready", async () => {
       );
 
       newAccounts.forEach((acc: Account) => {
-        if (!acc.email || !acc.password || !acc.nickname) {
+        const normalized: Account = {
+          nickname: String(acc.nickname || "").trim(),
+          email: String(acc.email || "").trim(),
+          password: String(acc.password || ""),
+        };
+
+        if (!normalized.email || !normalized.password || !normalized.nickname) {
           throw new Error(
             "Each account must have nickname, email, and password",
           );
         }
-        accountMap.set(acc.email, acc);
+
+        accountMap.set(normalized.email, normalized);
       });
 
       const updatedAccounts = Array.from(accountMap.values());
@@ -972,11 +1034,17 @@ Neutralino.events.on("ready", async () => {
       accountManager.showAlert("Accounts Registered!", "success");
       await accountManager.loadAccounts();
       await accountManager.createLog(
-        accountManager.extractNicknames(JSON.parse(input)),
+        accountManager.extractNicknames(parsedSource),
         "Account Added",
         "True",
         Date.now(),
       );
+
+      if (registerInputMode === "single") {
+        if (singleNicknameInput) singleNicknameInput.value = "";
+        if (singleEmailInput) singleEmailInput.value = "";
+        if (singlePasswordInput) singlePasswordInput.value = "";
+      }
     } catch (e) {
       let message = "Unknown error";
 
@@ -985,13 +1053,17 @@ Neutralino.events.on("ready", async () => {
       }
 
       console.error(`Error: ${message}`);
+      const isJsonMode = registerInputMode === "multiple";
+      const userMessage = isJsonMode && message.toLowerCase().includes("json")
+        ? "Invalid JSON format! Please correct it."
+        : message;
       await Neutralino.os.showNotification(
         "Oops :/",
-        "Invalid JSON format! Please correct it.",
+        userMessage,
         "ERROR",
       );
       accountManager.showAlert(
-        "Invalid JSON format! Please correct it.",
+        userMessage,
         "fail",
       );
     }
@@ -1195,6 +1267,17 @@ Neutralino.events.on("ready", async () => {
       }
 
       const deletedNickname = accounts[selectedIndex].nickname;
+      const confirmation = await Neutralino.os.showMessageBox(
+        "Remove Account",
+        `You are about to remove "${deletedNickname}".\n\nThis action cannot be undone.\nDo you want to continue?`,
+        "YES_NO",
+        "QUESTION",
+      );
+
+      if (confirmation !== "YES") {
+        accountManager.showAlert("Account removal cancelled.", "fail");
+        return;
+      }
 
       accounts.splice(selectedIndex, 1);
       console.log("After deletion:", accounts);
