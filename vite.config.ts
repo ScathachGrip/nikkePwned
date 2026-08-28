@@ -2,9 +2,10 @@ import { defineConfig } from "vite";
 import { svelte } from "@sveltejs/vite-plugin-svelte";
 
 export default defineConfig({
+  root: "src",
   plugins: [svelte()],
   base: "./",
-  publicDir: "resources",
+  publicDir: "../resources",
   clearScreen: false,
   server: {
     port: 1420,
@@ -12,7 +13,7 @@ export default defineConfig({
   },
   build: {
     target: "esnext",
-    outDir: "dist",
+    outDir: "../dist",
     emptyOutDir: true,
   },
 });

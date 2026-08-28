@@ -8,6 +8,7 @@ ui/app.js
 ui/index.html
 
 # Developer tools & temp files
+bun.lock
 .vscode
 .temp/
 .tmp/
