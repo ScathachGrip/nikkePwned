@@ -1,4 +1,40 @@
+import { writeFileSync } from "node:fs";
+import { join } from "node:path";
 
+export const OPENROUTER_MODEL_POOL = [
+  "nvidia/nemotron-nano-12b-v2-vl:free",
+  "google/gemma-4-26b-a4b-it:free",
+  "google/gemma-4-31b-it:free",
+  "nvidia/nemotron-3-super-120b-a12b:free",
+  "minimax/minimax-m2.5:free",
+  "arcee-ai/trinity-large-preview:free",
+  "liquid/lfm-2.5-1.2b-thinking:free",
+  "liquid/lfm-2.5-1.2b-instruct:free",
+  "nvidia/nemotron-3-nano-30b-a3b:free",
+  "qwen/qwen3-next-80b-a3b-instruct:free",
+  "nvidia/nemotron-nano-9b-v2:free",
+  "openai/gpt-oss-120b:free",
+  "openai/gpt-oss-20b:free",
+  "z-ai/glm-4.5-air:free",
+  "qwen/qwen3-coder:free",
+  "cognitivecomputations/dolphin-mistral-24b-venice-edition:free",
+  "google/gemma-3n-e2b-it:free",
+  "google/gemma-3n-e4b-it:free",
+  "google/gemma-3-4b-it:free",
+  "google/gemma-3-12b-it:free",
+  "google/gemma-3-27b-it:free",
+  "meta-llama/llama-3.3-70b-instruct:free",
+  "meta-llama/llama-3.2-3b-instruct:free",
+  "nousresearch/hermes-3-llama-3.1-405b:free",
+];
+
+// Native Bun 1.4.0 TSX Generator
+export function renderFrontendHTML(): string {
+  const modelOptions = OPENROUTER_MODEL_POOL.map(
+    (model) => `          <option value="${model}">${model}</option>`
+  ).join("\n");
+
+  return `<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -74,21 +110,7 @@
       background: var(--bg);
       color: var(--text);
       flex-direction: column;
-
       -webkit-font-smoothing: antialiased; transition: background 0.4s ease, color 0.4s ease;
-
-      /*
-      background-image:
-        linear-gradient(
-          color-mix(in srgb, var(--bg) 80%, transparent),
-          color-mix(in srgb, var(--bg) 80%, transparent)
-        ),
-        url('someshit');
-      background-size: cover;
-      background-position: center;
-      background-repeat: no-repeat;
-      background-attachment: fixed; 
-      */
     }
 
     html,
@@ -100,7 +122,6 @@
     option {
       font-family: 'DM Sans', sans-serif !important;
       -webkit-font-smoothing: antialiased;
-
     }
 
     .titlebar {
@@ -262,7 +283,8 @@
     .register-input-mode {
       display: flex;
       gap: 6px;
-      margin-top: 0;
+      margin-top: 4px;
+      margin-bottom: 4px;
       justify-content: center;
       align-items: center;
       flex-wrap: wrap;
@@ -270,7 +292,8 @@
 
     .entry-account-panel {
       display: block;
-      margin-top: 8px;
+      margin-top: 4px;
+      margin-bottom: 0;
     }
 
     .mode-toggle-btn {
@@ -388,7 +411,7 @@
       display: flex;
       align-items: stretch;
       gap: 6px;
-      margin-top: 10px;
+      margin-top: 12px;
     }
 
     .account-picker-wrap {
@@ -790,7 +813,7 @@
       align-items: center;
       gap: 5px;
       width: 100%;
-      margin: 0;
+      margin: 2px 0 4px 0;
       padding: 0;
       min-height: 28px;
     }
@@ -915,128 +938,95 @@
     .modal {
       border: none !important;
       display: none;
-
       position: fixed;
       z-index: 1000;
-
       left: 0;
       top: 0;
       width: 100%;
       height: 100%;
       background-color: rgba(0, 0, 0, 0.68);
-
-      display: flex;
       align-items: center;
       justify-content: center;
       overflow: hidden;
-
       -webkit-animation-name: animatebottom;
-
       -webkit-animation-duration: 0.4s;
       animation-name: animatebottom;
-      animation-duration: 0.4s
+      animation-duration: 0.4s;
+    }
+
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #222;
+      border-radius: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #555;
+      border-radius: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #777;
     }
 
     .modal-content {
       border: none !important;
       background-color: rgb(23, 22, 22);
+      color: white;
       padding: 20px;
       border-radius: 10px;
-      border: 1px solid #888;
-      width: 80%;
-      max-width: 700px;
-
-      max-height: 80vh;
-
+      width: 90%;
+      max-width: 480px;
+      max-height: 85vh;
       overflow-y: auto;
-
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
       display: flex;
       flex-direction: column;
-      -webkit-animation-name: animatebottom;
-      -webkit-animation-duration: 0.4s;
-      animation-name: animatebottom;
-      animation-duration: 0.4s
-    }
-
-    .light-mode .modal-content {
-      background-color: #f0f0f0;
-      color: #000000;
-      border: 1px solid #ccc;
-    }
-
-    .modal-content {
       scrollbar-color: #555 #222;
-
       scrollbar-width: thin;
     }
 
     .light-mode .modal-content {
+      background-color: #ffffff;
+      color: #000000;
       scrollbar-color: #777 #ddd;
-
       scrollbar-width: thin;
     }
 
     .modal-content::-webkit-scrollbar {
       width: 8px;
-
     }
 
     .modal-content::-webkit-scrollbar-track {
       background: #222;
-
       border-radius: 10px;
     }
 
     .light-mode .modal-content::-webkit-scrollbar-track {
       background: #ddd;
-
       border-radius: 10px;
     }
 
     .modal-content::-webkit-scrollbar-thumb {
       background: #555;
-
       border-radius: 10px;
     }
 
     .light-mode .modal-content::-webkit-scrollbar-thumb {
       background: #777;
-
       border-radius: 10px;
     }
 
     .modal-content::-webkit-scrollbar-thumb:hover {
       background: #777;
-
     }
 
     .light-mode .modal-content::-webkit-scrollbar-thumb:hover {
       background: #999;
-
-    }
-
-    .openrouter-field {
-      width: 100%;
-      background: #1d1d25ff;
-      color: white;
-      border: 1px solid #3a3a4d;
-      border-radius: 6px;
-      padding: 10px 12px;
-      font-size: 12px;
-      margin-bottom: 10px;
-    }
-
-    .openrouter-section-title {
-      margin: 0 0 6px 0;
-      font-size: 18px;
-      font-weight: 800;
-    }
-
-    .openrouter-helper {
-      margin: 0 0 10px 0;
-      font-size: 13px;
-      line-height: 1.45;
-      color: #d5d7dc;
     }
 
     .openrouter-panel {
@@ -1064,6 +1054,18 @@
     .openrouter-key-row {
       position: relative;
       margin-bottom: 10px;
+    }
+
+    .openrouter-field {
+      width: 100%;
+      background: #1d1d25ff !important;
+      color: #ffffff !important;
+      border: 1px solid #3a3a4d;
+      border-radius: 6px;
+      padding: 10px 12px;
+      font-size: 12px;
+      margin-bottom: 10px;
+      box-sizing: border-box;
     }
 
     .openrouter-key-row .openrouter-field {
@@ -1097,8 +1099,8 @@
     }
 
     .light-mode .openrouter-field {
-      background: #f5f5f5;
-      color: #000;
+      background: #f5f5f5 !important;
+      color: #000000 !important;
       border: 1px solid #c8c8c8;
     }
 
@@ -1203,7 +1205,6 @@
       border-radius: 3px;
       width: 25px;
       height: 25px;
-
       text-align: center;
       vertical-align: middle;
     }
@@ -1211,12 +1212,6 @@
     #delayBtn,
     label[for="delayBtn"] {
       margin-top: 8px;
-
-    }
-
-    #delayBtn:focus {
-      outline: none;
-      border-color: rgb(100, 100, 100);
     }
 
     #delayBtn:focus {
@@ -1233,7 +1228,6 @@
       border-radius: 3px;
       width: 25px;
       height: 25px;
-
       text-align: center;
       vertical-align: middle;
     }
@@ -1241,12 +1235,6 @@
     #delayBtnLogin,
     label[for="delayBtnLogin"] {
       margin-top: 8px;
-
-    }
-
-    #delayBtnLogin:focus {
-      outline: none;
-      border-color: rgb(100, 100, 100);
     }
 
     #delayBtnLogin:focus {
@@ -1308,7 +1296,6 @@
         bottom: -300px;
         opacity: 0
       }
-
       to {
         bottom: 0;
         opacity: 1
@@ -1342,7 +1329,6 @@
       }
 
       table td::before {
-
         content: attr(data-label);
         float: left;
         font-weight: bold;
@@ -1361,6 +1347,7 @@
     }
 
     input[type="number"] {
+      appearance: textfield;
       -moz-appearance: textfield;
     }
 
@@ -1387,13 +1374,11 @@
       display: block;
     }
 
-
     .search-box {
       display: flex;
       align-items: center;
       gap: 8px;
       margin-bottom: 16px;
-
     }
 
     .search-box .search-icon {
@@ -1431,12 +1416,10 @@
     }
 
     @keyframes berdetak {
-
       0%,
       100% {
         transform: scale(1);
       }
-
       50% {
         transform: scale(1.1);
       }
@@ -1446,7 +1429,6 @@
       0% {
         transform: rotate(0deg);
       }
-
       100% {
         transform: rotate(360deg);
       }
@@ -1480,7 +1462,6 @@
       width: 50px;
       height: 50px;
       pointer-events: none;
-
     }
 
     .tia {
@@ -1494,7 +1475,6 @@
       display: flex;
       justify-content: center;
       align-items: center;
-
       z-index: 9999;
       cursor: pointer;
     }
@@ -1516,7 +1496,6 @@
       width: 50px;
       height: 50px;
       pointer-events: none;
-
     }
 
     #click {
@@ -1613,27 +1592,11 @@
     }
 
     @keyframes vibrate {
-
-      0%,
-      100% {
-        transform: translate(0, 0);
-      }
-
-      20% {
-        transform: translate(-15px, 15px);
-      }
-
-      40% {
-        transform: translate(15px, -15px);
-      }
-
-      60% {
-        transform: translate(-15px, -15px);
-      }
-
-      80% {
-        transform: translate(15px, 15px);
-      }
+      0%, 100% { transform: translate(0, 0); }
+      20% { transform: translate(-15px, 15px); }
+      40% { transform: translate(15px, -15px); }
+      60% { transform: translate(-15px, -15px); }
+      80% { transform: translate(15px, 15px); }
     }
 
     .vibrate {
@@ -1644,11 +1607,9 @@
       margin: 0;
       padding: 0;
       height: 7px;
-
       color: red;
       font-size: 12px;
       visibility: hidden;
-
     }
 
     .window-controls {
@@ -1699,73 +1660,57 @@
       transition: all 0.3s ease;
     }
 
-   #loading {
-    position: fixed;
-    inset: 0;
-    background: var(--bg);
-    display: none;
-    align-items: center;
-    justify-content: center;
-    z-index: 9999;
-  }
-
-  #loading img {
-    width: 130px;
-    height: 130px;
-    animation: bounceLoader 0.6s infinite alternate ease-out;
-  }
-
-  @keyframes bounceLoader {
-    0% {
-      transform: translateY(0) scale(1);
+    #loading {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
     }
-    100% {
-      transform: translateY(-40px) scale(1.1);
+
+    #loading img {
+      width: 130px;
+      height: 130px;
+      animation: bounceLoader 0.6s infinite alternate ease-out;
     }
-  }
+
+    @keyframes bounceLoader {
+      0% { transform: translateY(0) scale(1); }
+      100% { transform: translateY(-40px) scale(1.1); }
+    }
   </style>
 </head>
 
-
-<head>
-  <meta charset="utf-8" />
-  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>NikkePwned</title>
-</head>
-
-<div id="loading">
-  <img id="loadingImg" src="" />
-</div>
-
 <body>
+  <div id="loading">
+    <img id="loadingImg" src="" />
+  </div>
   <div id="titlebar" class="titlebar">
     <div class="title-left">
       <div class="app-icon" aria-hidden="true"></div>
       <span class="app-title">nikkePwned</span>
     </div>
-    <div class="window-controls" role="group" aria-label="Window controls">
-      <button id="minBtn" class="ctl ctl-min" aria-label="Minimize" title="Minimize">
+    <div class="window-controls">
+      <button id="minBtn" class="ctl" title="Minimize">
         <span class="dot dot-min"></span>
       </button>
-      <button id="maxBtn" class="ctl ctl-max" aria-label="Maximize" title="Maximize">
+      <button id="maxBtn" class="ctl" title="Maximize">
         <span class="dot dot-max"></span>
       </button>
-      <button id="closeBtn" class="ctl ctl-close" aria-label="Close" title="Close">
+      <button id="closeBtn" class="ctl ctl-close" title="Close">
         <span class="dot dot-close"></span>
       </button>
     </div>
-
   </div>
-  <!-- your app content -->
   <div class="main-area">
     <div class="container funFadeInUp">
       <div id="logoContainer" style="position: relative; display: inline-block;">
         <img src="/icons/logo.png" id="appLogo" alt="Description" class="responsive-img" />
         <div id="capsWarning">⚠️ Caps Lock is ON</div>
       </div>
- 
-      <div id="pathContainer">        
+      <div id="pathContainer">
         <button id="selectPathIconBtn" type="button" title="Edit launcher path" aria-label="Edit launcher path">
           <img src="/icons/nikke.png" alt="Edit path icon" />
         </button>
@@ -1774,24 +1719,23 @@
       </div>
       <div id="entryAccountPanel" class="entry-account-panel">
         <div class="register-input-mode" id="registerInputMode">
-          <button id="modeSingleBtn" class="mode-toggle-btn is-active" type="button">Manual Entry</button>
-          <button id="modeMultipleBtn" class="mode-toggle-btn" type="button">JSON Bulk Import</button>
+          <button type="button" id="modeSingleBtn" class="mode-toggle-btn is-active">Manual Entry</button>
+          <button type="button" id="modeMultipleBtn" class="mode-toggle-btn">JSON Bulk Import</button>
         </div>
         <div id="singleAccountForm" class="single-account-form">
-          <input type="text" id="singleNickname" placeholder="Nickname" />
-          <input type="email" id="singleEmail" placeholder="Email" />
+          <input type="text" id="singleNickname" placeholder="Nickname (e.g. Main Account)" />
+          <input type="email" id="singleEmail" placeholder="Email / ID" />
           <input type="password" id="singlePassword" placeholder="Password" />
         </div>
-        <textarea id="jsonInput" placeholder="Enter account JSON here..."></textarea>
-        <button id="registerBtn" style="font-weight: 900;">📝Register Accounts</button>
+        <textarea id="jsonInput" style="display: none;" placeholder='[{"nickname": "Acc1", "email": "user1@mail.com", "password": "123"}]'></textarea>
+        <button id="registerBtn" type="button" style="font-weight: 900;">📝Register Accounts</button>
       </div>
-      <br />
       <div class="account-action-row">
         <div class="account-picker-wrap">
           <button id="accountPickerBtn" type="button" class="account-picker-btn" aria-haspopup="dialog"
             aria-controls="accountPickerModal" aria-expanded="false">
             <span id="accountPickerLabel" class="account-picker-label">Select an Account</span>
-            <span class="account-picker-arrow"> >> </span>
+            <span class="account-picker-arrow"> &gt;&gt; </span>
           </button>
           <select id="accountSelect" aria-hidden="true" tabindex="-1">
             <option value="" style="font-weight: 900;">Select account</option>
@@ -1855,8 +1799,8 @@
         <div class="asuwh">
           <div id="click" class="click" style="padding: 1rem; margin-bottom: 1rem;">
             <img src="/static/my.png" id="gambarKlik" class="gambarklik" alt="Click me!" />
-          </div> Clicks:
-          <input id="count" type="text" value="0" size="4">
+          </div>
+          Clicks: <input id="count" type="text" value="0" size="4">
           <button id="reset">Reset</button>
           <br /> Fast double click count:
           <input id="dcCount" type="text" value="0" size="4">
@@ -1871,48 +1815,20 @@
         <div class="openrouter-panel">
           <strong>⁉️ How this works:</strong><br />
           1. Get your OpenRouter API key<br />
-          2. Pick a vision-capable model<br />
-          3. Click Save configuration.<br />
-          4. Head over to opening battlefield (vs boss) nikke screen<br />
-          5. Press esc to pause nikke, then can listen 'F8' key to trigger damage dealt reasoning.<br />
-          6. Wait until completed, and go to your windows notification by pressing 'Windows + N'<br />
-          <br /><strong>📝 Note:</strong><br />
-          Could work in every nikke battlefield screen, but more designed for Union Raid (HardMode)<br />
-          with high HP raptures fights, since NIKKE did not show the exact value also.
+          2. Paste it here<br />
+          3. Open battlefield (vs-boss) NIKKE combat screen<br />
+          4. Press ESC to pause<br />
+          5. Press F8 to trigger damage analysis<br />
+          6. Check Windows Notifications (Win + N) for results
         </div>
         <h3 class="openrouter-label">🔑 OpenRouter API Key</h3>
         <div class="openrouter-key-row">
-          <input id="openrouterApiKey" class="openrouter-field" type="password"
-            placeholder="Paste your key (example: sk-or-v1-...)" autocomplete="off" />
-          <button id="openrouterApiKeyToggle" type="button" class="openrouter-visibility-btn"
-            aria-label="Show API key" aria-pressed="false">Show</button>
+          <input type="password" id="openrouterApiKey" class="openrouter-field" placeholder="Paste your key (example: sk-or-v1-...)" />
+          <button type="button" id="openrouterApiKeyToggle" class="openrouter-visibility-btn">Show</button>
         </div>
         <h3 class="openrouter-label">📦 Model for Image Reasoning</h3>
         <select id="openrouterModel" class="openrouter-field">
-          <option value="nvidia/nemotron-nano-12b-v2-vl:free">nvidia/nemotron-nano-12b-v2-vl:free</option>
-<option value="google/gemma-4-26b-a4b-it:free">google/gemma-4-26b-a4b-it:free</option>
-<option value="google/gemma-4-31b-it:free">google/gemma-4-31b-it:free</option>
-<option value="nvidia/nemotron-3-super-120b-a12b:free">nvidia/nemotron-3-super-120b-a12b:free</option>
-<option value="minimax/minimax-m2.5:free">minimax/minimax-m2.5:free</option>
-<option value="arcee-ai/trinity-large-preview:free">arcee-ai/trinity-large-preview:free</option>
-<option value="liquid/lfm-2.5-1.2b-thinking:free">liquid/lfm-2.5-1.2b-thinking:free</option>
-<option value="liquid/lfm-2.5-1.2b-instruct:free">liquid/lfm-2.5-1.2b-instruct:free</option>
-<option value="nvidia/nemotron-3-nano-30b-a3b:free">nvidia/nemotron-3-nano-30b-a3b:free</option>
-<option value="qwen/qwen3-next-80b-a3b-instruct:free">qwen/qwen3-next-80b-a3b-instruct:free</option>
-<option value="nvidia/nemotron-nano-9b-v2:free">nvidia/nemotron-nano-9b-v2:free</option>
-<option value="openai/gpt-oss-120b:free">openai/gpt-oss-120b:free</option>
-<option value="openai/gpt-oss-20b:free">openai/gpt-oss-20b:free</option>
-<option value="z-ai/glm-4.5-air:free">z-ai/glm-4.5-air:free</option>
-<option value="qwen/qwen3-coder:free">qwen/qwen3-coder:free</option>
-<option value="cognitivecomputations/dolphin-mistral-24b-venice-edition:free">cognitivecomputations/dolphin-mistral-24b-venice-edition:free</option>
-<option value="google/gemma-3n-e2b-it:free">google/gemma-3n-e2b-it:free</option>
-<option value="google/gemma-3n-e4b-it:free">google/gemma-3n-e4b-it:free</option>
-<option value="google/gemma-3-4b-it:free">google/gemma-3-4b-it:free</option>
-<option value="google/gemma-3-12b-it:free">google/gemma-3-12b-it:free</option>
-<option value="google/gemma-3-27b-it:free">google/gemma-3-27b-it:free</option>
-<option value="meta-llama/llama-3.3-70b-instruct:free">meta-llama/llama-3.3-70b-instruct:free</option>
-<option value="meta-llama/llama-3.2-3b-instruct:free">meta-llama/llama-3.2-3b-instruct:free</option>
-<option value="nousresearch/hermes-3-llama-3.1-405b:free">nousresearch/hermes-3-llama-3.1-405b:free</option>
+${modelOptions}
         </select>
         <button id="saveOpenrouterKeyBtn" class="openrouter-save-btn">Save configuration</button>
       </div>
@@ -1921,17 +1837,14 @@
       <div class="account-picker-modal-card" role="dialog" aria-modal="true" aria-label="Select an Account">
         <div class="account-picker-head">
           <span>Select an Account</span>
-          <button type="button" id="accountPickerClose" class="account-picker-close" aria-label="Close account picker">&times;</button>
+          <button id="accountPickerClose" type="button" class="account-picker-close" aria-label="Close picker">&times;</button>
         </div>
-        <div id="accountPickerList" class="account-picker-list">
-          <button type="button" class="account-picker-option-empty" disabled>No accounts available yet.</button>
-        </div>
+        <div id="accountPickerList" class="account-picker-list"></div>
       </div>
     </div>
   </div>
   <p class="pwned-version" style="text-align:center; margin-top:12px">Password Manager for NIKKE v<span
       id="appVersion">Loading...</span>
-
   </p>
   <span class="tia" id="themeToggle">
     <img src="/static/rpc_idle.png" alt="sun" style="width: 40px; height: 40px" />
@@ -1942,8 +1855,13 @@
   <span class="berdetak" id="myBtnWortel">
     <img src="/static/rpc_testing.png" alt="sun" style="width: 30px; height: 30px" />
   </span>
-  <script src="js/neutralino.js"></script>
-  <script src="js/app.js"></script>
+  <script src="app.js"></script>
 </body>
+</html>`;
+}
 
-</html>
+// Native Bun 1.4.0 TSX Generator Output
+const htmlContent = renderFrontendHTML();
+const indexPath = join(import.meta.dir, "index.html");
+writeFileSync(indexPath, htmlContent, "utf-8");
+console.log("Generated ui/index.html via Native Bun TSX generator in ui/frontend.tsx");
