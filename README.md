@@ -13,7 +13,27 @@ The motivation of this project is simplified login process, allowing users inter
 <a href="#installation">Installation</a> •
 <a href="https://github.com/ScathachGrip/nikkePwned/blob/master/CONTRIBUTING.md">Contributing</a> •
 <a href="https://github.com/ScathachGrip/nikkePwned/issues/new/choose">Report Issues</a>
-</div>
+---
+
+> [!IMPORTANT]
+> ## 🚨 Breaking Changes in v4.2.0 (Tauri v2 Migration)
+> 
+> 1. **Framework & Engine Migration**:
+>    - Migrated from Neutralinojs (`v4.1.2-indev`) to **Tauri v2 (Rust 2024 Edition)**.
+>    - Application Identifier updated to **`com.scathachgrip.nikkepwned`**.
+>    - External Node.js runtime and npm script dependencies have been completely removed. Frontend HTML/CSS is generated directly from pure Rust during compile-time (`src-tauri/build.rs`).
+> 
+> 2. **Persistent Storage Location**:
+>    - Legacy local storage directory (`.storage/`) has been migrated to standard OS AppData JSON storage:
+>      `%APPDATA%\com.scathachgrip.nikkepwned\nikkepwned_data.json`
+>      *(Path: `C:\Users\<User>\AppData\Roaming\com.scathachgrip.nikkepwned\nikkepwned_data.json`)*
+> 
+> 3. **Native Win32 Elevation & UAC Manifest**:
+>    - Executable `nikkepwned.exe` has embedded `requireAdministrator` UAC manifest and `comctl32.dll` v6 dependency.
+>    - Launching `nikke_launcher.exe` inherits parent Administrator privileges natively without triggering secondary UAC elevation popups.
+> 
+> 4. **In-Process Discord Rich Presence**:
+>    - Replaced external helper process (`rpc-bridge.exe`) with in-process Rust Discord IPC client targeting official Client ID `632699411448725564` with auto-reconnect recovery.
 
 ---
 
