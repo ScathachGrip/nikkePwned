@@ -1,9 +1,11 @@
-﻿name: Release
+name: Release
 
 on:
   push:
     branches:
       - master
+    tags:
+      - 'v*'
   workflow_dispatch:
 
 jobs:
@@ -14,40 +16,44 @@ jobs:
       contents: write
 
     steps:
-      - name: Checkout
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
 
-      - name: Install Neutralino CLI
-        run: npm install -g @neutralinojs/neu
+      - name: Setup Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
 
-      - name: Install dependencies
-        run: npm install
+      - name: Install Dependencies
+        run: bun install
 
-      - name: Build
-        run: npm run build:fresh
+      - name: Build Release Binary
+        run: bun run build:release
 
-      - name: Verify RPC bridge binary
+      - name: Verify Executable Binary
         run: |
-          if (!(Test-Path "rpc-bridge.exe")) { throw "rpc-bridge.exe not found" }
-          if (!(Test-Path "dist/nikkepwned/rpc-bridge.exe")) { throw "dist/nikkepwned/rpc-bridge.exe not found" }
+          if (!(Test-Path "src-tauri/target/release/nikkepwned.exe")) { throw "src-tauri/target/release/nikkepwned.exe not found" }
 
-      - name: Read version
+      - name: Package Release Artifacts
+        run: |
+          New-Item -ItemType Directory -Path "dist" -Force
+          Copy-Item -Path "src-tauri/target/release/nikkepwned.exe" -Destination "dist/nikkepwned.exe" -Force
+          Copy-Item -Path "src-tauri/target/release/nikkepwned.exe" -Destination "dist/nikkepwned-win_x64.exe" -Force
+          Compress-Archive -Path "dist/nikkepwned.exe", "dist/nikkepwned-win_x64.exe" -DestinationPath "dist/nikkepwned-release.zip" -Force
+
+      - name: Read Version
         id: pkg
         run: |
-          $version = node -p "require('./package.json').version"
-          "version=v$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          $ver = (Get-Content package.json | ConvertFrom-Json).version
+          "version=v$ver" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
 
-      - name: Create tag
+      - name: Create Tag if Missing
         run: |
           $tag = "${{ steps.pkg.outputs.version }}"
           $exists = git ls-remote --tags origin $tag
           if ($exists) {
-            Write-Host "Tag already exists"
+            Write-Host "Tag $tag already exists on remote"
           } else {
             git tag $tag
             git push origin $tag
@@ -60,6 +66,8 @@ jobs:
           name: ${{ steps.pkg.outputs.version }}
           generate_release_notes: true
           make_latest: true
-          files: dist/nikkepwned-release.zip
+          files: |
+            dist/nikkepwned-release.zip
+            src-tauri/target/release/nikkepwned.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

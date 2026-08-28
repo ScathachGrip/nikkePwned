@@ -1,42 +1,35 @@
-# Developer tools' files
+# Rust / Cargo build artifacts
+target/
+src-tauri/target/
+**/target/
+
+# Generated JS & HTML bundles
+ui/app.js
+ui/index.html
+
+# Developer tools & temp files
 .vscode
-.temp/auth_info.json
-.temp/window_state.config.json
-.temp
-.tmp/window_state.config.json
-.tmp
-.storage
-dist
-.lite_workspace.lua
+.temp/
+.tmp/
+.storage/
+dist/
 node_modules/
+package-lock.json
 npm-debug.log
 neutralinojs.log
-package-lock.json
-changelog.sh
-CHANGELOG.md
 
-# Neutralinojs binaries and builds
-/bin
-/dist
-/resources/js/
-/resources/index.html
-/resources/index-asli.html
-/resources/style.css
-
-# Neutralinojs client (minified)
-neutralino.js
-
-# Neutralinojs related files
-.storage
+# Binaries & logs
 *.log
-auth_info.json
-opendir.bat
+*.exe
+*.zip
 discord-rpc.dll
 discord-rpc.lib
 discord-rpc.exe
 rpc-bridge.exe
 build-rpc/
-discord-rpc.mjs
-tested.json
-tested-1.json
-kontol.html
+
+# Legacy
+/legacy
+
+# Scratch
+scratch/

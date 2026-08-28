@@ -14,25 +14,24 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      - name: 🛎 Checkout Repository
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: 📦 Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
 
-      - name: 📥 Install Dependencies
-        run: npm install
+      - name: Setup Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
 
-      - name: 🛠 Install Neutralino CLI (Global)
-        run: npm install -g @neutralinojs/neu
+      - name: Install Dependencies
+        run: bun install
 
-      - name: 🔄 Update Neutralino.js Files
-        run: neu update
+      - name: Build UI
+        run: bun run build:ui
 
-      - name: 🔧 Compile TypeScript
-        run: npm run build
+      - name: Build Tauri Release Binary
+        run: bun run build:release
 
-      - name: ✨ Release Build
-        run: npm run release
+      - name: Verify Executable Binary
+        run: |
+          if (!(Test-Path "src-tauri/target/release/nikkepwned.exe")) { throw "src-tauri/target/release/nikkepwned.exe not found" }

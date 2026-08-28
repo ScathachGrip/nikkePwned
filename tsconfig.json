@@ -1,32 +1,14 @@
 {
   "compilerOptions": {
-    "ignoreDeprecations": "6.0",
-    "target": "ES6",
+    "target": "ES2022",
     "module": "ESNext",
+    "moduleResolution": "bundler",
     "strict": true,
-    "inlineSourceMap": true,
-    "downlevelIteration": true,
-    "newLine": "lf",
-    "strictBindCallApply": true,
-    "strictPropertyInitialization": false,
-    "declaration": true,
-    "allowSyntheticDefaultImports": true,
-    "outDir": "./resources/js",
-    "rootDir": "./src",
-    "types": [
-      "neutralinojs-types"
-    ],
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "lib": ["DOM", "DOM.Iterable", "ESNext"],
+    "types": ["bun"]
   },
-  "include": [
-    "src"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "resource/js",
-    "tmp",
-    "logs",
-    "test"
-  ]
+  "include": ["src/**/*.ts", "src/**/*.svelte", "vite.config.ts"]
 }
