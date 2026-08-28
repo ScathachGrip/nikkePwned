@@ -61,21 +61,14 @@ This extension was designed to simplified login process, **automate the login pr
     - (if your antivirus scanning this tool however)
   - Read more: [this tool flagged as potential malware](./LIMITATIONS.md#this-tool-flagged-as-potential-malware)
 
-[!IMPORTANT]
-
 ## Breaking Changes
 
-1.  **Framework & Engine Migration**:
-    - Migrated from Neutralinojs (`v4.1.2-indev`) to **Tauri v2 (Rust 2024 Edition)**.
-    - Application Identifier updated to **`com.scathachgrip.nikkepwned`**.
-    - External Node.js runtime and npm script dependencies have been completely removed. Frontend HTML/CSS is generated directly from pure Rust during compile-time (`src-tauri/build.rs`).
-
-2.  **Persistent Storage Location**:
+1.  **Persistent Storage Location**:
     - Legacy local storage directory (`.storage/`) has been migrated to standard OS AppData JSON storage:
       `%APPDATA%\com.scathachgrip.nikkepwned\nikkepwned_data.json`
       _(Path: `C:\Users\<User>\AppData\Roaming\com.scathachgrip.nikkepwned\nikkepwned_data.json`)_
 
-3.  **Native Win32 Elevation & UAC Manifest**:
+2.  **Native Win32 Elevation & UAC Manifest**:
     - Executable `nikkepwned.exe` has embedded `requireAdministrator` UAC manifest and `comctl32.dll` v6 dependency.
     - Launching `nikke_launcher.exe` inherits parent Administrator privileges natively without triggering secondary UAC elevation popups.
 
