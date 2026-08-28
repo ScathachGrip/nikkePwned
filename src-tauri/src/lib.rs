@@ -117,50 +117,55 @@ fn check_caps_lock() -> bool {
 }
 
 #[tauri::command]
-fn execute_login(
+async fn execute_login(
     state: State<'_, AppState>,
     account_index: usize,
     switch_delay: u64,
     login_delay: u64,
 ) -> Result<LoginResult, String> {
-    let (acc, path) = {
-        let guard = state
-            .storage
-            .data
-            .lock()
-            .map_err(|_| "Failed to lock storage")?;
-        let acc = guard
-            .accounts
-            .get(account_index)
-            .cloned()
-            .ok_or_else(|| "Selected account not found".to_string())?;
-        (acc, guard.launcher_path.clone())
-    };
+    let storage = state.storage.clone();
 
-    if path.is_empty() {
-        return Err("nikke_launcher.exe path is not configured".into());
-    }
+    tokio::task::spawn_blocking(move || {
+        let (acc, path) = {
+            let guard = storage
+                .data
+                .lock()
+                .map_err(|_| "Failed to lock storage")?;
+            let acc = guard
+                .accounts
+                .get(account_index)
+                .cloned()
+                .ok_or_else(|| "Selected account not found".to_string())?;
+            (acc, guard.launcher_path.clone())
+        };
 
-    automation::launch_nikke_process(&path)?;
-    automation::perform_login_sequence(&acc.email, &acc.password, switch_delay, login_delay)?;
+        if path.is_empty() {
+            return Err("nikke_launcher.exe path is not configured".into());
+        }
 
-    if let Ok(mut guard) = state.storage.data.lock() {
-        guard.history.push(HistoryLog {
-            account: acc.nickname.clone(),
-            event_type: "Account Login".to_string(),
-            is_success: "True".to_string(),
-            timestamp: std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .unwrap_or_default()
-                .as_millis() as u64,
-        });
-    }
-    state.storage.save();
+        automation::launch_nikke_process(&path)?;
+        automation::perform_login_sequence(&acc.email, &acc.password, switch_delay, login_delay)?;
 
-    Ok(LoginResult {
-        success: true,
-        message: format!("Logged in as {}", acc.nickname),
+        if let Ok(mut guard) = storage.data.lock() {
+            guard.history.push(HistoryLog {
+                account: acc.nickname.clone(),
+                event_type: "Account Login".to_string(),
+                is_success: "True".to_string(),
+                timestamp: std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .unwrap_or_default()
+                    .as_millis() as u64,
+            });
+        }
+        storage.save();
+
+        Ok(LoginResult {
+            success: true,
+            message: format!("Logged in as {}", acc.nickname),
+        })
     })
+    .await
+    .map_err(|e| format!("Execution error: {}", e))?
 }
 
 #[tauri::command]

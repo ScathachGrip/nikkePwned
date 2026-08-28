@@ -3,6 +3,12 @@ use std::thread;
 use std::time::Duration;
 
 #[cfg(windows)]
+use std::os::windows::process::CommandExt;
+
+#[cfg(windows)]
+const CREATE_NO_WINDOW: u32 = 0x08000000;
+
+#[cfg(windows)]
 use windows::Win32::UI::Input::KeyboardAndMouse::{
     GetKeyState, SendInput, INPUT, INPUT_0, INPUT_KEYBOARD, KEYBDINPUT, KEYBD_EVENT_FLAGS,
     KEYEVENTF_KEYUP, KEYEVENTF_UNICODE, VIRTUAL_KEY, VK_CAPITAL, VK_RETURN, VK_TAB,
@@ -24,6 +30,7 @@ pub fn close_nikke_launcher() {
     {
         let _ = Command::new("taskkill")
             .args(["/F", "/IM", "nikke_launcher.exe"])
+            .creation_flags(CREATE_NO_WINDOW)
             .output();
     }
 }
@@ -32,7 +39,7 @@ pub fn close_nikke_launcher() {
 pub fn is_launcher_running() -> bool {
     #[cfg(windows)]
     {
-        if let Ok(output) = Command::new("tasklist").output() {
+        if let Ok(output) = Command::new("tasklist").creation_flags(CREATE_NO_WINDOW).output() {
             let stdout = String::from_utf8_lossy(&output.stdout);
             return stdout.contains("nikke_launcher.exe");
         }
@@ -48,8 +55,12 @@ pub fn launch_nikke_process(path: &str) -> Result<(), String> {
     close_nikke_launcher();
     thread::sleep(Duration::from_millis(500));
 
-    // Try standard spawn first (inherits parent admin privilege without triggering UAC prompt)
-    if Command::new(path).spawn().is_ok() {
+    // Try standard spawn first with hidden console flag
+    let mut cmd = Command::new(path);
+    #[cfg(windows)]
+    cmd.creation_flags(CREATE_NO_WINDOW);
+
+    if cmd.spawn().is_ok() {
         return Ok(());
     }
 

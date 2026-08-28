@@ -30,3 +30,6 @@ build-rpc/
 
 # Legacy
 /legacy
+
+# Scratch
+scratch/

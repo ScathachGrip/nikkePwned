@@ -10,5 +10,5 @@
     "lib": ["DOM", "DOM.Iterable", "ESNext"],
     "types": ["bun"]
   },
-  "include": ["ui/**/*.ts", "ui/**/*.tsx"]
+  "include": ["src/**/*.ts", "src/**/*.svelte", "vite.config.ts"]
 }
