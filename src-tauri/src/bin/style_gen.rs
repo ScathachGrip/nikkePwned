@@ -1591,7 +1591,7 @@ button#reset:hover {
 
 "#;
 
-    let target_path = if Path::new("src/styles").exists() {
+    let target_path = if Path::new("src/main.ts").exists() {
         Path::new("src/styles/app.css").to_path_buf()
     } else {
         Path::new("../src/styles/app.css").to_path_buf()
