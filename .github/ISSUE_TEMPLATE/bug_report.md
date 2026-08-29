@@ -2,9 +2,8 @@
 name: Bug report
 about: Create a report to help us improve
 title: bug
-labels: ''
-assignees: ''
-
+labels: ""
+assignees: ""
 ---
 
 **Describe the bug**
@@ -17,8 +16,10 @@ Steps to reproduce the behavior:
 A clear and concise description of what you expected to happen.
 
 **Desktop (please complete the following information):**
- - OS: [e.g. Windows 11]
- - Node version [node -v]
+
+- OS: [e.g. Windows 11]
+- Rust version [rustc --version]
+- Bun version [bun --version]
 
 **Additional context**
 Add any other context about the problem here.
