@@ -2,12 +2,11 @@
 <a href="#"><img width="600" src="resources/icons/docs_logo.png" alt="nikkePwned"></a>
 
 <p align="center">
-	<a href="https://github.com/ScathachGrip/nikkePwned/actions/workflows/build.yml"><img src="https://github.com/ScathachGrip/nikkePwned/actions/workflows/build.yml/badge.svg"></a>
-	<a href="https://github.com/ScathachGrip/nikkePwned/actions/workflows/build-rpc.yml"><img src="https://github.com/ScathachGrip/nikkePwned/actions/workflows/build-rpc.yml/badge.svg" /></a>
+	<a href="https://github.com/ScathachGrip/nikkePwned/actions/workflows/build-release.yml"><img src="https://github.com/ScathachGrip/nikkePwned/actions/workflows/build-release.yml/badge.svg"></a>
 </p>
 
-NIKKEPwned is a Password Manager for NIKKE, it uses localStorage and simulating nikke_launcher  
-The motivation of this project is simplified login process, allowing users interacts each accounts **quickly and effortlessly**. Thanks to [@neutralinojs/neutralinojs](https://github.com/neutralinojs/neutralinojs) for its streamlined JS/TS bindings.
+The Password Manager for NIKKE, it uses localStorage and simulating `nikke_launcher`.
+The motivation is simplified login process, allowing users interacts each accounts **quickly and low effort**.
 
 <a href="#installation">Installation</a> •
 <a href="https://github.com/ScathachGrip/nikkePwned/blob/master/CONTRIBUTING.md">Contributing</a> •
@@ -18,36 +17,33 @@ The motivation of this project is simplified login process, allowing users inter
 ---
 
 - [NIKKEPwned](#)
-  - [The problem](#the-problem)
-  - [The solution](#the-solution)
+  - [The problems](#the-problems)
+  - [The solutions](#the-solutions)
   - [Prerequisites](#prerequisites)
     - [Installation](#installation)
-      - [How to interacts](#how-to-interacts)
-        - [Core operations](#core-operations)
-        - [Management & diagnostics](#management--diagnostics)
-      - [Inputing data](#inputting-data)
-      - [Discord RPC support](#discord-rpc-supports)
-  - [Image reasoning for damageDealt check](#image-reasoning)
+      - [Discord RPC](#discord-rpc)
+  - [How to interacts](#how-to-interacts)
+    - [Inputting data](#inputting-data)
+      - [Interactive input](#interactive-input)
+      - [Bulk JSON input](#bulk-json-input)
+      - [Management](#management)
+  - [Image reasoning](#image-reasoning)
+    - [PreCapture](#precapture)
+    - [PausedState & AssignedResults](#pausedstate--assignedresults)
+    - [ActualResult & Less hallucination](#actualresult--less-hallucination)
     - [Setup](#setup)
-    - [Compatible vision models](#compatible-vision-models)
-      - [PreCapture](#precapture)
-      - [PausedState & AssignedResults](#pausedstate--assignedresults)
-      - [ActualResult & Less hallucination](#actualresult--less-hallucination)
+    - [Vision models](#vision-models)
   - [Running tests](#running-tests)
     - [Manual build](#manual-build)
-  - [Limitations](#Limitations)
-    - [Prevent antivirus things](./LIMITATIONS.md#prevent-windows-defender-from-flagging-the-tool)
-    - [Tool flagged as potential malware](./LIMITATIONS.md#this-tool-flagged-as-potential-malware)
   - [Application safety report](#application-safety-report)
-  - [Pronunciation](#Pronunciation)
-  - [Acknowledgements](./CLOSING_REMARKS.md)
+  - [Pronunciation](#pronunciation)
   - [Legal](#legal)
 
-# The Problem
+# The Problems
 
-Managing multiple accounts can be frustrating and inefficient, especially when you need to **log in manually one by one**. For users who frequently switch between multiple accounts, constantly entering login information can be a repetitive and tiresome task.
+Managing multiple accounts can be frustrating and inefficient, especially when you need to **log in manually one by one**. For users who frequently switch between multiple accounts, constantly entering login information can be a repetitive and tiresome task. Credentials entry can also lead to common issues such as incorrect passwords, accidental input errors, forgotten credentials, or logging into the wrong account.
 
-# The Solution
+# The Solutions
 
 ![Cute cat](./resources/project/flow.png)  
 This extension was designed to simplified login process, **automate the login process**, allowing users to log in to their accounts **quickly and effortlessly**. Instead copying pasting or manually typing credentials every time, this tool handles the process for you, **saving time and reducing errors**. By streamlining account management, this tool makes switching between accounts **seamless and efficient**, eliminating the hassle of repetitive logins. Whether you're managing a handful of accounts or dozens, this tool ensures a smoother, faster, and more convenient login experience.
@@ -55,18 +51,14 @@ This extension was designed to simplified login process, **automate the login pr
 ## Prerequisites
 
 - `64-bit editions of Microsoft Windows 11 or Microsoft Windows 10`
-  - `Other environments have not been tested; additional testing and feedback are welcome.`
-- You should turn-off antivirus
-  - You should do some exception things or exclusion
-    - (if your antivirus scanning this tool however)
-  - Read more: [this tool flagged as potential malware](./LIMITATIONS.md#this-tool-flagged-as-potential-malware)
+  - Other environments have not been tested; additional testing and feedback are welcome.
 
 ## Breaking Changes
 
 1.  **Persistent Storage Location**:
     - Legacy local storage directory (`.storage/`) has been migrated to standard OS AppData JSON storage:
       `%APPDATA%\com.scathachgrip.nikkepwned\nikkepwned_data.json`
-      _(Path: `C:\Users\<User>\AppData\Roaming\com.scathachgrip.nikkepwned\nikkepwned_data.json`)_
+      (Path: `C:\Users\<User>\AppData\Roaming\com.scathachgrip.nikkepwned\nikkepwned_data.json`)
 
 2.  **Native Win32 Elevation & UAC Manifest**:
     - Executable `nikkepwned.exe` has embedded `requireAdministrator` UAC manifest and `comctl32.dll` v6 dependency.
@@ -74,17 +66,15 @@ This extension was designed to simplified login process, **automate the login pr
 
 # Installation
 
-- Get the latest build version from the [release page You only need nikkepwned-release.zip.](https://github.com/ScathachGrip/nikkePwned/releases)
-- Unzip it, or extract it "as folder" somewhere in your computer
-- Open `nikkepwned-win_x64.exe` with **Run as Administrator**
-  - Read more: [Limitations](#Limitations) for clearly explanation.
+- Get the latest build version from the [release page You only need the executable file.](https://github.com/ScathachGrip/nikkePwned/releases)
+- Unzip it, or extract it "as folder" somewhere
+- Open `nikkepwned.exe` or `nikkepwned-win_x64.exe`
 
 # How to interacts
 
-> 1.  Edit launcher location where `nikke_launcher.exe` located, then select.
-> 2.  Input accounts as JSON
-> 3.  If success then select corresponding account
-> 4.  Proceed auto login
+- Edit launcher location where `nikke_launcher.exe` located, then select.
+- Input accounts, if already then Select account
+- Proceed auto login
 
 <table>
 	<td><b>NOTE:</b> After nikke launcer opened and the automation runs,<br>
@@ -92,56 +82,30 @@ This extension was designed to simplified login process, **automate the login pr
   Just wait until complete I added a small delays to avoid abuse and misleading usage.
 </table>
 
-## Discord RPC supports
+## Discord RPC
 
 Started from `4.0.1-indev`: this tools has automated created websocket connection to [Discord Rich Presence](https://docs.discord.com/developers/platform/rich-presence). If you willing to disable it check your task manager and kill it manual.
 
 <img width="950" src="resources/icons/rpc_dd.png" alt="nikkepwned"></a>
 
-## Core Operations
-
-| Feature              | Description                                                                                             |
-| -------------------- | ------------------------------------------------------------------------------------------------------- |
-| `NIKKE LauncherPath` | Specifies the location of `nikke_launcher.exe` required for the tool to operate.                        |
-| `JSON Input`         | Allows entry of account credentials in JSON format. Refer to _Inputting Data_ for details.              |
-| `Account Selection`  | Provides a dropdown list of registered accounts for selection.                                          |
-| `Login Execution`    | Initiates an automated login process by simulating `nikke_launcher` without requiring user interaction. |
-
 ---
-
-## Management & Diagnostics
-
-| Feature           | Description                                                                                                    |
-| ----------------- | -------------------------------------------------------------------------------------------------------------- |
-| `Account Removal` | Removes the selected account from the tool.                                                                    |
-| `Switch Delay`    | Defines the delay between account switches. Default: `5` seconds (Range: `1–8` seconds).                       |
-| `Login Delay`     | Sets a delay before login attempts to prevent excessive requests. Default: `5` seconds (Range: `1–8` seconds). |
-| `Activity Logs`   | Displays operational logs, including login attempts, path updates, and delay configurations.                   |
-| `Data Purge`      | Permanently deletes all stored data within the tool.                                                           |
-| `Rapidfire test`  | Performs rapid or double-click mouse input tests (macro validation).                                           |
 
 ## Inputting data
 
-This tool uses JSON and supports **two types of input** here's the example:
+This tool has interactive input and bulk JSON and supports:
 
-🟢 Single Input (Object Format)  
-Use this format when inputting one by one account:
+### Interactive input
 
-```json
-{
-  "nickname": "FUFUFAFA",
-  "email": "foobar1@gmail.com",
-  "password": "asuasu123"
-}
-```
+The menu `Manual Entry` for single credentials.
 
-🔵 Multiple Input (Array Format)  
-Use this format when inputting multiple accounts at once:
+### Bulk JSON input
+
+The menu `JSON Bulk Import` for multiple creds input, some example:
 
 ```json
 [
   {
-    "nickname": "FUFUFAFA",
+    "nickname": "JEANNE",
     "email": "foobar1@gmail.com",
     "password": "asuasu123"
   },
@@ -158,16 +122,27 @@ Use this format when inputting multiple accounts at once:
 ]
 ```
 
-If there's an errors watch your step again then..
+If there's an errors watch your step:
 
 - You should not change or rename the PROPERTY `nickname`, `email`, and `password`
 - You only supposed to change its VALUE
+
+### Management
+
+| Feature           | Description                                                                                                    |
+| ----------------- | -------------------------------------------------------------------------------------------------------------- |
+| `Account Removal` | Removes the selected account from the tool.                                                                    |
+| `Switch Delay`    | Defines the delay between account switches. Default: `5` seconds (Range: `1–8` seconds).                       |
+| `Login Delay`     | Sets a delay before login attempts to prevent excessive requests. Default: `5` seconds (Range: `1–8` seconds). |
+| `Activity Logs`   | Displays operational logs, including login attempts, path updates, and delay configurations.                   |
+| `Data Purge`      | Permanently deletes all stored data within the tool.                                                           |
+| `Rapidfire test`  | Performs rapid or double-click mouse input tests (macro validation).                                           |
 
 # Image Reasoning
 
 Started from `4.0.1-indev`: this tool has image reasoning and consuming some LLMs.
 
-You probably don't wanna calculate it manually, and there's always inconsistency between mock battles and real battles (damage values differ — blame NIKKE though), especially in UnionRaid Hard mode which is tons of HP and where exact damage dealt values aren't displayed. NIKKEPwned handle it and check the total damage using image reasoning. It's quite simple: when the battle is about to end at 00:00 or 00:01, press `ESC` to pause and then assign `F8` before registering real damage to ensure accurate results.
+You probably don't want calculate it manually, and there's always inconsistency between mock battles and real battles (damage values differ — blame NIKKE though), especially in UnionRaid Hard mode which is tons of HP and where exact damage dealt values aren't displayed. NIKKEPwned handle it and check the total damage using image reasoning. It's quite simple: when the battle is about to end at 00:00 or 00:01, press `ESC` to pause and then assign `F8` before registering real damage to ensure accurate results.
 
 ### PreCapture
 
@@ -200,7 +175,7 @@ Press `ESC` to pause, then assign `F8` to perform image-reasoning and extract da
 | `Trigger Analysis`   | Press `ESC` to pause, then press `F8` to initiate damage extraction.       |
 | `View Results`       | Upon completion, access the results via Windows notifications (`Win + N`). |
 
-## Compatible Vision Models
+## Vision Models
 
 ```js
 const OPENROUTER_MODEL_POOL = [
@@ -239,12 +214,6 @@ While multiple models are supported `nvidia/nemotron-nano-12b-v2-vl:free` is rec
 
 ## Manual build
 
-<table>
-	<td><b>NOTE:</b> NodeJS 20.x or higher</td>
-</table>
-
-If you prefer to build the project manually, follow these steps:
-
 ```sh
 git clone https://github.com/ScathachGrip/nikkePwned.git
 cd nikkePwned
@@ -252,35 +221,16 @@ cd nikkePwned
 
 You can check build script on `package.json` for the step by step.
 
-## Limitations
-
-This tool must be `run as Administrator` to function correctly because:
-
-- Simple, I just want to be automated.
-- It **simulates keystrokes**, which requires elevated permissions.
-- Opening NIKKE launcher triggers **User Account Control (UAC) prompt** otherwise the flow will broke
-
-> Read more: [LIMITATIONS.md for clearly explanation.](./LIMITATIONS.md)
-
 ## Application Safety Report
 
-**Security Notice**. For transparency, this application was analyzed by multiple third‑party scanning and sandboxing services. Detection engines may sometimes classify the binary as suspicious because it launches PowerShell commands through `<Neutralino.os.execCommand()>` and issues simulated keystrokes to interact with the UI (e.g., `[System.Windows.Forms.SendKeys]::SendWait`). These actions are implemented solely to automate legitimate user interactions (automated login for the NIKKE client) and not for credential harvesting, persistence, or remote access. Such automation patterns can match behavioral signatures used by endpoint protection products; therefore, if you encounter a positive detection, treat it as a potential false positive and consult the linked scan reports or contact the AV vendor for a formal false‑positive review.
+**Security Notice**. For transparency, this application has been analyzed by multiple third‑party scanning and sandboxing services. Older versions of this project were built using Neutralino.js and executed PowerShell helper scripts from the frontend, which could trigger false-positives in standard antivirus engines. This has been **completely resolved by migrating the project to Tauri**. In the current state:
 
-- **[VirusTotal Scan Report](https://www.virustotal.com/gui/file/08bc7cb8491627835ea958595386e0d3007cc3a150f1c6d28f03739d4629e9c7)**
-- **[Hybrid Analysis Report](https://hybrid-analysis.com/sample/08bc7cb8491627835ea958595386e0d3007cc3a150f1c6d28f03739d4629e9c7)**
-- **[Jotti's Malware Scan Report](https://virusscan.jotti.org/en-US/filescanjob/x2zfdx6pqb)**
-- **[MetaDefender Report](https://metadefender.com/results/file/bzI1MDkxOW5hbmtUNjA5NW5Id2hTWm9jZHNK_mdaas)**
+- There are no PowerShell scripts or unconstrained frontend execution commands.
+- The backend is written in compiled, native **Rust**.
+- OS integrations (such as starting the NIKKE launcher and simulating keystrokes for logging in) are handled safely using the Windows Win32 API (`SendInput` and `ShellExecuteW`) directly from Rust.
+- This native Rust architecture is significantly more secure, robust, and maintains a clean security profile.
 
-**Q: Is this safe?**
-
-> Yes, my code is fully transparent, I even write it with sweet and readable COMMENTS to make more casual or entry level can understand. You can check the source yourself—take a look at [app.ts](./src/app.ts) and [websocket.ts](./websocket.ts). There are no hidden scripts or anything suspicious.
-
-**Q: I'm still unsure. Do I have to use it?**
-
-> I completely understand your concern. Here's a simple way to decide:
-
-- **You can** if you value simplicity and convenience.
-- **Avoid it** ~~If you FOMO~~ if you security concerns outweigh your need for ease of use.
+> [VirusTotal](https://www.virustotal.com/gui/file/08bc7cb8491627835ea958595386e0d3007cc3a150f1c6d28f03739d4629e9c7) • [Hybrid Analysis](https://hybrid-analysis.com/sample/08bc7cb8491627835ea958595386e0d3007cc3a150f1c6d28f03739d4629e9c7) • [Jotti's Scan](https://virusscan.jotti.org/en-US/filescanjob/x2zfdx6pqb) • [MetaDefender](https://metadefender.com/results/file/bzI1MDkxOW5hbmtUNjA5NW5Id2hTWm9jZHNK_mdaas)
 
 All code is transparently written and documented in this GitHub repository, with all binary bundles generated through GitHub CI (Continuous Integration). There are no hidden scripts or encrypted stuff. There would be no reason for me to do otherwise.
 
