@@ -6,6 +6,8 @@ src-tauri/target/
 # Generated JS & HTML bundles
 ui/app.js
 ui/index.html
+src/styles/app-style-indev.css
+src/styles/app.css
 
 # Developer tools & temp files
 bun.lock
@@ -22,6 +24,7 @@ neutralinojs.log
 # Binaries & logs
 *.log
 *.exe
+*.pdb
 *.zip
 discord-rpc.dll
 discord-rpc.lib

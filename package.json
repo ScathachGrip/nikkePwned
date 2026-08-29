@@ -1,6 +1,6 @@
 {
   "name": "nikkepwned",
-  "version": "5.0.0",
+  "version": "5.0.6",
   "description": "Password Manager for NIKKE",
   "keywords": [],
   "author": "sinkaroid",
@@ -17,14 +17,15 @@
     "vite": "^6.0.0"
   },
   "scripts": {
-    "build:ui": "vite build",
+    "style:gen": "rustc src-tauri/src/bin/style_gen.rs -o style_gen.exe && ./style_gen.exe",
+    "build:ui": "bun run style:gen && vite build",
     "build:debug": "bun run build:ui && cd src-tauri && cargo build",
     "build:release": "bun run build:ui && cd src-tauri && cargo build --release",
     "build": "bun run build:release",
-    "dev": "vite",
+    "dev": "bun run style:gen && vite",
     "tauri:dev": "bun run build:ui && cd src-tauri && cargo tauri dev",
     "lint": "tsc --noEmit",
-    "typecheck": "tsc --noEmit"
+    "chore:release": "bun run src/dev_tools/chore_release.ts"
   },
   "packageManager": "bun@1.4.0",
   "engines": {

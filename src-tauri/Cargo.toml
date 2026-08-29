@@ -1,6 +1,6 @@
 [package]
 name = "nikkepwned"
-version = "5.0.0"
+version = "5.0.6"
 description = "Password Manager for NIKKE"
 authors = ["sinkaroid"]
 edition = "2024"
