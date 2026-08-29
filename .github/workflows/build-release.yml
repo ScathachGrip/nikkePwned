@@ -1,11 +1,11 @@
-name: Release
+name: Build and Release
 
 on:
   push:
     branches:
       - master
     tags:
-      - 'v*'
+      - "v*"
   workflow_dispatch:
 
 jobs:
@@ -21,6 +21,8 @@ jobs:
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: "package.json"
 
       - name: Setup Rust Toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -50,6 +52,8 @@ jobs:
 
       - name: Create Tag if Missing
         run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
           $tag = "${{ steps.pkg.outputs.version }}"
           $exists = git ls-remote --tags origin $tag
           if ($exists) {
