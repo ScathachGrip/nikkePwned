@@ -35,6 +35,38 @@ pub struct OpenRouterConfig {
     pub model: String,
 }
 
+fn default_burstbonk_keys() -> Vec<String> {
+    vec!["A".into(), "S".into(), "D".into(), "F".into(), "G".into()]
+}
+
+fn default_burstbonk_interval() -> u64 {
+    3
+}
+
+fn default_true() -> bool {
+    true
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BurstBonkConfig {
+    #[serde(default = "default_burstbonk_keys")]
+    pub keys: Vec<String>,
+    #[serde(default = "default_burstbonk_interval", rename = "interval_ms", alias = "intervalMs")]
+    pub interval_ms: u64,
+    #[serde(default = "default_true", rename = "humanized", alias = "isHumanized")]
+    pub humanized: bool,
+}
+
+impl Default for BurstBonkConfig {
+    fn default() -> Self {
+        Self {
+            keys: default_burstbonk_keys(),
+            interval_ms: default_burstbonk_interval(),
+            humanized: true,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct AppStore {
     #[serde(default)]
@@ -45,6 +77,8 @@ pub struct AppStore {
     pub history: Vec<HistoryLog>,
     #[serde(default)]
     pub openrouter: OpenRouterConfig,
+    #[serde(default, alias = "rapidfire")]
+    pub burstbonk: BurstBonkConfig,
 }
 
 pub struct StorageManager {

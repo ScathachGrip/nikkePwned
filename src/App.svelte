@@ -3,7 +3,7 @@
   import type {
     Account,
     HistoryLog,
-    OpenRouterConfig,
+    BurstBonkConfig,
     LoginResult,
   } from "./types";
   import { invoke } from "./lib/api";
@@ -16,7 +16,7 @@
   import JsonAccountForm from "./lib/components/JsonAccountForm.svelte";
   import AccountPickerModal from "./lib/components/AccountPickerModal.svelte";
   import LogsModal from "./lib/components/LogsModal.svelte";
-  import OpenRouterModal from "./lib/components/OpenRouterModal.svelte";
+  import BurstBonkModal from "./lib/components/BurstBonkModal.svelte";
   import WortelModal from "./lib/components/WortelModal.svelte";
 
   // Reactive State Runes
@@ -25,6 +25,7 @@
   let launcherPath = $state("where is nikke_launcher.exe");
   let accounts = $state<Account[]>([]);
   let selectedAccountIndex = $state<number | null>(null);
+  let loggedInAccountInfo = $state<{ nickname: string; email: string; index: number } | null>(null);
   let registerMode = $state<"single" | "json">("single");
 
   // Single / JSON Account Form State
@@ -40,7 +41,7 @@
   // Modals
   let isAccountPickerOpen = $state(false);
   let isLogsModalOpen = $state(false);
-  let isOpenRouterModalOpen = $state(false);
+  let isBurstBonkModalOpen = $state(false);
   let isWortelModalOpen = $state(false);
 
   // Loading Overlay
@@ -58,10 +59,11 @@
   let historyLogs = $state<HistoryLog[]>([]);
   let searchQuery = $state("");
 
-  // OpenRouter Form
-  let openrouterApiKey = $state("");
-  let openrouterModel = $state("nvidia/nemotron-nano-12b-v2-vl:free");
-  let isApiKeyVisible = $state(false);
+  // BurstBonk State
+  let burstbonkKeys = $state<string[]>(["A", "S", "D", "F", "G"]);
+  let burstbonkIntervalMs = $state<number>(3);
+  let burstbonkHumanized = $state(true);
+  let isBurstBonkActive = $state(false);
 
   // Wortel Easter Egg
   let wortelClickCount = $state(0);
@@ -208,6 +210,11 @@
       } else {
         jsonInput = "";
       }
+
+      if (isTypingAccount) {
+        isTypingAccount = false;
+        restoreIdleRpc();
+      }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       showAlert(msg, "fail");
@@ -223,6 +230,10 @@
     try {
       await invoke("remove_account", { email: acc.email });
       showAlert(`Removed ${acc.nickname}!`, "success");
+      if (loggedInAccountInfo && loggedInAccountInfo.email.toLowerCase() === acc.email.toLowerCase()) {
+        loggedInAccountInfo = null;
+        restoreIdleRpc();
+      }
       selectedAccountIndex = null;
       await loadAccounts();
     } catch (err) {
@@ -265,6 +276,11 @@
 
       if (res && res.success) {
         showAlert(`Logged in as ${acc.nickname}!`, "success");
+        loggedInAccountInfo = {
+          nickname: acc.nickname,
+          email: acc.email,
+          index: selectedAccountIndex!,
+        };
         invoke("update_discord_rpc", {
           details: `Playing NIKKE ${selectedAccountIndex! + 1} / ${accounts.length} accounts`,
           state: `Logged in as ${acc.nickname}`,
@@ -298,15 +314,92 @@
       showAlert("All stored data purged!", "success");
       accounts = [];
       selectedAccountIndex = null;
+      loggedInAccountInfo = null;
       launcherPath = "where is nikke_launcher.exe";
       await loadAccounts();
+      restoreIdleRpc();
     } catch (e) {
       showAlert(String(e), "fail");
     }
   }
 
+  let isTypingAccount = false;
+
+  function handleAccountTyping(event: Event): void {
+    const target = event.target as HTMLElement | null;
+    if (!target) return;
+
+    // Validate that the element is strictly inside <div id="entryAccountPanel" class="entry-account-panel">
+    const panel = document.getElementById("entryAccountPanel");
+    if (!panel || !panel.contains(target)) return;
+
+    const isInput =
+      target instanceof HTMLInputElement &&
+      ["nickname", "email", "password"].includes(target.placeholder.toLowerCase());
+
+    const isTextarea =
+      target instanceof HTMLTextAreaElement &&
+      target.placeholder.toLowerCase().includes("nickname");
+
+    if (!isInput && !isTextarea) return;
+
+    if (!isTypingAccount) {
+      isTypingAccount = true;
+      invoke("update_discord_rpc", {
+        details: "Password Manager for NIKKE",
+        state: "Registering account",
+        smallImageKey: "rpc_maintain",
+        smallImageText: "Registering account",
+      }).catch((e) => console.warn("RPC update failed:", e));
+    }
+  }
+
+  function handleAccountFocusOut(event: FocusEvent): void {
+    const panel = document.getElementById("entryAccountPanel");
+    const related = event.relatedTarget as HTMLElement | null;
+    if (panel && related && panel.contains(related)) {
+      return;
+    }
+
+    if (isTypingAccount) {
+      isTypingAccount = false;
+      restoreIdleRpc();
+    }
+  }
+
+  function restoreIdleRpc(): void {
+    isTypingAccount = false;
+    if (loggedInAccountInfo) {
+      const currentIdx = accounts.findIndex(
+        (a) =>
+          a.email.toLowerCase() === loggedInAccountInfo!.email.toLowerCase(),
+      );
+      const displayIdx =
+        currentIdx !== -1 ? currentIdx : loggedInAccountInfo.index;
+      invoke("update_discord_rpc", {
+        details: `Playing NIKKE ${displayIdx + 1} / ${accounts.length} accounts`,
+        state: `Logged in as ${loggedInAccountInfo.nickname}`,
+        smallImageKey: "rpc_maintain",
+        smallImageText: "Maintaining",
+      }).catch((e) => console.warn("RPC update failed:", e));
+    } else {
+      invoke("update_discord_rpc", {
+        details: "Idle",
+        state: "Password Manager for NIKKE",
+        smallImageKey: "rpc_idle",
+        smallImageText: "Idling",
+      }).catch((e) => console.warn("RPC update failed:", e));
+    }
+  }
+
   async function handleOpenLogsModal(): Promise<void> {
     isLogsModalOpen = true;
+    invoke("update_discord_rpc", {
+      details: "Viewing logs",
+      state: "Audit & History",
+      smallImageKey: "rpc_maintain",
+      smallImageText: "Logs",
+    }).catch((e) => console.warn("RPC update failed:", e));
     try {
       historyLogs = await invoke<HistoryLog[]>("get_history_logs");
     } catch (e) {
@@ -314,27 +407,98 @@
     }
   }
 
-  async function handleOpenOpenRouterModal(): Promise<void> {
-    isOpenRouterModalOpen = true;
+  function handleCloseLogsModal(): void {
+    isLogsModalOpen = false;
+    restoreIdleRpc();
+  }
+
+  function handleOpenWortelModal(): void {
+    isWortelModalOpen = true;
+    invoke("update_discord_rpc", {
+      details: "Rapidfire mouse test",
+      state: "Testing Click Frequency",
+      smallImageKey: "rpc_testing",
+      smallImageText: "Rapidfire Mouse Test",
+    }).catch((e) => console.warn("RPC update failed:", e));
+  }
+
+  function handleCloseWortelModal(): void {
+    isWortelModalOpen = false;
+    restoreIdleRpc();
+  }
+
+  async function handleOpenBurstBonkModal(): Promise<void> {
+    isBurstBonkModalOpen = true;
     try {
-      const cfg = await invoke<OpenRouterConfig>("get_openrouter_config");
-      if (cfg) {
-        openrouterApiKey = cfg.apiKey || cfg.api_key || "";
-        openrouterModel = cfg.model || "nvidia/nemotron-nano-12b-v2-vl:free";
+      const cfg = await invoke<BurstBonkConfig>("get_burstbonk_config");
+      if (cfg && cfg.keys && cfg.keys.length > 0) {
+        burstbonkKeys = cfg.keys;
       }
+      if (cfg && (cfg.interval_ms != null || cfg.intervalMs != null)) {
+        burstbonkIntervalMs = cfg.interval_ms ?? cfg.intervalMs ?? 3;
+      }
+      if (cfg && cfg.humanized != null) {
+        burstbonkHumanized = Boolean(cfg.humanized);
+      }
+      isBurstBonkActive = await invoke<boolean>("get_burstbonk_status");
+
+      invoke("update_discord_rpc", {
+        details: isBurstBonkActive ? "BurstBonk Engine (Active)" : "Configuring BurstBonk",
+        state: isBurstBonkActive ? `Auto-Burst (${burstbonkIntervalMs}ms)` : "Keyboard Burst Utility",
+        smallImageKey: isBurstBonkActive ? "rpc_maintain" : "rpc_llm",
+        smallImageText: isBurstBonkActive ? "BurstBonk Active" : "BurstBonk Menu",
+      }).catch((e) => console.warn("RPC update failed:", e));
     } catch (e) {
-      console.error("Failed to load OpenRouter config:", e);
+      console.error("Failed to load BurstBonk config:", e);
     }
   }
 
-  async function handleSaveOpenRouterConfig(): Promise<void> {
+  function handleCloseBurstBonkModal(): void {
+    isBurstBonkModalOpen = false;
+    restoreIdleRpc();
+  }
+
+  async function handleSaveBurstBonkConfig(): Promise<void> {
     try {
-      await invoke("save_openrouter_config", {
-        apiKey: openrouterApiKey.trim(),
-        model: openrouterModel || "nvidia/nemotron-nano-12b-v2-vl:free",
+      const validKeys = burstbonkKeys.filter((k) => k.trim() !== "");
+      if (validKeys.length === 0) {
+        showAlert("At least one key is required!", "fail");
+        return;
+      }
+      await invoke("save_burstbonk_config", {
+        keys: validKeys,
+        interval_ms: Number(burstbonkIntervalMs) || 3,
+        humanized: burstbonkHumanized,
       });
-      showAlert("OpenRouter config saved!", "success");
-      isOpenRouterModalOpen = false;
+      showAlert("BurstBonk config saved!", "success");
+    } catch (e) {
+      showAlert(String(e), "fail");
+    }
+  }
+
+  async function handleToggleBurstBonk(): Promise<void> {
+    try {
+      if (isBurstBonkActive) {
+        await invoke("stop_burstbonk");
+        isBurstBonkActive = false;
+        showAlert("BurstBonk stopped", "success");
+        invoke("update_discord_rpc", {
+          details: "Configuring BurstBonk",
+          state: "Standby",
+          smallImageKey: "rpc_llm",
+          smallImageText: "BurstBonk Standby",
+        }).catch((e) => console.warn("RPC update failed:", e));
+      } else {
+        await invoke("start_burstbonk");
+        isBurstBonkActive = true;
+        showAlert("BurstBonk started!", "success");
+        invoke("update_discord_rpc", {
+          details: "BurstBonk Engine (Active)",
+          state: `Auto-Burst (${burstbonkIntervalMs}ms)`,
+          smallImageKey: "rpc_maintain",
+          smallImageText: "BurstBonk Active",
+        }).catch((e) => console.warn("RPC update failed:", e));
+      }
     } catch (e) {
       showAlert(String(e), "fail");
     }
@@ -463,9 +627,9 @@
   function handleGlobalKeyDown(e: KeyboardEvent): void {
     if (e.key === "Escape") {
       isAccountPickerOpen = false;
-      isLogsModalOpen = false;
-      isOpenRouterModalOpen = false;
-      isWortelModalOpen = false;
+      if (isLogsModalOpen) handleCloseLogsModal();
+      if (isBurstBonkModalOpen) handleCloseBurstBonkModal();
+      if (isWortelModalOpen) handleCloseWortelModal();
     }
   }
 
@@ -476,6 +640,7 @@
     }
 
     window.addEventListener("keydown", handleGlobalKeyDown);
+    window.addEventListener("input", handleAccountTyping);
 
     loadAccounts();
     loadLauncherPath();
@@ -492,6 +657,7 @@
     return () => {
       clearInterval(interval);
       window.removeEventListener("keydown", handleGlobalKeyDown);
+      window.removeEventListener("input", handleAccountTyping);
     };
   });
 </script>
@@ -557,7 +723,12 @@
       </div>
 
       <!-- Account Entry Panel -->
-      <div id="entryAccountPanel" class="entry-account-panel">
+      <div
+        id="entryAccountPanel"
+        class="entry-account-panel"
+        oninput={handleAccountTyping}
+        onfocusout={handleAccountFocusOut}
+      >
         <div class="register-input-mode" id="registerInputMode">
           <button
             type="button"
@@ -696,18 +867,20 @@
     isOpen={isLogsModalOpen}
     bind:searchQuery
     filteredLogs={filteredHistoryLogs}
-    onClose={() => (isLogsModalOpen = false)}
+    onClose={handleCloseLogsModal}
   />
 
-  <!-- OpenRouter Settings Modal -->
-  <OpenRouterModal
-    isOpen={isOpenRouterModalOpen}
-    bind:apiKey={openrouterApiKey}
-    bind:model={openrouterModel}
-    {isApiKeyVisible}
-    onToggleVisibility={() => (isApiKeyVisible = !isApiKeyVisible)}
-    onSave={handleSaveOpenRouterConfig}
-    onClose={() => (isOpenRouterModalOpen = false)}
+  <!-- BurstBonk Settings Modal -->
+  <BurstBonkModal
+    isOpen={isBurstBonkModalOpen}
+    bind:keys={burstbonkKeys}
+    bind:intervalMs={burstbonkIntervalMs}
+    bind:humanized={burstbonkHumanized}
+    isActive={isBurstBonkActive}
+    onSave={handleSaveBurstBonkConfig}
+    onToggle={handleToggleBurstBonk}
+    onUpdateKeys={(newKeys: string[]) => (burstbonkKeys = newKeys)}
+    onClose={handleCloseBurstBonkModal}
   />
 
   <!-- Wortel Easter Egg Modal -->
@@ -721,7 +894,7 @@
     onImageClick={handleWortelImageClick}
     onMouseDown={handleWortelMouseDown}
     onReset={handleResetWortel}
-    onClose={() => (isWortelModalOpen = false)}
+    onClose={handleCloseWortelModal}
   />
 
   <!-- Floating Action Buttons -->
@@ -740,12 +913,12 @@
   <button
     type="button"
     class="tia"
-    id="myBtnOpenRouter"
-    onclick={handleOpenOpenRouterModal}
+    id="myBtnBurstBonk"
+    onclick={handleOpenBurstBonkModal}
   >
     <img
       src="/static/rpc_llm.png"
-      alt="key"
+      alt="burstbonk"
       style="width: 40px; height: 40px"
     />
   </button>
@@ -753,7 +926,7 @@
     type="button"
     class="berdetak"
     id="myBtnWortel"
-    onclick={() => (isWortelModalOpen = true)}
+    onclick={handleOpenWortelModal}
   >
     <img
       src="/static/rpc_testing.png"

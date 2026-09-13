@@ -934,7 +934,7 @@ select::-webkit-scrollbar-thumb:hover {
   background: #999;
 }
 
-.openrouter-panel {
+.burstbonk-panel {
   margin: 0 0 12px 0;
   padding: 10px 12px;
   border-radius: 8px;
@@ -945,91 +945,100 @@ select::-webkit-scrollbar-thumb:hover {
   color: #c7cad1;
 }
 
-.openrouter-panel strong {
+.burstbonk-panel strong {
   color: #f2f4f7;
   font-weight: 700;
 }
 
-.openrouter-label {
+.burstbonk-label {
   margin: 0 0 6px 0;
   font-size: 14px;
   font-weight: 700;
 }
 
-.openrouter-key-row {
-  position: relative;
-  margin-bottom: 10px;
+.burstbonk-status-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
 }
 
-.openrouter-field {
-  width: 100%;
+.burstbonk-status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #555;
+  transition: background 0.2s ease;
+}
+
+.burstbonk-status-dot.active {
+  background: #4caf50;
+  box-shadow: 0 0 6px #4caf50;
+}
+
+.burstbonk-status-text {
+  font-size: 12px;
+  font-weight: 600;
+  color: #c7cad1;
+}
+
+.burstbonk-keys-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.burstbonk-key-input {
+  width: 42px;
+  height: 42px;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 700;
+  text-transform: uppercase;
   background: #1d1d25ff !important;
   color: #ffffff !important;
   border: 1px solid #3a3a4d;
   border-radius: 6px;
-  padding: 10px 12px;
-  font-size: 12px;
-  margin-bottom: 10px;
   box-sizing: border-box;
+  outline: none;
+  transition: border-color 0.2s ease;
 }
 
-.openrouter-key-row .openrouter-field {
-  display: block;
-  margin-bottom: 0;
+.burstbonk-key-input:focus {
+  border-color: #e05bc4ff;
+}
+
+.burstbonk-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.burstbonk-toggle-btn {
   width: 100%;
-  min-width: 0;
-  box-sizing: border-box;
-  padding-right: 78px;
-}
-
-.openrouter-visibility-btn {
-  position: absolute;
-  top: 50%;
-  right: 8px;
-  transform: translateY(-50%);
-  width: auto;
-  margin: 0;
-  border: 1px solid #4a4f5f;
-  border-radius: 5px;
-  padding: 4px 10px;
-  font-size: 11px;
-  font-weight: 700;
-  background: #2a2f3a;
-  color: #e6e9ef;
+  background: #2e7d32;
+  color: white;
+  border-radius: 6px;
+  padding: 10px;
+  border: none;
   cursor: pointer;
+  font-weight: 700;
+  transition: background 0.2s ease;
 }
 
-.openrouter-visibility-btn:hover {
-  background: #343b4a;
+.burstbonk-toggle-btn:hover {
+  background: #388e3c;
 }
 
-.light-mode .openrouter-field {
-  background: #f5f5f5 !important;
-  color: #000000 !important;
-  border: 1px solid #c8c8c8;
+.burstbonk-toggle-btn.is-active-btn {
+  background: #c62828;
 }
 
-.light-mode .openrouter-panel {
-  background: #f2f4f7;
-  color: #333;
-  border: 1px solid #d5d9df;
+.burstbonk-toggle-btn.is-active-btn:hover {
+  background: #d32f2f;
 }
 
-.light-mode .openrouter-panel strong {
-  color: #101828;
-}
-
-.light-mode .openrouter-visibility-btn {
-  border-color: #c8ccd5;
-  background: #e8ebf2;
-  color: #1a1f2b;
-}
-
-.light-mode .openrouter-visibility-btn:hover {
-  background: #dde3ef;
-}
-
-.openrouter-save-btn {
+.burstbonk-save-btn {
   width: 100%;
   background: #af4337;
   color: white;
@@ -1040,9 +1049,37 @@ select::-webkit-scrollbar-thumb:hover {
   font-weight: 700;
 }
 
-.light-mode .openrouter-save-btn {
+.light-mode .burstbonk-key-input {
+  background: #f5f5f5 !important;
+  color: #000000 !important;
+  border: 1px solid #c8c8c8;
+}
+
+.light-mode .burstbonk-key-input:focus {
+  border-color: #ff6f61;
+}
+
+.light-mode .burstbonk-panel {
+  background: #f2f4f7;
+  color: #333;
+  border: 1px solid #d5d9df;
+}
+
+.light-mode .burstbonk-panel strong {
+  color: #101828;
+}
+
+.light-mode .burstbonk-status-text {
+  color: #333;
+}
+
+.light-mode .burstbonk-save-btn {
   background: #1f5fb0;
   color: white;
+}
+
+.light-mode .burstbonk-toggle-btn {
+  background: #2e7d32;
 }
 
 .close {
