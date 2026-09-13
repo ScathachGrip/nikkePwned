@@ -64,7 +64,7 @@
         <div class="bb-header-left">
           <div class="bb-title-row">
             <span class="bb-icon">⚡</span>
-            <h3 class="bb-title">BurstBonk Engine</h3>
+            <h3 class="bb-title">BurstBonk</h3>
           </div>
           <span class="bb-tagline"
             >Native {intervalMs}ms high-frequency hardware keystrokes</span
@@ -105,7 +105,8 @@
               <span class="bb-tooltip-q">?</span>
               <div class="bb-tooltip-popup">
                 <div class="bb-tooltip-popup-desc">
-                  Hello word
+                  Make sure these keys match with corresponding Skill Shortcuts
+                  on your NIKKE client Control Settings.
                 </div>
               </div>
             </div>
@@ -207,7 +208,7 @@
               <div class="bb-humanized-title-line">
                 <span class="bb-humanized-title">Humanized</span>
                 <span class="bb-humanized-badge" class:active={humanized}>
-                  {humanized ? "Active: +0.3~0.9ms delay" : "Anti-Detection"}
+                  {humanized ? "Active: +5~15ms delay" : "Anti-Detection"}
                 </span>
 
                 <!-- Hover Tooltip Explainer -->
@@ -224,7 +225,7 @@
                     </div>
                     <div class="bb-tooltip-popup-desc">
                       Injects hard <strong
-                        >random micro-delays (0.3xxx ms to 0.9xxx ms)</strong
+                        >random micro-delays (5.xxx ms to 15.xxx ms)</strong
                       > on every spam cycle.
                     </div>
                     <div class="bb-tooltip-popup-sub">
@@ -235,7 +236,7 @@
                     </div>
                     <div class="bb-tooltip-popup-footer">
                       Target output: <strong
-                        >{intervalMs}ms + (0.3~0.9ms)</strong
+                        >{intervalMs}ms + (5~15ms)</strong
                       >
                     </div>
                   </div>

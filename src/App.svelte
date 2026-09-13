@@ -470,6 +470,11 @@
         interval_ms: Number(burstbonkIntervalMs) || 3,
         humanized: burstbonkHumanized,
       });
+      console.log("[BurstBonk] Config saved:", {
+        keys: validKeys,
+        interval_ms: Number(burstbonkIntervalMs) || 3,
+        humanized: burstbonkHumanized,
+      });
       showAlert("BurstBonk config saved!", "success");
     } catch (e) {
       showAlert(String(e), "fail");
@@ -481,6 +486,7 @@
       if (isBurstBonkActive) {
         await invoke("stop_burstbonk");
         isBurstBonkActive = false;
+        console.log("[BurstBonk] Stopped");
         showAlert("BurstBonk stopped", "success");
         invoke("update_discord_rpc", {
           details: "Configuring BurstBonk",
@@ -491,6 +497,11 @@
       } else {
         await invoke("start_burstbonk");
         isBurstBonkActive = true;
+        console.log("[BurstBonk] Started with:", {
+          keys: burstbonkKeys,
+          interval_ms: burstbonkIntervalMs,
+          humanized: burstbonkHumanized,
+        });
         showAlert("BurstBonk started!", "success");
         invoke("update_discord_rpc", {
           details: "BurstBonk Engine (Active)",

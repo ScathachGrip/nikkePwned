@@ -29,7 +29,7 @@ const MAX_KEYS: usize = 5;
 /// Interval between each key send in milliseconds (atomic, configurable, default 3ms).
 static SPAM_INTERVAL_MS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(3);
 
-/// Whether humanized random delay jitter (0.3xxx ms - 0.9xxx ms) is enabled.
+/// Whether humanized random delay jitter (5.xxx ms - 15.xxx ms) is enabled.
 static HUMANIZED: AtomicBool = AtomicBool::new(false);
 
 /// Magic identifier placed in dwExtraInfo to identify our own synthetic keystrokes.
@@ -160,7 +160,7 @@ unsafe extern "system" fn ll_keyboard_proc(
 
 // ──────────────────────────── Spammer Loop ──────────────────────────────────
 
-/// Returns a random delay between 300 and 999 microseconds (0.3xxx ms to 0.9xxx ms).
+/// Returns a random delay between 5,000 and 15,999 microseconds (5.xxx ms to 15.xxx ms).
 fn get_humanized_jitter_micros() -> u64 {
     use std::cell::Cell;
     thread_local! {
@@ -179,8 +179,8 @@ fn get_humanized_jitter_micros() -> u64 {
         x ^= x >> 7;
         x ^= x << 17;
         rng.set(x);
-        // 300 to 999 microseconds (0.3xxx ms - 0.9xxx ms)
-        300 + (x % 700)
+        // 5,000 to 15,999 microseconds (5.xxx ms - 15.xxx ms)
+        5_000 + (x % 11_000)
     })
 }
 
@@ -188,17 +188,48 @@ fn get_humanized_jitter_micros() -> u64 {
 /// (with optional humanized jitter) as long as user physically holds key down.
 #[cfg(windows)]
 fn spammer_loop(idx: usize, vk: u16, scan: u16) {
+    let is_human = HUMANIZED.load(Ordering::Relaxed);
+    println!(
+        "\n[BurstBonk] >>> Key DOWN: 0x{:X} ('{}') | Humanized: {}",
+        vk,
+        (vk as u8 as char),
+        if is_human { "ON (5~15ms jitter)" } else { "OFF (flat)" }
+    );
+
+    let mut count = 0u64;
     while KEY_ACTIVE[idx].load(Ordering::SeqCst) && BURSTBONK_ACTIVE.load(Ordering::SeqCst) {
         send_scan_key(scan, vk);
+        count += 1;
         let base_interval = SPAM_INTERVAL_MS.load(Ordering::Relaxed).max(1);
         let delay = if HUMANIZED.load(Ordering::Relaxed) {
             let jitter_micros = get_humanized_jitter_micros();
-            Duration::from_micros(base_interval * 1000 + jitter_micros)
+            let total_micros = base_interval * 1000 + jitter_micros;
+            println!(
+                "[BurstBonk] [Iter #{:<3}] Key: 0x{:X} | Base: {}ms + Jitter: {:.3}ms -> Delay: {:.3}ms",
+                count,
+                vk,
+                base_interval,
+                jitter_micros as f64 / 1000.0,
+                total_micros as f64 / 1000.0
+            );
+            Duration::from_micros(total_micros)
         } else {
+            println!(
+                "[BurstBonk] [Iter #{:<3}] Key: 0x{:X} | Base: {}ms (Flat, Humanized: OFF)",
+                count,
+                vk,
+                base_interval
+            );
             Duration::from_millis(base_interval)
         };
         thread::sleep(delay);
     }
+    println!(
+        "[BurstBonk] <<< Key UP: 0x{:X} ('{}') | Total inputs sent: {}\n",
+        vk,
+        (vk as u8 as char),
+        count
+    );
     SPAM_RUNNING[idx].store(false, Ordering::SeqCst);
 }
 
@@ -270,7 +301,7 @@ impl Drop for BurstBonkHandle {
 ///
 /// `keys` is a list of single-character key names, e.g. `["A", "S", "D", "F", "G"]`.
 /// `interval_ms` is the spam rate in milliseconds (default: 3ms).
-/// `humanized` enables random 0.3xxx ms - 0.9xxx ms delay jitter per keypress.
+/// `humanized` enables random 5.xxx ms - 15.xxx ms delay jitter per keypress.
 /// Returns a handle that will stop the system when dropped, or an error if the
 /// system is already running or keys are invalid.
 #[cfg(windows)]
@@ -286,6 +317,28 @@ pub fn start(keys: &[String], interval_ms: u64, humanized: bool) -> Result<Burst
     // Set the spam interval and humanized jitter mode.
     SPAM_INTERVAL_MS.store(interval_ms.max(1), Ordering::SeqCst);
     HUMANIZED.store(humanized, Ordering::SeqCst);
+
+    println!(
+        "\n[BurstBonk] ==================================================="
+    );
+    println!(
+        "[BurstBonk] System STARTED"
+    );
+    println!(
+        "[BurstBonk]   Keys: {:?}",
+        keys
+    );
+    println!(
+        "[BurstBonk]   Base Interval: {}ms",
+        interval_ms
+    );
+    println!(
+        "[BurstBonk]   Humanized: {} (5.xxx ~ 15.xxx ms jitter)",
+        humanized
+    );
+    println!(
+        "[BurstBonk] ===================================================\n"
+    );
 
     // Resolve key names → VK codes.
     let mut vks = [0u16; MAX_KEYS];
@@ -354,6 +407,8 @@ fn stop_internal() {
 
     BURSTBONK_ACTIVE.store(false, Ordering::SeqCst);
 
+    println!("\n[BurstBonk] System STOPPED\n");
+
     // Signal all spammer threads to exit.
     for i in 0..MAX_KEYS {
         KEY_ACTIVE[i].store(false, Ordering::SeqCst);
@@ -373,6 +428,19 @@ fn stop_internal() {
         timeEndPeriod(1);
         let _ = SetPriorityClass(GetCurrentProcess(), NORMAL_PRIORITY_CLASS);
     }
+}
+
+/// Update runtime settings for interval and humanized mode without restarting the hook.
+pub fn update_runtime_settings(interval_ms: u64, humanized: bool) {
+    let old_interval = SPAM_INTERVAL_MS.swap(interval_ms.max(1), Ordering::SeqCst);
+    let old_humanized = HUMANIZED.swap(humanized, Ordering::SeqCst);
+    println!(
+        "[BurstBonk] Live Config Update: Interval: {}ms -> {}ms | Humanized: {} -> {}",
+        old_interval,
+        interval_ms,
+        old_humanized,
+        humanized
+    );
 }
 
 /// Public stop function callable from Tauri commands.

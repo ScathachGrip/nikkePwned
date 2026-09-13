@@ -36,7 +36,10 @@ fn get_launcher_path(state: State<'_, AppState>) -> String {
 }
 
 #[tauri::command]
-async fn select_launcher_path(app: AppHandle, state: State<'_, AppState>) -> Result<String, String> {
+async fn select_launcher_path(
+    app: AppHandle,
+    state: State<'_, AppState>,
+) -> Result<String, String> {
     let (tx, rx) = tokio::sync::oneshot::channel();
 
     app.dialog()
@@ -129,10 +132,7 @@ async fn execute_login(
 
     tokio::task::spawn_blocking(move || {
         let (acc, path) = {
-            let guard = storage
-                .data
-                .lock()
-                .map_err(|_| "Failed to lock storage")?;
+            let guard = storage.data.lock().map_err(|_| "Failed to lock storage")?;
             let acc = guard
                 .accounts
                 .get(account_index)
@@ -249,6 +249,8 @@ fn save_burstbonk_config(
         };
     }
     state.storage.save();
+    #[cfg(windows)]
+    burstbonk::update_runtime_settings(interval, is_human);
     Ok(())
 }
 
@@ -256,7 +258,11 @@ fn save_burstbonk_config(
 fn start_burstbonk(state: State<'_, AppState>) -> Result<(), String> {
     let (keys, interval, humanized) = {
         let guard = state.storage.data.lock().map_err(|_| "Lock failed")?;
-        (guard.burstbonk.keys.clone(), guard.burstbonk.interval_ms, guard.burstbonk.humanized)
+        (
+            guard.burstbonk.keys.clone(),
+            guard.burstbonk.interval_ms,
+            guard.burstbonk.humanized,
+        )
     };
 
     #[cfg(windows)]
@@ -345,10 +351,18 @@ fn confirm_dialog(title: String, message: String) -> bool {
     {
         use std::ffi::OsStr;
         use std::os::windows::ffi::OsStrExt;
-        use windows::Win32::UI::WindowsAndMessaging::{MessageBoxW, MB_ICONWARNING, MB_OKCANCEL, IDOK};
+        use windows::Win32::UI::WindowsAndMessaging::{
+            IDOK, MB_ICONWARNING, MB_OKCANCEL, MessageBoxW,
+        };
 
-        let title_w: Vec<u16> = OsStr::new(&title).encode_wide().chain(std::iter::once(0)).collect();
-        let msg_w: Vec<u16> = OsStr::new(&message).encode_wide().chain(std::iter::once(0)).collect();
+        let title_w: Vec<u16> = OsStr::new(&title)
+            .encode_wide()
+            .chain(std::iter::once(0))
+            .collect();
+        let msg_w: Vec<u16> = OsStr::new(&message)
+            .encode_wide()
+            .chain(std::iter::once(0))
+            .collect();
 
         unsafe {
             let res = MessageBoxW(
