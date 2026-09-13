@@ -1,4 +1,4 @@
-use discord_rich_presence::{activity, DiscordIpc, DiscordIpcClient};
+use discord_rich_presence::{DiscordIpc, DiscordIpcClient, activity};
 use std::sync::Mutex;
 
 const DISCORD_APP_ID: &str = "632699411448725564";
@@ -10,13 +10,25 @@ pub struct DiscordRpcState {
 
 fn resolve_small_image_url(key: &str) -> &str {
     match key {
-        "rpc_idle" => "https://raw.githubusercontent.com/ScathachGrip/nikkePwned/refs/heads/master/resources/static/rpc_idle.png",
-        "rpc_llm" => "https://raw.githubusercontent.com/ScathachGrip/nikkePwned/refs/heads/master/resources/static/rpc_llm.png",
-        "rpc_testing" => "https://raw.githubusercontent.com/ScathachGrip/nikkePwned/refs/heads/master/resources/static/rpc_testing.png",
-        "rpc_maintain" => "https://raw.githubusercontent.com/ScathachGrip/nikkePwned/refs/heads/master/resources/static/rpc_maintain.png",
-        "rpc_dd" => "https://raw.githubusercontent.com/ScathachGrip/nikkePwned/refs/heads/master/resources/static/rpc_dd.png",
+        "rpc_idle" => {
+            "https://raw.githubusercontent.com/ScathachGrip/nikkePwned/refs/heads/master/resources/static/rpc_idle.png"
+        }
+        "rpc_llm" => {
+            "https://raw.githubusercontent.com/ScathachGrip/nikkePwned/refs/heads/master/resources/static/rpc_llm.png"
+        }
+        "rpc_testing" => {
+            "https://raw.githubusercontent.com/ScathachGrip/nikkePwned/refs/heads/master/resources/static/rpc_testing.png"
+        }
+        "rpc_maintain" => {
+            "https://raw.githubusercontent.com/ScathachGrip/nikkePwned/refs/heads/master/resources/static/rpc_maintain.png"
+        }
+        "rpc_dd" => {
+            "https://raw.githubusercontent.com/ScathachGrip/nikkePwned/refs/heads/master/resources/static/rpc_dd.webp"
+        }
         url if url.starts_with("http") => url,
-        _ => "https://raw.githubusercontent.com/ScathachGrip/nikkePwned/refs/heads/master/resources/static/rpc_idle.png",
+        _ => {
+            "https://raw.githubusercontent.com/ScathachGrip/nikkePwned/refs/heads/master/resources/static/rpc_idle.png"
+        }
     }
 }
 
@@ -33,17 +45,15 @@ impl DiscordRpcState {
         if let Ok(mut guard) = self.client.lock() {
             if guard.is_none() {
                 match DiscordIpcClient::new(DISCORD_APP_ID) {
-                    Ok(mut client) => {
-                        match client.connect() {
-                            Ok(_) => {
-                                println!("🟢 Connected to Discord IPC");
-                                *guard = Some(client);
-                            }
-                            Err(e) => {
-                                eprintln!("⚠️ Discord IPC connect error: {:?}", e);
-                            }
+                    Ok(mut client) => match client.connect() {
+                        Ok(_) => {
+                            println!("🟢 Connected to Discord IPC");
+                            *guard = Some(client);
                         }
-                    }
+                        Err(e) => {
+                            eprintln!("⚠️ Discord IPC connect error: {:?}", e);
+                        }
+                    },
                     Err(e) => {
                         eprintln!("⚠️ Discord IPC creation error: {:?}", e);
                     }
