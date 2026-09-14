@@ -1,4 +1,4 @@
-name: Deploy Installer to GitHub Pages
+name: Native Installer
 
 on:
   push:
@@ -186,29 +186,15 @@ jobs:
           # Pre-flight Checks
           # ---------------------------------------------------------------------------
           Write-Host @"
-                                                        
-                    +     +   ++++++++++++++            
-                   +++ ++ +++++++++++++++               
-                  ++++  ++++++++++++++++  +++++++       
-                 +++  +++++++++++++++++ +++++++++++     
-             ++  ++ ++++++++++++++++++ +++++++          
-             ++++   ++++++++++++++++++++++++ +++++++    
-             ++++    ++++++++++++++++++++ ++++++++++++  
-             ++++                    ++ +++++++++++++++ 
-           +   +            +++     ++++++++       +    
-           +++++            +++  +++ ++++ ++++++++++++  
-           ++++++        +++++++++++++     +++++++++++  
-            +++++            ++++          +++    +++++ 
-                            ++++           ++++++++  ++ 
-           ++++++++         ++++++         +++++++++    
-             ++++++++          ++++++   ++++  ++++++    
-               +++++  +       +++++++  +++++++  ++++    
-                    +++++++       +++++ ++++++++ ++     
-                ++++++++++ ++++++ ++++++ ++++++         
-                    +++++ +++++++ +++++++ ++++          
-                         +++++++  ++++++  ++            
-                                 ++++                   
-                                                        
+          ====================================================================
+                    _ __    __        ____                         ___
+             ____  (_) /__ / /_____  / __ \_      ______  ___  ___/  /
+            / __ \/ / //_// //_/ _ \/ /_/ / | /| / / __ \/ _ \/ __  / 
+           / / / / / ,<  / ,< /  __/ ____/| |/ |/ / / / /  __/ /_/ /  
+          /_/ /_/_/_/|_|/_/|_|\___/_/     |__/|__/_/ /_/\___/\__,_/   
+
+                               Password Manager for NIKKE
+          ====================================================================
           "@ -ForegroundColor Cyan
 
           # Check Architecture
@@ -283,12 +269,12 @@ jobs:
           Write-Host "Creating shortcuts..." -ForegroundColor Green
 
           # Start Menu
-          Create-Shortcut -Path $StartMenuShortcut -TargetPath $TargetExe -Description "The Password Manager for NIKKE" -IconLocation $TargetExe
+          Create-Shortcut -Path $StartMenuShortcut -TargetPath $TargetExe -Description "Password Manager for NIKKE" -IconLocation $TargetExe
           Write-Host "  [+] Start Menu: $StartMenuShortcut" -ForegroundColor Gray
 
           # Desktop (optional)
           if (-not $NoDesktopShortcut) {
-              Create-Shortcut -Path $DesktopShortcut -TargetPath $TargetExe -Description "The Password Manager for NIKKE" -IconLocation $TargetExe
+              Create-Shortcut -Path $DesktopShortcut -TargetPath $TargetExe -Description "Password Manager for NIKKE" -IconLocation $TargetExe
               Write-Host "  [+] Desktop: $DesktopShortcut" -ForegroundColor Gray
           }
 
