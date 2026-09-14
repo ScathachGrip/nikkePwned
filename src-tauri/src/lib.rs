@@ -2,6 +2,7 @@
 #![allow(clippy::all)]
 
 mod automation;
+mod burstbonk;
 mod rpc;
 mod storage;
 mod system;
@@ -9,14 +10,15 @@ mod vision;
 
 use rpc::DiscordRpcState;
 use serde::Serialize;
-use std::sync::Arc;
-use storage::{Account, HistoryLog, OpenRouterConfig, StorageManager};
+use std::sync::{Arc, Mutex};
+use storage::{Account, BurstBonkConfig, HistoryLog, StorageManager};
 use tauri::{AppHandle, Manager, State};
 use tauri_plugin_dialog::DialogExt;
 
 pub struct AppState {
     pub storage: Arc<StorageManager>,
     pub rpc: Arc<DiscordRpcState>,
+    pub burstbonk_handle: Mutex<Option<burstbonk::BurstBonkHandle>>,
 }
 
 #[derive(Serialize)]
@@ -34,7 +36,10 @@ fn get_launcher_path(state: State<'_, AppState>) -> String {
 }
 
 #[tauri::command]
-async fn select_launcher_path(app: AppHandle, state: State<'_, AppState>) -> Result<String, String> {
+async fn select_launcher_path(
+    app: AppHandle,
+    state: State<'_, AppState>,
+) -> Result<String, String> {
     let (tx, rx) = tokio::sync::oneshot::channel();
 
     app.dialog()
@@ -127,10 +132,7 @@ async fn execute_login(
 
     tokio::task::spawn_blocking(move || {
         let (acc, path) = {
-            let guard = storage
-                .data
-                .lock()
-                .map_err(|_| "Failed to lock storage")?;
+            let guard = storage.data.lock().map_err(|_| "Failed to lock storage")?;
             let acc = guard
                 .accounts
                 .get(account_index)
@@ -214,24 +216,81 @@ fn add_history_log(
 }
 
 #[tauri::command]
-fn get_openrouter_config(state: State<'_, AppState>) -> OpenRouterConfig {
+fn get_burstbonk_config(state: State<'_, AppState>) -> BurstBonkConfig {
     if let Ok(guard) = state.storage.data.lock() {
-        return guard.openrouter.clone();
+        return guard.burstbonk.clone();
     }
-    OpenRouterConfig::default()
+    BurstBonkConfig::default()
 }
 
 #[tauri::command]
-fn save_openrouter_config(
+fn save_burstbonk_config(
     state: State<'_, AppState>,
-    api_key: String,
-    model: String,
+    keys: Vec<String>,
+    interval_ms: Option<u64>,
+    humanized: Option<bool>,
 ) -> Result<(), String> {
+    if keys.is_empty() || keys.len() > 5 {
+        return Err("Provide 1–5 keys".into());
+    }
+    // Validate all keys before saving.
+    for k in &keys {
+        if burstbonk::key_name_to_vk(k).is_none() {
+            return Err(format!("Invalid key: '{}' — use A–Z or 0–9", k));
+        }
+    }
+    let interval = interval_ms.unwrap_or(3).max(1);
+    let is_human = humanized.unwrap_or(true);
     if let Ok(mut guard) = state.storage.data.lock() {
-        guard.openrouter = OpenRouterConfig { api_key, model };
+        guard.burstbonk = BurstBonkConfig {
+            keys,
+            interval_ms: interval,
+            humanized: is_human,
+        };
     }
     state.storage.save();
+    #[cfg(windows)]
+    burstbonk::update_runtime_settings(interval, is_human);
     Ok(())
+}
+
+#[tauri::command]
+fn start_burstbonk(state: State<'_, AppState>) -> Result<(), String> {
+    let (keys, interval, humanized) = {
+        let guard = state.storage.data.lock().map_err(|_| "Lock failed")?;
+        (
+            guard.burstbonk.keys.clone(),
+            guard.burstbonk.interval_ms,
+            guard.burstbonk.humanized,
+        )
+    };
+
+    #[cfg(windows)]
+    {
+        let handle = burstbonk::start(&keys, interval, humanized)?;
+        if let Ok(mut bb) = state.burstbonk_handle.lock() {
+            *bb = Some(handle);
+        }
+    }
+    #[cfg(not(windows))]
+    {
+        let _ = (keys, interval, humanized);
+        return Err("BurstBonk is only supported on Windows".into());
+    }
+    Ok(())
+}
+
+#[tauri::command]
+fn stop_burstbonk(state: State<'_, AppState>) {
+    burstbonk::stop();
+    if let Ok(mut bb) = state.burstbonk_handle.lock() {
+        *bb = None;
+    }
+}
+
+#[tauri::command]
+fn get_burstbonk_status() -> bool {
+    burstbonk::is_active()
 }
 
 #[tauri::command]
@@ -292,10 +351,18 @@ fn confirm_dialog(title: String, message: String) -> bool {
     {
         use std::ffi::OsStr;
         use std::os::windows::ffi::OsStrExt;
-        use windows::Win32::UI::WindowsAndMessaging::{MessageBoxW, MB_ICONWARNING, MB_OKCANCEL, IDOK};
+        use windows::Win32::UI::WindowsAndMessaging::{
+            IDOK, MB_ICONWARNING, MB_OKCANCEL, MessageBoxW,
+        };
 
-        let title_w: Vec<u16> = OsStr::new(&title).encode_wide().chain(std::iter::once(0)).collect();
-        let msg_w: Vec<u16> = OsStr::new(&message).encode_wide().chain(std::iter::once(0)).collect();
+        let title_w: Vec<u16> = OsStr::new(&title)
+            .encode_wide()
+            .chain(std::iter::once(0))
+            .collect();
+        let msg_w: Vec<u16> = OsStr::new(&message)
+            .encode_wide()
+            .chain(std::iter::once(0))
+            .collect();
 
         unsafe {
             let res = MessageBoxW(
@@ -322,7 +389,11 @@ pub fn run() {
         .setup(|app| {
             let storage = Arc::new(StorageManager::new(app.handle()));
             let rpc = Arc::new(DiscordRpcState::new());
-            app.manage(AppState { storage, rpc });
+            app.manage(AppState {
+                storage,
+                rpc,
+                burstbonk_handle: Mutex::new(None),
+            });
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -337,8 +408,11 @@ pub fn run() {
             get_history_logs,
             add_history_log,
             purge_data,
-            get_openrouter_config,
-            save_openrouter_config,
+            get_burstbonk_config,
+            save_burstbonk_config,
+            start_burstbonk,
+            stop_burstbonk,
+            get_burstbonk_status,
             close_window,
             minimize_window,
             toggle_maximize_window,

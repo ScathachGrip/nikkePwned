@@ -1,5 +1,5 @@
 <div align="center">
-<a href="#"><img width="600" src="resources/icons/docs_logo.png" alt="nikkePwned"></a>
+<a href="#"><img width="600" src="resources/icons/docs_logo.webp" alt="nikkePwned"></a>
 
 <p align="center">
 	<a href="https://github.com/ScathachGrip/nikkePwned/actions/workflows/build-release.yml"><img src="https://github.com/ScathachGrip/nikkePwned/actions/workflows/build-release.yml/badge.svg"></a>
@@ -27,25 +27,22 @@ The motivation is simplified login process, allowing users interacts each accoun
       - [Interactive input](#interactive-input)
       - [Bulk JSON input](#bulk-json-input)
       - [Management](#management)
+    - [Burst bonk](#burst-bonk)
+      - [burst_bonk_humanized](#burst_bonk_humanized)
   - [Image reasoning](#image-reasoning)
-    - [PreCapture](#precapture)
-    - [PausedState & AssignedResults](#pausedstate--assignedresults)
-    - [ActualResult & Less hallucination](#actualresult--less-hallucination)
-    - [Setup](#setup)
-    - [Vision models](#vision-models)
   - [Running tests](#running-tests)
     - [Manual build](#manual-build)
   - [Application safety report](#application-safety-report)
   - [Pronunciation](#pronunciation)
   - [Legal](#legal)
 
-# The Problems
+## The Problems
 
 Managing multiple accounts can be frustrating and inefficient, especially when you need to **log in manually one by one**. For users who frequently switch between multiple accounts, constantly entering login information can be a repetitive and tiresome task. Credentials entry can also lead to common issues such as incorrect passwords, accidental input errors, forgotten credentials, or logging into the wrong account.
 
-# The Solutions
+## The Solutions
 
-![Cute cat](./resources/project/flow.png)  
+![flow](./resources/project/flow.webp)  
 This extension was designed to simplified login process, **automate the login process**, allowing users to log in to their accounts **quickly and effortlessly**. Instead copying pasting or manually typing credentials every time, this tool handles the process for you, **saving time and reducing errors**. By streamlining account management, this tool makes switching between accounts **seamless and efficient**, eliminating the hassle of repetitive logins. Whether you're managing a handful of accounts or dozens, this tool ensures a smoother, faster, and more convenient login experience.
 
 ## Prerequisites
@@ -64,11 +61,30 @@ This extension was designed to simplified login process, **automate the login pr
     - Executable `nikkepwned.exe` has embedded `requireAdministrator` UAC manifest and `comctl32.dll` v6 dependency.
     - Launching `nikke_launcher.exe` inherits parent Administrator privileges natively without triggering secondary UAC elevation popups.
 
-# Installation
+## Installation
 
-- Get the latest build version from the [release page You only need the executable file.](https://github.com/ScathachGrip/nikkePwned/releases)
-- Unzip it, or extract it "as folder" somewhere
-- Open `nikkepwned.exe` or `nikkepwned-win_x64.exe`
+### Manual Download (Portable)
+
+1. Download the latest build from the [Releases page](https://github.com/ScathachGrip/nikkePwned/releases).
+2. Extract the archive somewhere on your machine.
+3. Run `nikkepwned.exe` (or `nikkepwned-win_x64.exe`).
+
+---
+
+### Windows (PowerShell) - Automated Installer
+
+Alternatively, you can install or update nikkePwned automatically via PowerShell:
+
+```powershell
+irm https://raw.githubusercontent.com/ScathachGrip/nikkePwned/master/install.ps1 | iex
+```
+
+This will automatically:
+
+- Download the latest `nikkepwned.exe` release.
+- Place it in `%LOCALAPPDATA%\Programs\nikkePwned`.
+- Add shortcuts to your **Start Menu** and **Desktop**.
+- Register an entry in Windows Settings (**Installed apps**) for clean one-click uninstall.
 
 # How to interacts
 
@@ -86,7 +102,7 @@ This extension was designed to simplified login process, **automate the login pr
 
 Started from `4.0.1-indev`: this tools has automated created websocket connection to [Discord Rich Presence](https://docs.discord.com/developers/platform/rich-presence). If you willing to disable it check your task manager and kill it manual.
 
-<img width="950" src="resources/icons/rpc_dd.png" alt="nikkepwned"></a>
+<img width="950" src="resources/icons/rpc_dd.webp" alt="nikkepwned"></a>
 
 ---
 
@@ -136,11 +152,38 @@ If there's an errors watch your step:
 | `Login Delay`     | Sets a delay before login attempts to prevent excessive requests. Default: `5` seconds (Range: `1–8` seconds). |
 | `Activity Logs`   | Displays operational logs, including login attempts, path updates, and delay configurations.                   |
 | `Data Purge`      | Permanently deletes all stored data within the tool.                                                           |
-| `Rapidfire test`  | Performs rapid or double-click mouse input tests (macro validation).                                           |
+| `Rapidfire test`  | Performs rapidfire or double-click mouse input tests.                                                          |
+| `Burst bonk`      | Performs burst bonk, the Living Off the Land feature.                                                          |
 
-# Image Reasoning
+## Burst Bonk
 
-Started from `4.0.1-indev`: this tool has image reasoning and consuming some LLMs.
+> [!IMPORTANT]  
+> Requires game to use `Simple` setting for its Skill Cutscenes to working as expected.
+
+Never miss a late ultimate burst, keep firing consistently at `09.95s – 09.98s` in every burst cycle runs. A lightweight and customizable keyboard burst utility that automatically repeats configured key inputs while they are held.
+
+Each key can be configured independently with a defined repeat interval, providing fast and consistent repeated input without manually pressing the key multiple times.
+
+### burst_bonk_humanized
+
+Static fixed-interval (e.g. a flat `3.000ms`) generate zero-variance timing distributions. In modern game telemetry, such rigid rhythms produce distinct robotic flatline signatures that can be flagged by anti-macro heuristics.
+
+To prevent this, BurstBonk includes a native humanized workflows:
+
+- **Random Micro-Jitter (`+5.xxx ms – 15.xxx ms`)**:
+  On every single repeat cycle, the engine calculates a pseudo-random jitter between `5,000` and `15,999` microseconds before dispatching the key event:
+  $$\text{Effective Delay} = \text{Base Interval} + \text{Random Jitter}(5\text{ms} \dots 15\text{ms})$$
+- **Natural Frame Interleaving**:
+  Because game clients operate at discrete frame steps (e.g. 60 FPS $\approx$ 16.6ms / 120 FPS $\approx$ 8.3ms), varying delays between 8ms and 18ms ensure inputs naturally land on irregular frame boundaries.
+- **Independent Multi-Key Concurrency**:
+  Each active key runs on an isolated thread with its own independent random seed, preventing synchronized timing across simultaneous keypresses.
+
+## Image Reasoning
+
+> [!IMPORTANT]
+> **Deprecated**
+>
+> This feature has been deprecated as of `Season 44 (September 3, 2026)`, as its functionality has since been natively implemented by NIKKE itself. It has therefore been removed from this tool as it is no longer necessary.
 
 You probably don't want calculate it manually, and there's always inconsistency between mock battles and real battles (damage values differ — blame NIKKE though), especially in UnionRaid Hard mode which is tons of HP and where exact damage dealt values aren't displayed. NIKKEPwned handle it and check the total damage using image reasoning. It's quite simple: when the battle is about to end at 00:00 or 00:01, press `ESC` to pause and then assign `F8` before registering real damage to ensure accurate results.
 
@@ -148,19 +191,22 @@ You probably don't want calculate it manually, and there's always inconsistency 
 
 Battlefield screen at `00:01` or `00:00` before registering actual damage.
 
-![PreCapture](./resources/project/Screenshot_before_1s.png)
+![PreCapture](./resources/project/Screenshot_before_1s.webp)
+
+<details>
+<summary>Deprecated</summary>
 
 ### PausedState & AssignedResults
 
 Press `ESC` to pause, then assign `F8` to perform image-reasoning and extract damage data. When assigned, You can make notification keep visible by pressing `Win + N`.
 
-![PausedState & AssignedResults ](./resources/project/Screenshot_assigned.png)
+![PausedState & AssignedResults ](./resources/project/Screenshot_assigned.webp)
 
 ### ActualResult & Less Hallucination
 
 `nvidia/nemotron-nano-12b-v2-vl:free` is recommended based on internal tests. It demonstrates faster response times and more consistent accuracy. If everything working as expected you can continue to nikke and registering actual damage otherwise keep retry or regroup.
 
-![ActualResult & Less Hallucination](./resources/project/Screenshot_actual_result.png)
+![ActualResult & Less Hallucination](./resources/project/Screenshot_actual_result.webp)
 
 ---
 
@@ -207,6 +253,8 @@ const OPENROUTER_MODEL_POOL = [
 ```
 
 While multiple models are supported `nvidia/nemotron-nano-12b-v2-vl:free` is recommended based on internal testing. It demonstrates faster response times and more consistent accuracy, with reduced hallucination in image-based reasoning tasks.
+
+</details>
 
 ## Running tests
 

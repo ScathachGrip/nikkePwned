@@ -1,6 +1,6 @@
 [package]
 name = "nikkepwned"
-version = "5.0.12"
+version = "5.0.13"
 description = "Password Manager for NIKKE"
 authors = ["sinkaroid"]
 edition = "2024"
@@ -34,6 +34,7 @@ windows = { version = "0.58", features = [
     "Win32_System_Diagnostics_ToolHelp",
     "Win32_System_Com",
     "Win32_System_Wmi",
+    "Win32_System_LibraryLoader",
 ] }
 
 [lib]
