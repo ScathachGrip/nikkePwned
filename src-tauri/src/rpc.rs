@@ -76,7 +76,7 @@ impl DiscordRpcState {
                 let small_url = small_image_key.map(resolve_small_image_url);
                 let mut assets = activity::Assets::new()
                     .large_image(LARGE_IMAGE_URL)
-                    .large_text("v5.0.12");
+                    .large_text("v5.0.13");
 
                 if let Some(url) = small_url {
                     assets = assets.small_image(url);
