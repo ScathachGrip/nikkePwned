@@ -2,7 +2,7 @@
 <a href="#"><img width="600" src="resources/icons/docs_logo.webp" alt="nikkePwned"></a>
 
 <p align="center">
-	<a href="https://github.com/ScathachGrip/nikkePwned/actions/workflows/build-release.yml"><img src="https://github.com/ScathachGrip/nikkePwned/actions/workflows/build-release.yml/badge.svg"></a>
+	<a href="https://github.com/ScathachGrip/nikkePwned/actions/workflows/build-release.yml"><img src="https://github.com/ScathachGrip/nikkePwned/actions/workflows/build-release.yml/badge.svg"></a> <a href="https://github.com/ScathachGrip/nikkePwned/actions/workflows/gh-pages.yml"><img src="https://github.com/ScathachGrip/nikkePwned/actions/workflows/gh-pages.yml/badge.svg"></a>
 </p>
 
 The Password Manager for NIKKE, it uses localStorage and simulating `nikke_launcher`.
@@ -30,8 +30,8 @@ The motivation is simplified login process, allowing users interacts each accoun
     - [Burst bonk](#burst-bonk)
       - [burst_bonk_humanized](#burst_bonk_humanized)
   - [Image reasoning](#image-reasoning)
-  - [Running tests](#running-tests)
-    - [Manual build](#manual-build)
+  - [Development](#development)
+    - [Running tests](#running-tests)
   - [Application safety report](#application-safety-report)
   - [Pronunciation](#pronunciation)
   - [Legal](#legal)
@@ -63,30 +63,19 @@ This extension was designed to simplified login process, **automate the login pr
 
 ## Installation
 
-### Manual Download (Portable)
+### 🚀 Installer (PowerShell)
+
+```powershell
+irm https://tia.scathach.id | iex
+```
+
+### 🚀 From Releases
 
 1. Download the latest build from the [Releases page](https://github.com/ScathachGrip/nikkePwned/releases).
 2. Extract the archive somewhere on your machine.
 3. Run `nikkepwned.exe` (or `nikkepwned-win_x64.exe`).
 
----
-
-### Windows (PowerShell) - Automated Installer
-
-Alternatively, you can install or update nikkePwned automatically via PowerShell:
-
-```powershell
-irm https://raw.githubusercontent.com/ScathachGrip/nikkePwned/master/install.ps1 | iex
-```
-
-This will automatically:
-
-- Download the latest `nikkepwned.exe` release.
-- Place it in `%LOCALAPPDATA%\Programs\nikkePwned`.
-- Add shortcuts to your **Start Menu** and **Desktop**.
-- Register an entry in Windows Settings (**Installed apps**) for clean one-click uninstall.
-
-# How to interacts
+## How to interacts
 
 - Edit launcher location where `nikke_launcher.exe` located, then select.
 - Input accounts, if already then Select account
@@ -256,18 +245,30 @@ While multiple models are supported `nvidia/nemotron-nano-12b-v2-vl:free` is rec
 
 </details>
 
-## Running tests
-
-> Check workflows and the whole build script on `package.json`
-
-## Manual build
+## Development
 
 ```sh
 git clone https://github.com/ScathachGrip/nikkePwned.git
 cd nikkePwned
 ```
 
-You can check build script on `package.json` for the step by step.
+### Running tests
+
+```sh
+## debug
+bun run build:debug
+
+## prod
+bun run build:release
+
+## indev
+bun run tauri:dev
+
+## ui
+bun run build:ui
+```
+
+Other build and ci scripts defined in `package.json` and `gh-action`.
 
 ## Application Safety Report
 
