@@ -1,7 +1,7 @@
 use discord_rich_presence::{DiscordIpc, DiscordIpcClient, activity};
 use std::sync::Mutex;
 
-const DISCORD_APP_ID: &str = "632699411448725564";
+const DISCORD_APP_ID: &str = "1549962142634090587";
 const LARGE_IMAGE_URL: &str = "https://raw.githubusercontent.com/ScathachGrip/nikkePwned/refs/heads/master/resources/static/rpc_icon.png";
 
 pub struct DiscordRpcState {
@@ -76,7 +76,7 @@ impl DiscordRpcState {
                 let small_url = small_image_key.map(resolve_small_image_url);
                 let mut assets = activity::Assets::new()
                     .large_image(LARGE_IMAGE_URL)
-                    .large_text("v5.0.15");
+                    .large_text("v5.0.16");
 
                 if let Some(url) = small_url {
                     assets = assets.small_image(url);
