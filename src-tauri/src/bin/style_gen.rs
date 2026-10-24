@@ -104,6 +104,7 @@ option {
 .main-area {
   flex: 1;
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
 }
@@ -185,7 +186,7 @@ option {
   padding: 20px !important;
   border-radius: 10px !important;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2) !important;
-  margin: auto !important;
+  margin: 0 auto !important;
 }
 
 .light-mode .container {
@@ -934,153 +935,6 @@ select::-webkit-scrollbar-thumb:hover {
   background: #999;
 }
 
-.burstbonk-panel {
-  margin: 0 0 12px 0;
-  padding: 10px 12px;
-  border-radius: 8px;
-  border: 1px solid #3a3a4d;
-  background: #1f2129;
-  font-size: 12px;
-  line-height: 1.45;
-  color: #c7cad1;
-}
-
-.burstbonk-panel strong {
-  color: #f2f4f7;
-  font-weight: 700;
-}
-
-.burstbonk-label {
-  margin: 0 0 6px 0;
-  font-size: 14px;
-  font-weight: 700;
-}
-
-.burstbonk-status-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 12px;
-}
-
-.burstbonk-status-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: #555;
-  transition: background 0.2s ease;
-}
-
-.burstbonk-status-dot.active {
-  background: #4caf50;
-  box-shadow: 0 0 6px #4caf50;
-}
-
-.burstbonk-status-text {
-  font-size: 12px;
-  font-weight: 600;
-  color: #c7cad1;
-}
-
-.burstbonk-keys-row {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 14px;
-}
-
-.burstbonk-key-input {
-  width: 42px;
-  height: 42px;
-  text-align: center;
-  font-size: 16px;
-  font-weight: 700;
-  text-transform: uppercase;
-  background: #1d1d25ff !important;
-  color: #ffffff !important;
-  border: 1px solid #3a3a4d;
-  border-radius: 6px;
-  box-sizing: border-box;
-  outline: none;
-  transition: border-color 0.2s ease;
-}
-
-.burstbonk-key-input:focus {
-  border-color: #e05bc4ff;
-}
-
-.burstbonk-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.burstbonk-toggle-btn {
-  width: 100%;
-  background: #2e7d32;
-  color: white;
-  border-radius: 6px;
-  padding: 10px;
-  border: none;
-  cursor: pointer;
-  font-weight: 700;
-  transition: background 0.2s ease;
-}
-
-.burstbonk-toggle-btn:hover {
-  background: #388e3c;
-}
-
-.burstbonk-toggle-btn.is-active-btn {
-  background: #c62828;
-}
-
-.burstbonk-toggle-btn.is-active-btn:hover {
-  background: #d32f2f;
-}
-
-.burstbonk-save-btn {
-  width: 100%;
-  background: #af4337;
-  color: white;
-  border-radius: 6px;
-  padding: 10px;
-  border: none;
-  cursor: pointer;
-  font-weight: 700;
-}
-
-.light-mode .burstbonk-key-input {
-  background: #f5f5f5 !important;
-  color: #000000 !important;
-  border: 1px solid #c8c8c8;
-}
-
-.light-mode .burstbonk-key-input:focus {
-  border-color: #ff6f61;
-}
-
-.light-mode .burstbonk-panel {
-  background: #f2f4f7;
-  color: #333;
-  border: 1px solid #d5d9df;
-}
-
-.light-mode .burstbonk-panel strong {
-  color: #101828;
-}
-
-.light-mode .burstbonk-status-text {
-  color: #333;
-}
-
-.light-mode .burstbonk-save-btn {
-  background: #1f5fb0;
-  color: white;
-}
-
-.light-mode .burstbonk-toggle-btn {
-  background: #2e7d32;
-}
 
 .close {
   color: #aaaaaa;
@@ -1408,6 +1262,155 @@ input[type="number"] {
   animation: spin 2s linear infinite;
 }
 
+#myBtnBurstBonk {
+  opacity: 0.65;
+  filter: grayscale(100%);
+  transition: opacity 0.2s ease, filter 0.2s ease, transform 0.2s ease;
+}
+
+#myBtnBurstBonk:hover {
+  opacity: 0.95;
+  filter: grayscale(30%);
+  transform: scale(1.04);
+}
+
+.auto-close-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+
+.auto-close-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #9d9db5;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  padding: 6px 14px;
+  border-radius: 20px;
+  backdrop-filter: blur(8px);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.auto-close-label:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.18);
+  transform: translateY(-1px);
+}
+
+.auto-close-input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.auto-close-custom-box {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  background: #1c1c27;
+  border: 1.5px solid #4a4a62;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.auto-close-label:hover .auto-close-custom-box {
+  border-color: #e05bc4;
+}
+
+.auto-close-custom-box.is-checked {
+  background: #e05bc4;
+  border-color: #e05bc4;
+  box-shadow: 0 0 10px rgba(224, 91, 196, 0.45);
+}
+
+.auto-close-check-icon {
+  width: 10px;
+  height: 10px;
+  stroke: #ffffff;
+  stroke-width: 3.5;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.auto-close-text {
+  line-height: 1;
+}
+
+.version-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #9d9db5;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  padding: 6px 14px;
+  border-radius: 20px;
+  backdrop-filter: blur(8px);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.version-pill:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.18);
+  transform: translateY(-1px);
+}
+
+.version-pill-text {
+  line-height: 1;
+}
+
+.light-mode .auto-close-label {
+  color: #475569;
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+.light-mode .auto-close-label:hover {
+  color: #0f172a;
+  background: rgba(0, 0, 0, 0.07);
+  border-color: rgba(0, 0, 0, 0.18);
+}
+
+.light-mode .auto-close-custom-box {
+  background: #ffffff;
+  border-color: #cbd5e1;
+}
+
+.light-mode .auto-close-custom-box.is-checked {
+  background: #e05bc4;
+  border-color: #e05bc4;
+}
+
+.light-mode .version-pill {
+  color: #475569;
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+.light-mode .version-pill:hover {
+  color: #0f172a;
+  background: rgba(0, 0, 0, 0.07);
+  border-color: rgba(0, 0, 0, 0.18);
+}
+
 #searchInput {
   flex: 1 1 auto;
   min-width: 0;
@@ -1634,10 +1637,8 @@ button#reset:hover {
         Path::new("../src/styles/app.css").to_path_buf()
     };
 
-    if let Some(parent) = target_path.parent() {
-        if !parent.exists() {
-            fs::create_dir_all(parent)?;
-        }
+    if let Some(parent) = target_path.parent().filter(|p| !p.exists()) {
+        fs::create_dir_all(parent)?;
     }
 
     fs::write(&target_path, css_content)?;
