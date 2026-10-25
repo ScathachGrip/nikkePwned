@@ -19,7 +19,12 @@ pub struct Account {
 pub struct HistoryLog {
     #[serde(alias = "accountWhat", default)]
     pub account: String,
-    #[serde(alias = "typeWhat", alias = "event_type", rename = "eventType", default)]
+    #[serde(
+        alias = "typeWhat",
+        alias = "event_type",
+        rename = "eventType",
+        default
+    )]
     pub event_type: String,
     #[serde(alias = "is_success", rename = "isSuccess", default)]
     pub is_success: String,
@@ -51,7 +56,11 @@ fn default_true() -> bool {
 pub struct BurstBonkConfig {
     #[serde(default = "default_burstbonk_keys")]
     pub keys: Vec<String>,
-    #[serde(default = "default_burstbonk_interval", rename = "interval_ms", alias = "intervalMs")]
+    #[serde(
+        default = "default_burstbonk_interval",
+        rename = "interval_ms",
+        alias = "intervalMs"
+    )]
     pub interval_ms: u64,
     #[serde(default = "default_true", rename = "humanized", alias = "isHumanized")]
     pub humanized: bool,

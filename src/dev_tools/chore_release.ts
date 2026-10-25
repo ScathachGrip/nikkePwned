@@ -83,18 +83,6 @@ function main(): void {
     console.log(`✅ Updated src-tauri/tauri.conf.json -> ${newVersion}`);
   }
 
-  // Update src-tauri/src/rpc.rs
-  const rpcPath = path.resolve(rootDir, "src-tauri/src/rpc.rs");
-  if (fs.existsSync(rpcPath)) {
-    let rpcStr = fs.readFileSync(rpcPath, "utf-8");
-    rpcStr = rpcStr.replace(
-      /\.large_text\("v[^"]+"\)/,
-      `.large_text("v${newVersion}")`
-    );
-    fs.writeFileSync(rpcPath, rpcStr, "utf-8");
-    console.log(`✅ Updated src-tauri/src/rpc.rs -> v${newVersion}`);
-  }
-
   console.log(`\nchore(release, cargo): bump manifest to ${newVersion}`);
 }
 

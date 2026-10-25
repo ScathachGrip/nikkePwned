@@ -1,13 +1,11 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import type {
-    Account,
-    HistoryLog,
-    BurstBonkConfig,
-    LoginResult,
-  } from "./types";
+  import type { Account, BurstBonkConfig, HistoryLog, LoginResult } from "./types";
   import { invoke } from "./lib/api";
   import { playAudio, redactedEmail } from "./lib/utils";
+  import pkg from "../package.json";
+
+  const appVersion = `v${pkg.version}`;
 
   import Header from "./lib/components/Header.svelte";
   import Toast from "./lib/components/Toast.svelte";
@@ -25,7 +23,11 @@
   let launcherPath = $state("where is nikke_launcher.exe");
   let accounts = $state<Account[]>([]);
   let selectedAccountIndex = $state<number | null>(null);
-  let loggedInAccountInfo = $state<{ nickname: string; email: string; index: number } | null>(null);
+  let loggedInAccountInfo = $state<{
+    nickname: string;
+    email: string;
+    index: number;
+  } | null>(null);
   let registerMode = $state<"single" | "json">("single");
 
   // Single / JSON Account Form State
@@ -34,15 +36,24 @@
   let singlePassword = $state("");
   let jsonInput = $state("");
 
-  // Delays
+  // Delays & Auto-Close
   let switchDelay = $state(3);
   let loginDelay = $state(3);
+  let autoCloseOnLogin = $state(false);
+
+  function handleAutoCloseChange(e: Event): void {
+    const target = e.target as HTMLInputElement;
+    autoCloseOnLogin = target.checked;
+    localStorage.setItem("nikkepwned_auto_close", String(autoCloseOnLogin));
+  }
 
   // Modals
   let isAccountPickerOpen = $state(false);
   let isLogsModalOpen = $state(false);
   let isBurstBonkModalOpen = $state(false);
   let isWortelModalOpen = $state(false);
+
+
 
   // Loading Overlay
   let isLoading = $state(false);
@@ -58,12 +69,6 @@
   // Logs & Search
   let historyLogs = $state<HistoryLog[]>([]);
   let searchQuery = $state("");
-
-  // BurstBonk State
-  let burstbonkKeys = $state<string[]>(["A", "S", "D", "F", "G"]);
-  let burstbonkIntervalMs = $state<number>(3);
-  let burstbonkHumanized = $state(true);
-  let isBurstBonkActive = $state(false);
 
   // Wortel Easter Egg
   let wortelClickCount = $state(0);
@@ -230,7 +235,10 @@
     try {
       await invoke("remove_account", { email: acc.email });
       showAlert(`Removed ${acc.nickname}!`, "success");
-      if (loggedInAccountInfo && loggedInAccountInfo.email.toLowerCase() === acc.email.toLowerCase()) {
+      if (
+        loggedInAccountInfo &&
+        loggedInAccountInfo.email.toLowerCase() === acc.email.toLowerCase()
+      ) {
         loggedInAccountInfo = null;
         restoreIdleRpc();
       }
@@ -275,7 +283,14 @@
       isLoading = false;
 
       if (res && res.success) {
-        showAlert(`Logged in as ${acc.nickname}!`, "success");
+        showAlert(res.message, "success");
+
+        // Native Windows Notification sent first
+        invoke("show_notification", {
+          title: "nikkePwned",
+          body: res.message,
+        }).catch((e) => console.warn("Native notification failed:", e));
+
         loggedInAccountInfo = {
           nickname: acc.nickname,
           email: acc.email,
@@ -287,12 +302,30 @@
           smallImageKey: "rpc_maintain",
           smallImageText: "Maintaining",
         }).catch((e) => console.warn("RPC update failed:", e));
+
+        if (autoCloseOnLogin) {
+          setTimeout(() => {
+            invoke("close_window").catch((e) =>
+              console.warn("Failed to close window:", e),
+            );
+          }, 1200);
+        }
       } else {
-        showAlert(res?.message || "Failed to perform login", "fail");
+        const failMsg = res?.message || "Failed to perform login";
+        showAlert(failMsg, "fail");
+        invoke("show_notification", {
+          title: "nikkePwned",
+          body: failMsg,
+        }).catch((e) => console.warn("Native notification failed:", e));
       }
     } catch (err) {
       isLoading = false;
-      showAlert(String(err), "fail");
+      const errMsg = String(err);
+      showAlert(errMsg, "fail");
+      invoke("show_notification", {
+        title: "nikkePwned",
+        body: errMsg,
+      }).catch((e) => console.warn("Native notification failed:", e));
     }
   }
 
@@ -335,7 +368,9 @@
 
     const isInput =
       target instanceof HTMLInputElement &&
-      ["nickname", "email", "password"].includes(target.placeholder.toLowerCase());
+      ["nickname", "email", "password"].includes(
+        target.placeholder.toLowerCase(),
+      );
 
     const isTextarea =
       target instanceof HTMLTextAreaElement &&
@@ -427,92 +462,13 @@
     restoreIdleRpc();
   }
 
-  async function handleOpenBurstBonkModal(): Promise<void> {
+  function handleOpenBurstBonkModal(): void {
     isBurstBonkModalOpen = true;
-    try {
-      const cfg = await invoke<BurstBonkConfig>("get_burstbonk_config");
-      if (cfg && cfg.keys && cfg.keys.length > 0) {
-        burstbonkKeys = cfg.keys;
-      }
-      if (cfg && (cfg.interval_ms != null || cfg.intervalMs != null)) {
-        burstbonkIntervalMs = cfg.interval_ms ?? cfg.intervalMs ?? 3;
-      }
-      if (cfg && cfg.humanized != null) {
-        burstbonkHumanized = Boolean(cfg.humanized);
-      }
-      isBurstBonkActive = await invoke<boolean>("get_burstbonk_status");
-
-      invoke("update_discord_rpc", {
-        details: isBurstBonkActive ? "BurstBonk Engine (Active)" : "Configuring BurstBonk",
-        state: isBurstBonkActive ? `Auto-Burst (${burstbonkIntervalMs}ms)` : "Keyboard Burst Utility",
-        smallImageKey: isBurstBonkActive ? "rpc_maintain" : "rpc_llm",
-        smallImageText: isBurstBonkActive ? "BurstBonk Active" : "BurstBonk Menu",
-      }).catch((e) => console.warn("RPC update failed:", e));
-    } catch (e) {
-      console.error("Failed to load BurstBonk config:", e);
-    }
   }
 
   function handleCloseBurstBonkModal(): void {
     isBurstBonkModalOpen = false;
     restoreIdleRpc();
-  }
-
-  async function handleSaveBurstBonkConfig(): Promise<void> {
-    try {
-      const validKeys = burstbonkKeys.filter((k) => k.trim() !== "");
-      if (validKeys.length === 0) {
-        showAlert("At least one key is required!", "fail");
-        return;
-      }
-      await invoke("save_burstbonk_config", {
-        keys: validKeys,
-        interval_ms: Number(burstbonkIntervalMs) || 3,
-        humanized: burstbonkHumanized,
-      });
-      console.log("[BurstBonk] Config saved:", {
-        keys: validKeys,
-        interval_ms: Number(burstbonkIntervalMs) || 3,
-        humanized: burstbonkHumanized,
-      });
-      showAlert("BurstBonk config saved!", "success");
-    } catch (e) {
-      showAlert(String(e), "fail");
-    }
-  }
-
-  async function handleToggleBurstBonk(): Promise<void> {
-    try {
-      if (isBurstBonkActive) {
-        await invoke("stop_burstbonk");
-        isBurstBonkActive = false;
-        console.log("[BurstBonk] Stopped");
-        showAlert("BurstBonk stopped", "success");
-        invoke("update_discord_rpc", {
-          details: "Configuring BurstBonk",
-          state: "Standby",
-          smallImageKey: "rpc_llm",
-          smallImageText: "BurstBonk Standby",
-        }).catch((e) => console.warn("RPC update failed:", e));
-      } else {
-        await invoke("start_burstbonk");
-        isBurstBonkActive = true;
-        console.log("[BurstBonk] Started with:", {
-          keys: burstbonkKeys,
-          interval_ms: burstbonkIntervalMs,
-          humanized: burstbonkHumanized,
-        });
-        showAlert("BurstBonk started!", "success");
-        invoke("update_discord_rpc", {
-          details: "BurstBonk Engine (Active)",
-          state: `Auto-Burst (${burstbonkIntervalMs}ms)`,
-          smallImageKey: "rpc_maintain",
-          smallImageText: "BurstBonk Active",
-        }).catch((e) => console.warn("RPC update failed:", e));
-      }
-    } catch (e) {
-      showAlert(String(e), "fail");
-    }
   }
 
   function toggleThemeWithCircularTransition(event: MouseEvent): void {
@@ -537,9 +493,9 @@
 
     if (
       typeof document !== "undefined" &&
-      typeof (document as any).startViewTransition === "function"
+      typeof document.startViewTransition === "function"
     ) {
-      const transition = (document as any).startViewTransition(() => {
+      const transition = document.startViewTransition(() => {
         isLightMode = nextLightMode;
         localStorage.setItem("theme", nextLightMode ? "light" : "dark");
         document.body.classList.toggle("light-mode", nextLightMode);
@@ -648,6 +604,11 @@
     const savedTheme = localStorage.getItem("theme");
     if (savedTheme === "light") {
       isLightMode = true;
+    }
+
+    const savedAutoClose = localStorage.getItem("nikkepwned_auto_close");
+    if (savedAutoClose !== null) {
+      autoCloseOnLogin = savedAutoClose === "true";
     }
 
     window.addEventListener("keydown", handleGlobalKeyDown);
@@ -859,6 +820,32 @@
         >
       </div>
     </div>
+
+    <!-- Auto Close on Login Checklist (Outside Main Card) -->
+    <div class="auto-close-wrapper funFadeInUp">
+      <div class="version-pill" title="nikkePwned version">
+        <span class="version-pill-text">{appVersion}</span>
+      </div>
+      <label class="auto-close-label" for="autoCloseCheckbox">
+        <input
+          type="checkbox"
+          id="autoCloseCheckbox"
+          bind:checked={autoCloseOnLogin}
+          onchange={handleAutoCloseChange}
+          class="auto-close-input"
+        />
+        <span class="auto-close-custom-box" class:is-checked={autoCloseOnLogin}>
+          {#if autoCloseOnLogin}
+            <svg viewBox="0 0 24 24" class="auto-close-check-icon">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+          {/if}
+        </span>
+        <span class="auto-close-text"
+          >Exit nikkePwned upon successful login</span
+        >
+      </label>
+    </div>
   </main>
 
   <!-- Account Picker Modal -->
@@ -881,16 +868,9 @@
     onClose={handleCloseLogsModal}
   />
 
-  <!-- BurstBonk Settings Modal -->
+  <!-- BurstBonk Modal -->
   <BurstBonkModal
     isOpen={isBurstBonkModalOpen}
-    bind:keys={burstbonkKeys}
-    bind:intervalMs={burstbonkIntervalMs}
-    bind:humanized={burstbonkHumanized}
-    isActive={isBurstBonkActive}
-    onSave={handleSaveBurstBonkConfig}
-    onToggle={handleToggleBurstBonk}
-    onUpdateKeys={(newKeys: string[]) => (burstbonkKeys = newKeys)}
     onClose={handleCloseBurstBonkModal}
   />
 
@@ -925,11 +905,13 @@
     type="button"
     class="tia"
     id="myBtnBurstBonk"
+    title="Deprecated"
+    aria-label="Deprecated"
     onclick={handleOpenBurstBonkModal}
   >
     <img
       src="/static/rpc_llm.png"
-      alt="burstbonk"
+      alt="BurstBonk (Deprecated)"
       style="width: 40px; height: 40px"
     />
   </button>

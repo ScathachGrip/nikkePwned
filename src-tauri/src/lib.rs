@@ -2,6 +2,7 @@
 #![allow(clippy::all)]
 
 mod automation;
+#[path = "burstbonk.rs"]
 mod burstbonk;
 mod rpc;
 mod storage;
@@ -255,29 +256,8 @@ fn save_burstbonk_config(
 }
 
 #[tauri::command]
-fn start_burstbonk(state: State<'_, AppState>) -> Result<(), String> {
-    let (keys, interval, humanized) = {
-        let guard = state.storage.data.lock().map_err(|_| "Lock failed")?;
-        (
-            guard.burstbonk.keys.clone(),
-            guard.burstbonk.interval_ms,
-            guard.burstbonk.humanized,
-        )
-    };
-
-    #[cfg(windows)]
-    {
-        let handle = burstbonk::start(&keys, interval, humanized)?;
-        if let Ok(mut bb) = state.burstbonk_handle.lock() {
-            *bb = Some(handle);
-        }
-    }
-    #[cfg(not(windows))]
-    {
-        let _ = (keys, interval, humanized);
-        return Err("BurstBonk is only supported on Windows".into());
-    }
-    Ok(())
+fn start_burstbonk(_state: State<'_, AppState>) -> Result<(), String> {
+    Err("BurstBonk macro has been permanently deprecated and disabled in accordance with NIKKE Terms of Service (prohibiting third-party automation and keystroke injection).".into())
 }
 
 #[tauri::command]
@@ -291,6 +271,17 @@ fn stop_burstbonk(state: State<'_, AppState>) {
 #[tauri::command]
 fn get_burstbonk_status() -> bool {
     burstbonk::is_active()
+}
+
+#[tauri::command]
+fn show_notification(app: AppHandle, title: String, body: String) -> Result<(), String> {
+    use tauri_plugin_notification::NotificationExt;
+    app.notification()
+        .builder()
+        .title(title)
+        .body(body)
+        .show()
+        .map_err(|e| format!("Notification error: {e}"))
 }
 
 #[tauri::command]
@@ -416,7 +407,8 @@ pub fn run() {
             close_window,
             minimize_window,
             toggle_maximize_window,
-            confirm_dialog
+            confirm_dialog,
+            show_notification
         ])
         .run(get_tauri_context!())
         .expect("error while running tauri application");

@@ -1,4 +1,4 @@
-/** @type {Record<string, any>} */
+/** @type {import('@sveltejs/vite-plugin-svelte').Options} */
 export default {
   compilerOptions: {
     warningFilter: (warning) => !warning.code.startsWith("a11y"),

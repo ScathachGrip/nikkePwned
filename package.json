@@ -1,6 +1,6 @@
 {
   "name": "nikkepwned",
-  "version": "5.0.16",
+  "version": "6.0.1",
   "description": "Password Manager for NIKKE",
   "keywords": [],
   "author": "sinkaroid",
@@ -11,7 +11,7 @@
   "type": "module",
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^5.0.0",
-    "@types/bun": "^1.4.0",
+    "@types/bun": "^1.4.4",
     "svelte": "^5.0.0",
     "typescript": "^7.0.2",
     "vite": "^6.0.0"
@@ -27,8 +27,8 @@
     "lint": "tsc --noEmit",
     "chore:release": "bun run src/dev_tools/chore_release.ts"
   },
-  "packageManager": "bun@1.4.0",
+  "packageManager": "bun@1.4.4",
   "engines": {
-    "bun": ">=1.4.0"
+    "bun": ">=1.4.4"
   }
 }
