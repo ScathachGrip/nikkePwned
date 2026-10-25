@@ -166,7 +166,7 @@ Battlefield screen at `00:01` or `00:00` before registering actual damage.
 
 Press `ESC` to pause, then assign `F8` to perform image-reasoning and extract damage data. When assigned, You can make notification keep visible by pressing `Win + N`.
 
-![PausedState & AssignedResults ](./resources/project/Screenshot_assigned.webp)
+![PausedState & AssignedResults ](./resources/project/Screenshot_assigned_deprecated.webp)
 
 ### ActualResult & Less Hallucination
 
