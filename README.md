@@ -45,10 +45,13 @@ This extension was designed to simplified login process, **automate the login pr
 
 ## Prerequisites
 
-- `64-bit editions of Microsoft Windows 11 or Microsoft Windows 10`
-  - Other environments have not been tested; additional testing and feedback are welcome.
+- **Supported OS**: 64-bit editions of Microsoft Windows 11 / 10.
+  - Compatibility is currently verified only on standard 64-bit Windows installations. Feedback regarding other environments is appreciated.
 
 ## Breaking Changes
+
+> [!WARNING]
+> If you are upgrading from nikkePwned `v4.x.x`, please review the following breaking changes and migration details:
 
 1.  **Persistent Storage Location**:
     - Legacy local storage directory (`.storage/`) has been migrated to standard OS AppData JSON storage:
