@@ -37,3 +37,6 @@ build-rpc/
 
 # Scratch
 scratch/
+
+# Internal / Private Docs
+FUTURE_CONCERN.md
