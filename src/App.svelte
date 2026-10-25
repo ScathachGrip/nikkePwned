@@ -493,9 +493,9 @@
 
     if (
       typeof document !== "undefined" &&
-      typeof (document as any).startViewTransition === "function"
+      typeof document.startViewTransition === "function"
     ) {
-      const transition = (document as any).startViewTransition(() => {
+      const transition = document.startViewTransition(() => {
         isLightMode = nextLightMode;
         localStorage.setItem("theme", nextLightMode ? "light" : "dark");
         document.body.classList.toggle("light-mode", nextLightMode);
